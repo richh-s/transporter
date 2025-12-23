@@ -7,6 +7,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const stats = [
   { name: "Active Trucks", value: "12", icon: Truck, change: "+2", changeType: "positive" },
@@ -23,26 +24,26 @@ const recentOrders = [
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-10 sm:pb-0">
       <div className="px-1 sm:px-0">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Fleet Overview</h2>
-        <p className="text-sm text-muted-foreground">Monitoring your transport operations in real-time.</p>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">Fleet Overview</h2>
+        <p className="text-xs sm:text-sm text-muted-foreground">Monitoring your transport operations in real-time.</p>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="p-4 sm:p-6 bg-card border border-border rounded-xl shadow-none sm:shadow-sm hover:shadow-md transition-shadow">
+          <div key={stat.name} className="p-3 sm:p-6 bg-card border border-border rounded-xl shadow-none sm:shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <stat.icon className="h-5 w-5 sm:h-6 sm:h-6 text-primary" />
+              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                <stat.icon className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <span className={StatChangeClasses(stat.changeType)}>
+              <span className={cn(StatChangeClasses(stat.changeType), "text-[10px] sm:text-xs")}>
                 {stat.change}
               </span>
             </div>
-            <div className="mt-3 sm:mt-4">
-              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.name}</h3>
-              <p className="text-2xl sm:text-3xl font-bold mt-1">{stat.value}</p>
+            <div className="mt-2 sm:mt-4">
+              <h3 className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate uppercase tracking-wider">{stat.name}</h3>
+              <p className="text-xl sm:text-3xl font-bold mt-0.5 sm:mt-1">{stat.value}</p>
             </div>
           </div>
         ))}

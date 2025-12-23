@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +58,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-sidebar text-sidebar-foreground pt-12 lg:pt-0",
+        "flex h-full flex-col bg-sidebar text-sidebar-foreground pt-16 lg:pt-0 border-r border-sidebar-border",
         className
       )}
     >
@@ -162,12 +163,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex items-center flex-1">
-              <h1 className="text-base sm:text-lg font-semibold md:text-xl text-brand-primary truncate">
-                <span className="text-brand-accent">WeTruck</span> Transporter
+            <div className="flex items-center flex-1 min-w-0">
+              <h1 className="text-sm sm:text-lg font-bold md:text-xl text-brand-primary truncate uppercase tracking-tight">
+                <span className="">WeTruck</span>
               </h1>
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              <ThemeToggle />
               <button className="text-muted-foreground hover:text-foreground">
                 <Bell className="h-5 w-5" />
               </button>
@@ -242,7 +244,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </DialogContent>
         </Dialog>
 
-        <main className="flex-1 pt-10 pb-10 px-4 sm:py-6 sm:px-6 lg:px-8 mb-16 lg:mb-0">
+        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
 

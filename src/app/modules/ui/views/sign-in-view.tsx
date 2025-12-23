@@ -62,7 +62,7 @@ export const SignInView = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
+    <div className="light-theme-only min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8 text-foreground">
       <div className="flex flex-col gap-6 w-full max-w-[450px] md:max-w-[900px] mx-auto">
         <Card className="overflow-hidden border-none shadow-none sm:shadow-sm bg-white p-0 gap-0">
           <CardContent className="grid p-0 md:grid-cols-2 min-h-[500px] md:min-h-[550px]">
@@ -208,34 +208,25 @@ export const SignInView = () => {
             </div>
 
             {/* Right Side: Visual/Brand */}
-            <div className="relative hidden md:flex flex-col items-center justify-center p-12 overflow-hidden bg-brand-primary">
+            <div className="relative hidden md:flex flex-col items-center justify-center p-12 overflow-hidden bg-slate-900">
               {/* Truck Image Background with Overlay */}
               <div className="absolute inset-0">
                 <Image
                   src="/images/truck.png"
                   alt="Background Truck"
                   fill
-                  className="object-cover opacity-100 brightness-60"
+                  className="object-cover opacity-60 brightness-75 grayscale"
                 />
-                <div className="absolute inset-0 bg-brand-primary/40 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 via-slate-900/40 to-slate-900/60" />
               </div>
 
-              {/* Background Glassmorphism Shapes */}
-              <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white/5 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-brand-primary/20 rounded-full blur-3xl animate-pulse delay-700" />
+              {/* Background Decorative Shapes */}
+              <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-brand-accent/5 rounded-full blur-3xl animate-pulse delay-700" />
 
               <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-8 w-full h-full">
                 <div className="group relative">
-                  <div className="absolute -inset-1 bg-linear-to-r from-brand-accent/50 to-brand-primary/50 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                  {/* <div className="relative bg-white p-8 rounded-3xl shadow-2xl transition-transform duration-500 hover:scale-105">
-                    <Image
-                      src="/images/image.png"
-                      alt="WeTruck Logo"
-                      width={180}
-                      height={180}
-                      className="object-contain"
-                    />
-                  </div> */}
+                  <div className="absolute -inset-1 bg-linear-to-r from-brand-accent/30 to-blue-500/10 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                 </div>
 
                 <div className="space-y-4">
@@ -246,7 +237,7 @@ export const SignInView = () => {
                   <div className="h-1 w-20 bg-brand-accent mx-auto rounded-full" />
                 </div>
 
-                <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-light italic">
+                <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-medium italic">
                   &quot;Streamline your logistics operations with the most
                   powerful transport dashboard.&quot;
                 </p>
@@ -258,11 +249,11 @@ export const SignInView = () => {
                   <span className="font-bold text-xl text-white/70">
                     Logistics
                   </span>
-                  <span className="text-xl text-white">•</span>
+                  <span className="text-xl text-brand-accent">•</span>
                   <span className="font-bold text-xl text-white/70">
                     Efficiency
                   </span>
-                  <span className="text-xl">•</span>
+                  <span className="text-xl text-brand-accent">•</span>
                   <span className="font-bold text-xl text-white/70">
                     Control
                   </span>
