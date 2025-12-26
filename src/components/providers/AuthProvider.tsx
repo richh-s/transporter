@@ -49,8 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("wetruck_user");
           setUser(null);
         } else if (data) {
-          // Session valid - keep user logged in
-          setUser(JSON.parse(savedUser));
+          // Session valid - use fresh data from API
+          const freshUser: User = {
+            id: String(data.id),
+            email: data.email,
+            role: data.user_type,
+            name: data.email.split("@")[0],
+          };
+          setUser(freshUser);
+          localStorage.setItem("wetruck_user", JSON.stringify(freshUser));
         }
       }
 
