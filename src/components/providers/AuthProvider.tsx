@@ -1,65 +1,104 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { request } from "@/lib/api-client";
 
-interface User {
+type User = {
   id: string;
   email: string;
+  role: string;
   name?: string;
+} | null;
+
+interface LoginResponse {
+  message?: string;
+  role: string;
+  expires_in: number;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: User;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<void>;
-  logout: () => void;
-  signup: (email: string, name: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const initAuth = async () => {
+      // Load user from localStorage
+      const savedUser = localStorage.getItem("wetruck_user");
+
+      if (savedUser) {
+        // Verify the session with backend (check if cookie is still valid)
+        const { data, error, status } = await request<{
+          id: number;
+          email: string;
+          user_type: string;
+        }>("/auth/me");
+
+        if (error || status === 401) {
+          // Session invalid - clear everything
+          console.log("❌ Session invalid - clearing user data");
+          localStorage.removeItem("wetruck_user");
+          setUser(null);
+        } else if (data) {
+          // Session valid - keep user logged in
+          setUser(JSON.parse(savedUser));
+        }
+      }
+
+      setIsLoading(false);
+    };
+    initAuth();
   }, []);
 
-  const login = async (email: string, password?: string) => {
-    setIsLoading(true);
-    // Simulate API call to FastAPI backend
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock authentication for development
-    if (email === "test@gmail.com" && password === "test123") {
-      const newUser = { id: "1", email, name: "Test User" };
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
-      throw new Error("Invalid email or password. Use test@gmail.com / test123");
+  const login = async (email: string, password: string) => {
+    const { data, error } = await request<LoginResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        role: "transporter", // Required by your backend
+      }),
+    });
+
+    if (error) throw new Error(error);
+
+    if (data) {
+      // Create user data from login response
+      const user: User = {
+        id: "", // Backend can provide this later if needed
+        email,
+        role: data.role,
+        name: email.split("@")[0],
+      };
+
+      setUser(user);
+      localStorage.setItem("wetruck_user", JSON.stringify(user));
     }
   };
 
-  const signup = async (email: string, name: string) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const newUser = { id: "1", email, name };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    setIsLoading(false);
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      // Call backend to clear cookies
+      await request("/auth/logout", {
+        method: "POST",
+      });
+    } catch (error) {
+      // Even if backend call fails, still clear local data
+      console.warn("Logout endpoint failed, clearing local data anyway", error);
+    } finally {
+      // Always clear local user data
+      setUser(null);
+      localStorage.removeItem("wetruck_user");
+    }
   };
 
   return (
@@ -70,7 +109,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         logout,
-        signup,
       }}
     >
       {children}
