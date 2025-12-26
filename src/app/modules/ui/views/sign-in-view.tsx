@@ -3,7 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { OctagonAlert, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import {
+  OctagonAlert,
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -18,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -30,11 +38,18 @@ const formSchema = z.object({
 });
 
 export const SignInView = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,15 +66,98 @@ export const SignInView = () => {
       await login(data.email, data.password);
       router.push("/");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Invalid email or password. Please try again."
-      );
+      // Map backend errors to user-friendly messages
+      const errorMessage = err instanceof Error ? err.message : "";
+
+      // Network/Connection errors
+      if (
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("Network error") ||
+        errorMessage.includes("Cannot connect")
+      ) {
+        setError(
+          "Unable to connect to server. Please check your internet connection and try again."
+        );
+      }
+      // Invalid credentials
+      else if (
+        errorMessage.includes("Invalid") ||
+        errorMessage.includes("incorrect") ||
+        errorMessage.includes("wrong")
+      ) {
+        setError(
+          "Invalid email or password. Please check your credentials and try again."
+        );
+      }
+      // Account-related errors
+      else if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("doesn't exist")
+      ) {
+        setError(
+          "No account found with this email. Please check your email or contact support."
+        );
+      } else if (
+        errorMessage.includes("disabled") ||
+        errorMessage.includes("suspended")
+      ) {
+        setError(
+          "Your account has been disabled. Please contact support for assistance."
+        );
+      }
+      // Server errors
+      else if (
+        errorMessage.includes("500") ||
+        errorMessage.includes("server error")
+      ) {
+        setError("Server error occurred. Please try again in a few moments.");
+      }
+      // Rate limiting
+      else if (
+        errorMessage.includes("too many") ||
+        errorMessage.includes("rate limit")
+      ) {
+        setError(
+          "Too many login attempts. Please wait a few minutes and try again."
+        );
+      }
+      // Generic fallback
+      else {
+        setError(
+          errorMessage ||
+            "Authentication failed. Please try again or contact support if the problem persists."
+        );
+      }
     } finally {
       setPending(false);
     }
   };
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated (will redirect)
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Redirecting to dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="light-theme-only min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8 text-foreground">
@@ -182,25 +280,23 @@ export const SignInView = () => {
 
                   <div className="text-center text-sm">
                     <span className="text-muted-foreground">
-                      Don&apos;t have an account?{" "}
+                      Contact support to request access to the platform.
                     </span>
-                    <a
-                      href="/sign-up"
-                      className="text-brand-accent font-semibold hover:underline"
-                    >
-                      Sign Up
-                    </a>
                   </div>
 
                   {/* Mock Credentials Hint */}
                   <div className="rounded-lg border border-dashed border-brand-accent/50 bg-brand-accent/5 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-brand-primary/60 mb-1">
-                      Development Mock Login
-                    </p>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <ShieldCheck className="h-3 w-3 text-brand-primary" />
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-brand-primary/60">
+                        Dev Access
+                      </p>
+                    </div>
                     <p className="text-xs text-brand-primary/80">
                       <span className="font-semibold">Email:</span>{" "}
-                      test@gmail.com <br />
-                      <span className="font-semibold">Password:</span> test123
+                      transporter@wetruck.ai <br />
+                      <span className="font-semibold">Password:</span>{" "}
+                      transporter123
                     </p>
                   </div>
                 </form>
