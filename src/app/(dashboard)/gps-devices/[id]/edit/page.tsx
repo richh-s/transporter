@@ -37,6 +37,7 @@ import {
   useUpdateGPSDevice,
 } from "@/hooks/use-gps-devices";
 import { useUnassignedTrucks } from "@/hooks/use-trucks";
+import type { UpdateGPSDeviceRequest } from "@/types/gps-device";
 
 const formSchema = z.object({
   external_device_id: z
@@ -110,7 +111,7 @@ export default function EditGPSDevicePage() {
   }, [id]);
 
   const onSubmit = async (values: FormValues) => {
-    const updateData: any = {
+    const updateData: UpdateGPSDeviceRequest = {
       external_device_id: values.external_device_id,
       imei_number: values.imei_number,
       device_name: values.device_name || undefined,
