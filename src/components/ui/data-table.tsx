@@ -13,7 +13,18 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronsUpDown } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronsUpDown,
+  MoreHorizontal,
+  Edit2,
+  Trash2,
+  Eye,
+  ChevronRight,
+  ChevronLeft,
+  Truck,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +32,9 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -65,6 +78,12 @@ interface DataTableProps<TData, TValue> {
   filterControls?: React.ReactNode;
   // Header actions (e.g., Add button)
   headerActions?: React.ReactNode;
+  // Scroll change callback (for mobile card view)
+  onScrollChange?: (isScrolled: boolean) => void;
+  // Scroll state (to conditionally show mobile add button)
+  isScrolled?: boolean;
+  // Mobile add button (shown in filter area when scrolled)
+  mobileAddButton?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -84,6 +103,9 @@ export function DataTable<TData, TValue>({
   manualFiltering = false,
   filterControls,
   headerActions,
+  onScrollChange,
+  isScrolled,
+  mobileAddButton,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -95,13 +117,198 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [isPerPageOpen, setIsPerPageOpen] = React.useState(false);
   const [isColumnsOpen, setIsColumnsOpen] = React.useState(false);
+  const router = useRouter();
+  const mobileScrollRef = React.useRef<HTMLDivElement>(null);
 
-  // Handle search change for server-side filtering
+  // Debounce search to prevent excessive API calls
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Handle search change for server-side filtering with debouncing
   const handleSearchChange = (value: string) => {
+    // Update local state immediately for responsive UI
     setGlobalFilter(value);
-    if (onSearchChange) {
-      onSearchChange(value);
+
+    // Debounce the API call
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      if (onSearchChange) {
+        onSearchChange(value);
+      }
+    }, 500); // 500ms debounce delay
+  };
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounce scroll handler to prevent flickering
+  const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Handle scroll for mobile card view with debouncing
+  const handleScroll = React.useCallback(() => {
+    if (mobileScrollRef.current && onScrollChange) {
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Debounce the scroll check
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (mobileScrollRef.current) {
+          const scrollTop = mobileScrollRef.current.scrollTop;
+          const scrollHeight = mobileScrollRef.current.scrollHeight;
+          const clientHeight = mobileScrollRef.current.clientHeight;
+
+          // Check if content is scrollable and if we've scrolled enough
+          const isScrollable = scrollHeight > clientHeight;
+          // Use a reasonable threshold that works for single cards but prevents flickering
+          const isScrolled = isScrollable && scrollTop > 20;
+
+          onScrollChange(isScrolled);
+        }
+      }, 50); // 50ms debounce
+    }
+  }, [onScrollChange]);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Check scroll position on mount and when data changes
+  React.useEffect(() => {
+    if (mobileScrollRef.current && onScrollChange) {
+      // Check after a delay to allow layout to settle
+      const timeout = setTimeout(() => {
+        if (mobileScrollRef.current) {
+          const scrollTop = mobileScrollRef.current.scrollTop;
+          const scrollHeight = mobileScrollRef.current.scrollHeight;
+          const clientHeight = mobileScrollRef.current.clientHeight;
+
+          const isScrollable = scrollHeight > clientHeight;
+          const isScrolled = isScrollable && scrollTop > 20;
+
+          onScrollChange(isScrolled);
+        }
+      }, 200);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [data, onScrollChange]);
+
+  // Mobile Card View Component - Renders table rows as cards on mobile screens
+  const MobileCardView = ({ row }: { row: any }) => {
+    const rowData = row.original;
+    const visibleCells = row.getVisibleCells().filter((cell: any) => {
+      // Always show plate_number and actions, filter others based on visibility
+      if (cell.column.id === "actions" || cell.column.id === "plate_number")
+        return true;
+      if (cell.column.columnDef.enableHiding === false) return true;
+      return columnVisibility[cell.column.id] !== false;
+    });
+
+    // Find plate_number cell for header
+    const plateCell = visibleCells.find(
+      (cell: any) =>
+        cell.column.id === "plate_number" ||
+        cell.column.accessorKey === "plate_number"
+    );
+
+    // Find actions cell
+    const actionsCell = visibleCells.find(
+      (cell: any) => cell.column.id === "actions"
+    );
+
+    // Other cells for body
+    const bodyCells = visibleCells.filter(
+      (cell: any) =>
+        cell.column.id !== "plate_number" &&
+        cell.column.id !== "actions" &&
+        cell.column.accessorKey !== "plate_number"
+    );
+
+    // Get header label for a column
+    const getHeaderLabel = (column: any) => {
+      const labelMap: Record<string, string> = {
+        plate_number: "Plate / VIN",
+        truck_type: "Type",
+        make: "Make / Model",
+        capacity_quintal: "Capacity",
+        status: "Status",
+      };
+
+      if (column.id && labelMap[column.id]) {
+        return labelMap[column.id];
+      }
+
+      if (typeof column.columnDef.header === "string") {
+        return column.columnDef.header;
+      }
+
+      return (
+        column.id
+          ?.replace(/_/g, " ")
+          .replace(/\b\w/g, (l: string) => l.toUpperCase()) || ""
+      );
+    };
+
+    return (
+      <div className="bg-card border rounded-lg p-3 space-y-2 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+        {/* Card Header - Primary Info (Plate Number) */}
+        <div className="flex items-start justify-between pb-2 border-b border-border/50">
+          <div className="flex-1 min-w-0 pr-2">
+            {plateCell &&
+              flexRender(
+                plateCell.column.columnDef.cell,
+                plateCell.getContext()
+              )}
+          </div>
+          {/* Actions Button */}
+          {actionsCell && (
+            <div className="flex-shrink-0 -mr-1 -mt-1">
+              {flexRender(
+                actionsCell.column.columnDef.cell,
+                actionsCell.getContext()
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Card Body - Compact Label-Value Pairs */}
+        <div className="flex-1 space-y-2">
+          {bodyCells.map((cell: any) => {
+            const headerLabel = getHeaderLabel(cell.column);
+            const cellValue = flexRender(
+              cell.column.columnDef.cell,
+              cell.getContext()
+            );
+
+            return (
+              <div key={cell.id} className="flex flex-col space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
+                  {headerLabel}
+                </span>
+                <div className="text-xs font-medium text-foreground break-words leading-tight">
+                  {cellValue}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const table = useReactTable({
@@ -136,21 +343,64 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // Get visible rows for mobile (after table is created)
+  // Show all rows from current page (server fetches 10 per page)
+  const allRows = table.getRowModel().rows;
+  const visibleRows = allRows; // Show all fetched cards
+  const hasMore = pageCount ? page < pageCount : false;
+  const remainingCount = total ? Math.max(0, total - page * perPage) : 0;
+
+  // Handle "See More" click - fetch next page from server
+  const handleSeeMore = () => {
+    if (hasMore && onPageChange && pageCount && page < pageCount) {
+      onPageChange(page + 1);
+      // Scroll to top when new page loads
+      setTimeout(() => {
+        if (mobileScrollRef.current) {
+          mobileScrollRef.current.scrollTop = 0;
+        }
+      }, 100);
+    }
+  };
+
+  // Handle "See Previous" click - fetch previous page from server
+  const handleSeePrevious = () => {
+    if (onPageChange && page > 1) {
+      onPageChange(page - 1);
+      // Scroll to top when new page loads
+      setTimeout(() => {
+        if (mobileScrollRef.current) {
+          mobileScrollRef.current.scrollTop = 0;
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col space-y-3 sm:space-y-3 overflow-hidden">
       {/* Search and Filters - Fixed, no scroll */}
-      <div className="space-y-3 flex-shrink-0 overflow-x-hidden">
+      <div className="space-y-3 shrink-0 overflow-x-hidden overscroll-none touch-none md:touch-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex flex-1 flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-col md:flex-row flex-1 items-stretch md:items-center gap-2 w-full sm:w-auto">
             {searchKey && (
               <Input
                 placeholder={searchPlaceholder}
                 value={globalFilter ?? ""}
                 onChange={(event) => handleSearchChange(event.target.value)}
-                className="max-w-sm h-9 text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="flex-1 md:max-w-sm h-9 text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 py-2"
               />
             )}
-            {filterControls}
+            <div className="flex flex-1 md:flex-initial items-center gap-2">
+              {filterControls}
+              {/* Mobile Add Button - Show next to filters when stats cards are hidden (scrolled or on last page) */}
+              {mobileAddButton &&
+                (isScrolled ||
+                  (pageCount !== undefined &&
+                    pageCount > 0 &&
+                    page === pageCount)) && (
+                  <div className="md:hidden flex-1">{mobileAddButton}</div>
+                )}
+            </div>
           </div>
           {headerActions && (
             <div className="w-full sm:w-auto">{headerActions}</div>
@@ -158,8 +408,66 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Table - Mobile: fixed header and pagination, scrollable body. Desktop: scrollable container */}
-      <div className="rounded-md border w-full flex flex-col h-[200px] sm:h-[380px] overflow-hidden">
+      {/* Mobile Card View - Only visible on mobile screens (< 768px) - 2 Column Grid - Scrollable */}
+      <div
+        ref={mobileScrollRef}
+        onScroll={handleScroll}
+        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain overscroll-x-none touch-pan-y overscroll-behavior-contain scrollbar-hide"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="grid grid-cols-2 gap-2 p-1 pb-2">
+          {visibleRows.length ? (
+            <>
+              {visibleRows.map((row) => (
+                <MobileCardView key={row.id} row={row} />
+              ))}
+
+              {/* Pagination Buttons - After cards */}
+              {(page > 1 || hasMore) && (
+                <div className="col-span-2 mt-3 mb-2 flex items-center justify-center gap-3 sticky bottom-0 bg-background/95 backdrop-blur-sm py-2 z-10">
+                  {/* Previous Button */}
+                  <Button
+                    onClick={handleSeePrevious}
+                    variant="outline"
+                    disabled={page <= 1}
+                    className="h-10 w-10 p-0 border-border hover:bg-muted/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {/* Page Indicator */}
+                  <div className="flex items-center gap-1 px-3 py-2 bg-muted/30 border border-border rounded-md shrink-0">
+                    <span className="text-sm font-semibold text-foreground">
+                      {page}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/</span>
+                    <span className="text-sm text-muted-foreground">
+                      {pageCount || 1}
+                    </span>
+                  </div>
+
+                  {/* Next Button */}
+                  <Button
+                    onClick={handleSeeMore}
+                    variant="outline"
+                    disabled={!hasMore}
+                    className="h-10 w-10 p-0 border-brand-primary/20 hover:bg-brand-primary/10 hover:border-brand-primary/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    <ChevronRight className="h-4 w-4 text-brand-primary" />
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="col-span-2 bg-card border rounded-lg p-8 text-center text-muted-foreground">
+              No results.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Table View - Hidden on mobile, visible on tablet and desktop (>= 768px) */}
+      <div className="hidden md:flex rounded-md border w-full flex-col h-[200px] sm:h-[380px] overflow-hidden">
         {/* Table Container - Single scrollable container for header and body */}
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto scrollbar-hide">
           <div className="min-w-full">
@@ -241,8 +549,8 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Pagination - Fixed, no scroll */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 flex-shrink-0 mt-2 sm:mt-0">
+      {/* Pagination - Hidden on mobile, visible on tablet and above */}
+      <div className="hidden sm:flex flex-col md:flex-row items-center justify-between gap-1.5 sm:gap-2 flex-shrink-0 mt-2 sm:mt-0">
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <div className="text-muted-foreground hidden sm:block">
             {total !== undefined
@@ -310,7 +618,7 @@ export function DataTable<TData, TValue>({
                 Columns <ChevronDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-[200px] sm:w-auto">
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+import { ChevronsUpDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -10,9 +10,7 @@ import {
 } from "@/components/ui/popover";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -69,24 +67,26 @@ export function FleetFilterControls({
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0" align="start" sideOffset={4}>
+        <PopoverContent
+          className="p-0"
+          align="start"
+          sideOffset={4}
+          style={{
+            width: "var(--radix-popover-trigger-width)",
+          }}
+        >
           <Command>
-            <CommandInput placeholder="Search status..." />
             <CommandList>
-              <CommandEmpty>No status found.</CommandEmpty>
               <CommandGroup>
                 <CommandItem
                   onSelect={() => {
                     onStatusFilter("all");
                     setIsStatusFilterOpen(false);
                   }}
+                  className={cn(
+                    !filters.status && "bg-amber-100 text-amber-700 font-medium"
+                  )}
                 >
-                  <CheckIcon
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      !filters.status ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                   All
                 </CommandItem>
                 {TRUCK_STATUSES.map((status) => (
@@ -96,15 +96,11 @@ export function FleetFilterControls({
                       onStatusFilter(status.value);
                       setIsStatusFilterOpen(false);
                     }}
+                    className={cn(
+                      status.value === filters.status &&
+                        "bg-amber-100 text-amber-700 font-medium"
+                    )}
                   >
-                    <CheckIcon
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        status.value === filters.status
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
                     {status.label}
                   </CommandItem>
                 ))}
@@ -124,24 +120,27 @@ export function FleetFilterControls({
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0" align="start" sideOffset={4}>
+        <PopoverContent
+          className="p-0"
+          align="start"
+          sideOffset={4}
+          style={{
+            width: "var(--radix-popover-trigger-width)",
+          }}
+        >
           <Command>
-            <CommandInput placeholder="Search type..." />
             <CommandList>
-              <CommandEmpty>No type found.</CommandEmpty>
               <CommandGroup>
                 <CommandItem
                   onSelect={() => {
                     onTypeFilter("all");
                     setIsTypeFilterOpen(false);
                   }}
+                  className={cn(
+                    !filters.truck_type &&
+                      "bg-amber-100 text-amber-700 font-medium"
+                  )}
                 >
-                  <CheckIcon
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      !filters.truck_type ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                   All
                 </CommandItem>
                 {TRUCK_TYPES.map((type) => (
@@ -151,15 +150,11 @@ export function FleetFilterControls({
                       onTypeFilter(type.value);
                       setIsTypeFilterOpen(false);
                     }}
+                    className={cn(
+                      type.value === filters.truck_type &&
+                        "bg-amber-100 text-amber-700 font-medium"
+                    )}
                   >
-                    <CheckIcon
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        type.value === filters.truck_type
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
                     {type.label}
                   </CommandItem>
                 ))}

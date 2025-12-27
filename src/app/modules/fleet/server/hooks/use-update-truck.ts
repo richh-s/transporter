@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { truckApi } from "@/lib/api/trucks";
-import type { UpdateTruckRequest } from "@/lib/api/trucks";
+import type { UpdateTruckRequest, Truck } from "@/lib/api/trucks";
 
 // Custom error class for API errors with status codes
 class ApiError extends Error {
@@ -51,8 +51,62 @@ export function useUpdateTruck() {
 
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch trucks list automatically
+    onMutate: async ({ id, data }) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ["trucks"] });
+
+      // Snapshot the previous value for rollback
+      const previousQueries = queryClient.getQueriesData({ queryKey: ["trucks"] });
+
+      // Optimistically update the truck in all queries
+      queryClient.setQueriesData<{ trucks: Truck[]; total: number; page: number; per_page: number; pages: number }>(
+        { queryKey: ["trucks"] },
+        (old) => {
+          if (!old) return old;
+          
+          // Update the truck with optimistic data
+          const updatedTrucks = old.trucks.map((truck) =>
+            truck.id === Number(id) ? { ...truck, ...data } : truck
+          );
+          
+          return {
+            ...old,
+            trucks: updatedTrucks,
+          };
+        }
+      );
+
+      // Return context with snapshot for potential rollback
+      return { previousQueries };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSuccess: (data) => {
+      // Replace optimistic update with real data from server
+      queryClient.setQueriesData<{ trucks: Truck[]; total: number; page: number; per_page: number; pages: number }>(
+        { queryKey: ["trucks"] },
+        (old) => {
+          if (!old) return old;
+          
+          // Replace optimistic truck with real data
+          const updatedTrucks = old.trucks.map((truck) =>
+            truck.id === data.id ? data : truck
+          );
+          
+          return {
+            ...old,
+            trucks: updatedTrucks,
+          };
+        }
+      );
+      
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["trucks"] });
     },
   });

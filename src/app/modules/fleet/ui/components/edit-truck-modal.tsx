@@ -148,10 +148,12 @@ export function EditTruckModal({
         id: truck.id,
         data: values,
       });
+      // Only close modal and show success on actual success
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
       console.error("Failed to update truck:", err);
+      // Modal stays open to show error message
     }
   };
 
@@ -179,7 +181,7 @@ export function EditTruckModal({
             }}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-2">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
               {updateTruckMutation.error && (
                 <Alert
                   variant="destructive"
@@ -258,8 +260,11 @@ export function EditTruckModal({
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-[--radix-popover-trigger-width] p-0"
+                          className="p-0"
                           align="start"
+                          style={{
+                            width: "var(--radix-popover-trigger-width)",
+                          }}
                         >
                           <Command>
                             <CommandInput placeholder="Search type..." />
@@ -325,8 +330,11 @@ export function EditTruckModal({
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-[--radix-popover-trigger-width] p-0"
+                          className="p-0"
                           align="start"
+                          style={{
+                            width: "var(--radix-popover-trigger-width)",
+                          }}
                         >
                           <Command>
                             <CommandInput placeholder="Search status..." />
@@ -404,23 +412,43 @@ export function EditTruckModal({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Model (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || ""}
-                          className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 col-span-full">
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Model (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gps_device_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GPS Device ID (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || ""}
+                            className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4 col-span-full">
                   <FormField
@@ -485,24 +513,6 @@ export function EditTruckModal({
                       <FormLabel>Libre Key (Optional)</FormLabel>
                       <FormControl>
                         <Input
-                          {...field}
-                          value={field.value || ""}
-                          className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gps_device_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GPS Device ID (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
                           {...field}
                           value={field.value || ""}
                           className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"

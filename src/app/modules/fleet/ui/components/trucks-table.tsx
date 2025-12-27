@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { truckColumns, type TruckTableRow } from "../columns/truck-columns";
@@ -28,8 +28,12 @@ interface TrucksTableProps {
   onPageChange: (page: number) => void;
   onPerPageChange: (perPage: number) => void;
   onSearchChange: (search: string) => void;
+  onScrollChange?: (isScrolled: boolean) => void;
+  isScrolled?: boolean;
+  onPageCountChange?: (pageCount: number) => void;
   filterControls: React.ReactNode;
   headerActions?: React.ReactNode;
+  mobileAddButton?: React.ReactNode;
 }
 
 function TrucksTableContent({
@@ -41,8 +45,12 @@ function TrucksTableContent({
   onPageChange,
   onPerPageChange,
   onSearchChange,
+  onScrollChange,
+  isScrolled,
+  onPageCountChange,
   filterControls,
   headerActions,
+  mobileAddButton,
 }: TrucksTableProps) {
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
@@ -112,6 +120,13 @@ function TrucksTableContent({
   const total = trucksData?.total || 0;
   const totalPages = trucksData?.pages || 0;
 
+  // Notify parent of page count changes
+  useEffect(() => {
+    if (onPageCountChange) {
+      onPageCountChange(totalPages);
+    }
+  }, [totalPages, onPageCountChange]);
+
   return (
     <DataTable
       columns={truckColumns}
@@ -131,8 +146,11 @@ function TrucksTableContent({
       onPageChange={onPageChange}
       onSearchChange={onSearchChange}
       onPerPageChange={onPerPageChange}
+      onScrollChange={onScrollChange}
+      isScrolled={isScrolled}
       filterControls={filterControls}
       headerActions={headerActions}
+      mobileAddButton={mobileAddButton}
     />
   );
 }

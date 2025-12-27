@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,9 +21,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 export const FleetView = () => {
-  // Pagination state
+  // Pagination state - Use 10 for mobile, 5 for desktop
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(5);
+  const [perPage, setPerPage] = useState(10);
 
   // Filter state
   const [filters, setFilters] = useState<{
@@ -46,6 +46,8 @@ export const FleetView = () => {
   const [selectedTruck, setSelectedTruck] = useState<TruckType | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [pageCount, setPageCount] = useState(0);
 
   // Filter handlers
   const handleStatusFilter = (
@@ -94,10 +96,41 @@ export const FleetView = () => {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Prevent body scrolling on mobile to fix scroll chaining issue
+  useEffect(() => {
+    const handleResize = () => {
+      // Only prevent scrolling on mobile
+      if (window.innerWidth < 768) {
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Listen for resize events
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
+  // Reset scroll state when page or filters change
+  useEffect(() => {
+    setIsScrolled(false);
+  }, [page, filters]);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]  space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden">
+    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 touch-none md:touch-auto">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
             Fleet Management
@@ -108,19 +141,40 @@ export const FleetView = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Will be updated when data loads */}
-      <FleetStatsCardsWrapper page={page} perPage={perPage} filters={filters} />
+      {/* Stats Cards - Will be updated when data loads - Hide on mobile when scrolled or on last page */}
+      <div
+        className={`shrink-0 touch-none md:touch-auto transition-all duration-300 md:block ${
+          isScrolled || (pageCount > 0 && page === pageCount)
+            ? "hidden md:block"
+            : "block"
+        }`}
+      >
+        <FleetStatsCardsWrapper
+          page={page}
+          perPage={perPage}
+          filters={filters}
+        />
+      </div>
 
-      {/* Add Truck Button - Mobile only */}
-      <div className="block sm:hidden">
+      {/* Add Truck Button - Mobile only - Hide when scrolled or on last page */}
+      <div
+        className={`block sm:hidden shrink-0 transition-all duration-300 ${
+          isScrolled || (pageCount > 0 && page === pageCount)
+            ? "hidden"
+            : "block"
+        }`}
+      >
         <AddTruckModal onSuccess={handleSuccess} />
       </div>
 
       {/* Success/Error Alerts */}
-      {(createTruckMutation.error ||
-        updateTruckMutation.error ||
-        deleteTruckMutation.error) && (
-        <Alert variant="destructive" className="bg-red-50 border-red-100">
+      {((createTruckMutation.error as Error | null) ||
+        (updateTruckMutation.error as Error | null) ||
+        (deleteTruckMutation.error as Error | null)) && (
+        <Alert
+          variant="destructive"
+          className="bg-red-50 border-red-100 shrink-0"
+        >
           <XCircle className="h-4 w-4" />
           <AlertDescription>
             {createTruckMutation.error instanceof Error
@@ -134,45 +188,53 @@ export const FleetView = () => {
         </Alert>
       )}
       {success && (
-        <Alert className="bg-green-50 border-green-100 text-green-700">
+        <Alert className="bg-green-50 border-green-100 text-green-700 shrink-0">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
 
-      {/* Main Content - Table with Suspense */}
-      <TrucksTable
-        page={page}
-        perPage={perPage}
-        filters={filters}
-        onEdit={handleEditClick}
-        onDelete={handleDeleteClick}
-        onPageChange={(newPage) => setPage(newPage)}
-        onSearchChange={(search) => {
-          setFilters((prev) => ({
-            ...prev,
-            plate_number: search || null,
-          }));
-          setPage(1);
-        }}
-        onPerPageChange={(newPerPage) => {
-          setPerPage(newPerPage);
-          setPage(1);
-        }}
-        filterControls={
-          <FleetFilterControls
-            filters={filters}
-            onStatusFilter={handleStatusFilter}
-            onTypeFilter={handleTypeFilter}
-            onClearFilters={clearFilters}
-          />
-        }
-        headerActions={
-          <div className="hidden sm:block">
-            <AddTruckModal onSuccess={handleSuccess} />
-          </div>
-        }
-      />
+      {/* Main Content - Table with Suspense - Takes remaining space */}
+      <div className="flex-1 min-h-0 overflow-hidden shrink-0">
+        <TrucksTable
+          page={page}
+          perPage={perPage}
+          filters={filters}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
+          onPageChange={(newPage) => setPage(newPage)}
+          onSearchChange={(search) => {
+            setFilters((prev) => ({
+              ...prev,
+              plate_number: search || null,
+            }));
+            setPage(1);
+          }}
+          onPerPageChange={(newPerPage) => {
+            setPerPage(newPerPage);
+            setPage(1);
+          }}
+          onScrollChange={setIsScrolled}
+          isScrolled={isScrolled}
+          onPageCountChange={setPageCount}
+          filterControls={
+            <FleetFilterControls
+              filters={filters}
+              onStatusFilter={handleStatusFilter}
+              onTypeFilter={handleTypeFilter}
+              onClearFilters={clearFilters}
+            />
+          }
+          headerActions={
+            <div className="hidden sm:block">
+              <AddTruckModal onSuccess={handleSuccess} />
+            </div>
+          }
+          mobileAddButton={
+            <AddTruckModal onSuccess={handleSuccess} variant="icon-only" />
+          }
+        />
+      </div>
 
       {/* Edit Modal */}
       <EditTruckModal

@@ -131,6 +131,11 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     },
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
+      const statusString = status ? String(status) : "unknown";
+      const formattedStatus = statusString.replace(/_/g, " ");
+      const displayStatus =
+        formattedStatus.charAt(0).toUpperCase() + formattedStatus.slice(1);
+
       return (
         <div className="flex items-center">
           <Badge
@@ -147,8 +152,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
                 "bg-red-100 text-red-700 hover:bg-red-100"
             )}
           >
-            {status.replace(/_/g, " ").charAt(0).toUpperCase() +
-              status.replace(/_/g, " ").slice(1)}
+            {displayStatus}
           </Badge>
         </div>
       );

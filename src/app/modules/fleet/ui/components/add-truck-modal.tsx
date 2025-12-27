@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Loader2, XCircle, CheckIcon, ChevronsUpDownIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,13 +79,15 @@ const TRUCK_STATUSES = [
 
 interface AddTruckModalProps {
   onSuccess?: () => void;
+  variant?: "default" | "icon-only";
 }
 
-export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
+export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isTypePopoverOpen, setIsTypePopoverOpen] = useState(false);
   const [isStatusPopoverOpen, setIsStatusPopoverOpen] = useState(false);
+  const scrollableRef = useRef<HTMLDivElement>(null);
 
   const createTruckMutation = useCreateTruck();
 
@@ -120,6 +122,26 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
     }
   }, [isOpen]);
 
+  // Ensure scrollable area works properly when modal opens or step changes
+  useEffect(() => {
+    if (isOpen && scrollableRef.current) {
+      // Small delay to ensure layout is complete
+      const timer = setTimeout(() => {
+        if (scrollableRef.current) {
+          // Force browser to recalculate scrollable area
+          const element = scrollableRef.current;
+          element.style.overflow = "hidden";
+          requestAnimationFrame(() => {
+            if (element) {
+              element.style.overflow = "";
+            }
+          });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, step]);
+
   const validateStep1 = async () => {
     return await form.trigger(["vin", "plate_number"]);
   };
@@ -151,23 +173,49 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
 
     try {
       await createTruckMutation.mutateAsync(values);
+      // Only close modal, reset form, and show success on actual success
       setIsOpen(false);
       form.reset();
       onSuccess?.();
     } catch (err: any) {
+      // Error is already handled by the mutation's onError
+      // Just ensure it doesn't break the app - the error will be displayed in the Alert
       console.error("Failed to create truck:", err);
+      // Modal stays open to show error message
+      // Don't re-throw to prevent app crash
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full sm:w-auto bg-brand-primary hover:bg-brand-secondary h-11">
-          <Plus className="mr-2 h-4 w-4" /> Add New Truck
-        </Button>
+        {variant === "icon-only" ? (
+          <Button
+            className="h-9 w-full md:w-auto bg-brand-primary hover:bg-brand-secondary text-xs sm:text-sm px-2 sm:px-3 flex items-center justify-center"
+            title="Add New Truck"
+          >
+            <Plus className="mr-0.5 h-3.5 w-3.5" /> Add
+          </Button>
+        ) : (
+          <Button className="w-full sm:w-auto bg-brand-primary hover:bg-brand-secondary h-11">
+            <Plus className="mr-2 h-4 w-4" /> Add New Truck
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-w-[95vw] h-[500px] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 sm:p-6 pb-2">
+      <DialogContent
+        className={cn(
+          "sm:max-w-[600px] max-w-[95vw] flex flex-col p-0 overflow-hidden",
+          "top-[5%] sm:top-[50%] translate-y-0 sm:translate-y-[-50%]",
+          step === 1
+            ? "h-auto max-h-[70vh] sm:max-h-[400px]"
+            : step === 2
+            ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+            : step === 3
+            ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+            : "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+        )}
+      >
+        <DialogHeader className="p-4 sm:p-6 pb-2 shrink-0">
           <DialogTitle className="text-lg sm:text-xl">
             Add New Truck
           </DialogTitle>
@@ -199,9 +247,21 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                 e.preventDefault();
               }
             }}
-            className="flex-1 flex flex-col overflow-hidden"
+            className="flex-1 flex flex-col overflow-hidden min-h-0"
           >
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-2">
+            <div 
+              ref={scrollableRef}
+              className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 min-h-0 pb-2 touch-pan-y" 
+              style={{ 
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+                touchAction: "pan-y"
+              }}
+              onWheel={(e) => {
+                // Ensure wheel events work for scrolling
+                e.stopPropagation();
+              }}
+            >
               {createTruckMutation.error && (
                 <Alert
                   variant="destructive"
@@ -211,6 +271,8 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                   <AlertDescription className="text-sm">
                     {createTruckMutation.error instanceof Error
                       ? createTruckMutation.error.message
+                      : typeof createTruckMutation.error === "string"
+                      ? createTruckMutation.error
                       : "Failed to create truck. Please try again."}
                   </AlertDescription>
                 </Alert>
@@ -569,14 +631,14 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
               </div>
             </div>
 
-            <DialogFooter className="p-4 sm:p-6 pt-2 bg-background flex flex-row items-center justify-between sm:justify-between space-x-0 border-t">
-              <div className="flex gap-2">
+            <DialogFooter className="p-2 sm:p-6 pt-2 bg-background flex flex-row items-center justify-between sm:justify-between space-x-0 border-t shrink-0 sticky bottom-0 z-10">
+              <div className="flex gap-1.5 sm:gap-2">
                 {step > 1 && (
                   <Button
                     variant="outline"
                     type="button"
                     onClick={prevStep}
-                    className="h-11"
+                    className="h-9 sm:h-11 px-3 sm:px-4 text-xs sm:text-sm"
                   >
                     Back
                   </Button>
@@ -585,7 +647,7 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                   variant="ghost"
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="h-11"
+                  className="h-9 sm:h-11 px-3 sm:px-4 text-xs sm:text-sm"
                 >
                   Cancel
                 </Button>
@@ -595,7 +657,7 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                 <Button
                   type="button"
                   onClick={(e) => nextStep(e)}
-                  className="bg-brand-primary h-11 px-8"
+                  className="bg-brand-primary h-9 sm:h-11 px-4 sm:px-8 text-xs sm:text-sm"
                 >
                   Next Step
                 </Button>
@@ -603,10 +665,10 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                 <Button
                   type="submit"
                   disabled={createTruckMutation.isPending}
-                  className="bg-brand-primary hover:bg-brand-secondary text-white transition-all active:scale-[0.98] h-11 px-8"
+                  className="bg-brand-primary hover:bg-brand-secondary text-white transition-all active:scale-[0.98] h-9 sm:h-11 px-4 sm:px-8 text-xs sm:text-sm"
                 >
                   {createTruckMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                   )}
                   Add Truck
                 </Button>
