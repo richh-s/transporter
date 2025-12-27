@@ -75,7 +75,12 @@ export function FleetFilterControls({
             <CommandList>
               <CommandEmpty>No status found.</CommandEmpty>
               <CommandGroup>
-                <CommandItem onSelect={() => onStatusFilter("all")}>
+                <CommandItem
+                  onSelect={() => {
+                    onStatusFilter("all");
+                    setIsStatusFilterOpen(false);
+                  }}
+                >
                   <CheckIcon
                     className={cn(
                       "mr-2 h-4 w-4",
@@ -125,7 +130,12 @@ export function FleetFilterControls({
             <CommandList>
               <CommandEmpty>No type found.</CommandEmpty>
               <CommandGroup>
-                <CommandItem onSelect={() => onTypeFilter("all")}>
+                <CommandItem
+                  onSelect={() => {
+                    onTypeFilter("all");
+                    setIsTypeFilterOpen(false);
+                  }}
+                >
                   <CheckIcon
                     className={cn(
                       "mr-2 h-4 w-4",

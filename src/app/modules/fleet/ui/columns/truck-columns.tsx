@@ -23,14 +23,13 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     enableHiding: false, // Always visible on mobile
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
+        <span
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-0 text-xs sm:text-sm w-full justify-start -ml-1 sm:ml-0"
+          className="text-xs sm:text-sm flex items-center cursor-pointer px-1 "
         >
           <span className="hidden sm:inline">Plate / </span>VIN
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
+        </span>
       );
     },
     cell: ({ row }) => {
@@ -55,14 +54,13 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     id: "truck_type",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
+        <span
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-1 sm:px-2 lg:px-3 text-xs sm:text-sm"
+          className="text-xs sm:text-sm flex items-center cursor-pointer px-1 "
         >
           Type
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
+        </span>
       );
     },
     cell: ({ row }) => {
@@ -77,9 +75,9 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     accessorKey: "make",
     id: "make",
     header: () => (
-      <div className="text-xs sm:text-sm whitespace-nowrap px-0">
+      <span className="text-xs sm:text-sm whitespace-nowrap flex items-center px-1 ">
         Make / Model
-      </div>
+      </span>
     ),
     cell: ({ row }) => {
       const truck = row.original;
@@ -100,14 +98,13 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     id: "capacity_quintal",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
+        <span
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-0 text-xs sm:text-sm whitespace-nowrap w-full justify-start -ml-1 sm:ml-0"
+          className="text-xs sm:text-sm whitespace-nowrap flex items-center cursor-pointer px-1 "
         >
           Capacity
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
+        </span>
       );
     },
     cell: ({ row }) => {
@@ -123,14 +120,13 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     id: "status",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
+        <span
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-0 text-xs sm:text-sm whitespace-nowrap w-full justify-start"
+          className="text-xs sm:text-sm whitespace-nowrap flex items-center cursor-pointer px-1 "
         >
           Status
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </Button>
+        </span>
       );
     },
     cell: ({ row }) => {

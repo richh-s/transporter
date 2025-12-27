@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { truckColumns, type TruckTableRow } from "../columns/truck-columns";
-import { Card, CardContent } from "@/components/ui/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   truckApi,
@@ -30,6 +29,7 @@ interface TrucksTableProps {
   onPerPageChange: (perPage: number) => void;
   onSearchChange: (search: string) => void;
   filterControls: React.ReactNode;
+  headerActions?: React.ReactNode;
 }
 
 function TrucksTableContent({
@@ -42,6 +42,7 @@ function TrucksTableContent({
   onPerPageChange,
   onSearchChange,
   filterControls,
+  headerActions,
 }: TrucksTableProps) {
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
@@ -131,6 +132,7 @@ function TrucksTableContent({
       onSearchChange={onSearchChange}
       onPerPageChange={onPerPageChange}
       filterControls={filterControls}
+      headerActions={headerActions}
     />
   );
 }
@@ -146,12 +148,8 @@ function TrucksTableLoading() {
 
 export function TrucksTable(props: TrucksTableProps) {
   return (
-    <Card className="overflow-hidden flex-1 flex flex-col min-h-0">
-      <CardContent className="p-4 sm:p-6 overflow-x-hidden flex-1 flex flex-col min-h-0">
-        <Suspense fallback={<TrucksTableLoading />}>
-          <TrucksTableContent {...props} />
-        </Suspense>
-      </CardContent>
-    </Card>
+    <Suspense fallback={<TrucksTableLoading />}>
+      <TrucksTableContent {...props} />
+    </Suspense>
   );
 }

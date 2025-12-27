@@ -63,6 +63,8 @@ interface DataTableProps<TData, TValue> {
   manualFiltering?: boolean;
   // Filter controls
   filterControls?: React.ReactNode;
+  // Header actions (e.g., Add button)
+  headerActions?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -81,6 +83,7 @@ export function DataTable<TData, TValue>({
   manualPagination = false,
   manualFiltering = false,
   filterControls,
+  headerActions,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -91,6 +94,7 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [isPerPageOpen, setIsPerPageOpen] = React.useState(false);
+  const [isColumnsOpen, setIsColumnsOpen] = React.useState(false);
 
   // Handle search change for server-side filtering
   const handleSearchChange = (value: string) => {
@@ -106,7 +110,9 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: manualPagination
+      ? undefined
+      : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -131,7 +137,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full h-full flex flex-col space-y-3 sm:space-y-4 overflow-hidden">
+    <div className="w-full h-full flex flex-col space-y-3 sm:space-y-3 overflow-hidden">
       {/* Search and Filters - Fixed, no scroll */}
       <div className="space-y-3 flex-shrink-0 overflow-x-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -146,94 +152,111 @@ export function DataTable<TData, TValue>({
             )}
             {filterControls}
           </div>
+          {headerActions && (
+            <div className="w-full sm:w-auto">{headerActions}</div>
+          )}
         </div>
       </div>
 
-      {/* Table - Only this section scrolls horizontally and vertically */}
-      <div 
-        className="rounded-md border overflow-x-auto overflow-y-auto w-full scrollbar-hide flex-1 min-h-0" 
-        style={{ 
-          maxHeight: 'calc(100vh - 300px)'
-        }}
-      >
-        <div className="min-w-full">
-          <Table className="min-w-full w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, index) => {
-                  const isSticky = header.column.columnDef.meta?.sticky;
-                  return (
-                    <TableHead 
-                      key={header.id}
-                      className={cn(
-                        isSticky && "sticky left-0 z-10 bg-background border-r",
-                        "px-1 sm:px-2"
-                      )}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
+      {/* Table - Mobile: fixed header and pagination, scrollable body. Desktop: scrollable container */}
+      <div className="rounded-md border w-full flex flex-col h-[200px] sm:h-[380px] overflow-hidden">
+        {/* Table Container - Single scrollable container for header and body */}
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto scrollbar-hide">
+          <div className="min-w-full">
+            <Table className="min-w-full w-full">
+              <TableHeader className="bg-background sticky top-0 z-20">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-b">
+                    {headerGroup.headers.map((header, index) => {
+                      const isSticky = (header.column.columnDef.meta as any)
+                        ?.sticky;
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "bg-background",
+                            isSticky &&
+                              "sticky left-0 z-30 bg-background border-r",
+                            index === 0
+                              ? "pl-0 sm:pl-1 pr-1 sm:pr-2"
+                              : "pl-1 sm:pl-2 pr-1 sm:pr-2",
+                            "align-middle"
                           )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const isSticky = cell.column.columnDef.meta?.sticky;
-                    return (
-                      <TableCell 
-                        key={cell.id}
-                        className={cn(
-                          isSticky && "sticky left-0 z-10 bg-background border-r"
-                        )}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                        >
+                          <div className="flex items-center h-full">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </div>
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const isSticky = (cell.column.columnDef.meta as any)
+                          ?.sticky;
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              isSticky &&
+                                "sticky left-0 z-10 bg-background border-r",
+                              "align-middle"
+                            )}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 
       {/* Pagination - Fixed, no scroll */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 pb-2 sm:pb-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 flex-shrink-0 mt-2 sm:mt-0">
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <div className="text-muted-foreground hidden sm:block">
             {total !== undefined
-              ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(page * perPage, total)} of ${total}`
+              ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(
+                  page * perPage,
+                  total
+                )} of ${total}`
               : `${table.getFilteredRowModel().rows.length} total`}
           </div>
           {onPerPageChange && (
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Per page:</span>
+              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                Per page:
+              </span>
               <Popover open={isPerPageOpen} onOpenChange={setIsPerPageOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -245,7 +268,11 @@ export function DataTable<TData, TValue>({
                     <ChevronsUpDown className="ml-1.5 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0 w-[70px] sm:w-[80px]" align="start" sideOffset={4}>
+                <PopoverContent
+                  className="p-0 w-[70px] sm:w-[80px]"
+                  align="start"
+                  sideOffset={4}
+                >
                   <Command>
                     <CommandList>
                       <CommandGroup>
@@ -274,9 +301,12 @@ export function DataTable<TData, TValue>({
               </Popover>
             </div>
           )}
-          <DropdownMenu>
+          <DropdownMenu open={isColumnsOpen} onOpenChange={setIsColumnsOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 sm:h-9 text-xs sm:text-sm">
+              <Button
+                variant="outline"
+                className="h-8 sm:h-9 text-xs sm:text-sm"
+              >
                 Columns <ChevronDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -290,9 +320,10 @@ export function DataTable<TData, TValue>({
                       key={column.id}
                       className="capitalize text-xs sm:text-sm"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
+                      onCheckedChange={(value) => {
+                        column.toggleVisibility(!!value);
+                        setIsColumnsOpen(false);
+                      }}
                     >
                       {column.id}
                     </DropdownMenuCheckboxItem>
@@ -355,4 +386,3 @@ export function DataTable<TData, TValue>({
     </div>
   );
 }
-

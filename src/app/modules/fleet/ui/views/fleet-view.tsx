@@ -23,7 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export const FleetView = () => {
   // Pagination state
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(5);
 
   // Filter state
   const [filters, setFilters] = useState<{
@@ -95,12 +95,12 @@ export const FleetView = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden">
+    <div className="flex flex-col h-[calc(100vh-8rem)]  space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-            <span className="text-brand-accent">WeTruck</span> Fleet Management
+            Fleet Management
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Manage your trucks and fleet capacity.
@@ -111,8 +111,10 @@ export const FleetView = () => {
       {/* Stats Cards - Will be updated when data loads */}
       <FleetStatsCardsWrapper page={page} perPage={perPage} filters={filters} />
 
-      {/* Add Truck Button */}
-      <AddTruckModal onSuccess={handleSuccess} />
+      {/* Add Truck Button - Mobile only */}
+      <div className="block sm:hidden">
+        <AddTruckModal onSuccess={handleSuccess} />
+      </div>
 
       {/* Success/Error Alerts */}
       {(createTruckMutation.error ||
@@ -164,6 +166,11 @@ export const FleetView = () => {
             onTypeFilter={handleTypeFilter}
             onClearFilters={clearFilters}
           />
+        }
+        headerActions={
+          <div className="hidden sm:block">
+            <AddTruckModal onSuccess={handleSuccess} />
+          </div>
         }
       />
 

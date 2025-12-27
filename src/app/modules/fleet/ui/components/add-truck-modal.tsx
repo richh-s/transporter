@@ -162,7 +162,7 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-brand-primary hover:bg-brand-secondary h-11">
+        <Button className="w-full sm:w-auto bg-brand-primary hover:bg-brand-secondary h-11">
           <Plus className="mr-2 h-4 w-4" /> Add New Truck
         </Button>
       </DialogTrigger>
