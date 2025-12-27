@@ -64,7 +64,16 @@ function TrucksTableContent({
       const response = await truckApi.getTrucks(params);
 
       if (!response.data) {
-        throw new Error(response.error || "Failed to fetch trucks");
+        const errorMessage = response.error || "Failed to fetch trucks";
+        const statusMessage = response.status
+          ? ` (Status: ${response.status})`
+          : "";
+        console.error("❌ Failed to fetch trucks:", {
+          error: errorMessage,
+          status: response.status,
+          params,
+        });
+        throw new Error(`${errorMessage}${statusMessage}`);
       }
 
       const data = response.data;

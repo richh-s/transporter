@@ -1,17 +1,29 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useTruck } from "@/app/modules/fleet/server/hooks";
+import {
+  useTruck,
+  useTruckDocuments,
+  useUploadTruckDocument,
+  useDeleteTruckDocument,
+} from "@/app/modules/fleet/server/hooks";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { EditTruckModal, DeleteTruckModal } from "../components";
+import {
+  EditTruckModal,
+  DeleteTruckModal,
+  UploadDocumentModal,
+} from "../components";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Truck } from "@/lib/api/trucks";
+import { DataTable } from "@/components/ui/data-table";
+import { documentColumns } from "../columns/document-columns";
+import type { DocumentTableRow } from "../columns/document-columns";
 
 interface TruckDetailContentProps {
   id: string;
@@ -23,6 +35,12 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
   const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  const { data: documents, isLoading: documentsLoading } =
+    useTruckDocuments(id);
+  const uploadDocumentMutation = useUploadTruckDocument();
+  const deleteDocumentMutation = useDeleteTruckDocument();
 
   const handleSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["truck", id] });
@@ -53,196 +71,308 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     });
   };
 
+  const handleUploadDocument = async (file: File, documentType: string) => {
+    await uploadDocumentMutation.mutateAsync({
+      truckId: id,
+      file,
+      documentType,
+    });
+    // Invalidate documents query to refresh the list
+    queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
+  };
+
+  const handleDeleteDocument = async (documentId: number) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+      try {
+        await deleteDocumentMutation.mutateAsync({
+          truckId: id,
+          documentId: String(documentId),
+        });
+      } catch (error: any) {
+        console.error("Failed to delete document:", error);
+      }
+    }
+  };
+
+  const handleViewDocument = (url: string) => {
+    window.open(url, "_blank");
+  };
+
+  // Prevent body scrolling on mobile to fix scroll chaining issue
+  useEffect(() => {
+    const handleResize = () => {
+      // Only prevent scrolling on mobile
+      if (window.innerWidth < 768) {
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Listen for resize events
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
+    <div className="flex flex-col h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/fleet")}
-            className="h-9"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Fleet
-          </Button>
+      <div className="space-y-3 pb-2 border-b shrink-0 touch-none md:touch-auto">
+        <div className="flex flex-row items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-              <span className="text-brand-accent">WeTruck</span> Truck Details
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
+              Truck Details
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground">
               View and manage truck information
             </p>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              className="h-8 text-xs"
+            >
+              <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-8 text-xs text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditModalOpen(true)}
-            className="h-9"
-          >
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="h-9 text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/fleet")}
+          className="h-8"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+          Back
+        </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Plate Number
-              </label>
-              <p className="text-sm sm:text-base font-semibold text-brand-primary mt-1">
-                {truck.plate_number}
-              </p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                VIN
-              </label>
-              <p className="text-sm sm:text-base font-mono mt-1">{truck.vin}</p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Status
-              </label>
-              <div className="mt-1">
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "font-semibold text-xs sm:text-sm",
-                    getStatusColor(truck.status)
-                  )}
-                >
-                  {truck.status.replace(/_/g, " ").charAt(0).toUpperCase() +
-                    truck.status.replace(/_/g, " ").slice(1)}
-                </Badge>
-              </div>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Truck Type
-              </label>
-              <p className="text-sm sm:text-base capitalize mt-1">
-                {truck.truck_type}
-              </p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Registration Date
-              </label>
-              <p className="text-sm sm:text-base mt-1">
-                {formatDate(truck.registration_date)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vehicle Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Vehicle Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Make
-              </label>
-              <p className="text-sm sm:text-base mt-1">{truck.make || "—"}</p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Model
-              </label>
-              <p className="text-sm sm:text-base mt-1">{truck.model || "—"}</p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Year
-              </label>
-              <p className="text-sm sm:text-base mt-1">{truck.year || "—"}</p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Color
-              </label>
-              <p className="text-sm sm:text-base capitalize mt-1">
-                {truck.color || "—"}
-              </p>
-            </div>
-            <div>
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Capacity
-              </label>
-              <p className="text-sm sm:text-base font-semibold mt-1">
-                {truck.capacity_quintal} Q
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Additional Information */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                  Government ID
-                </label>
-                <p className="text-sm sm:text-base mt-1">
-                  {truck.gov_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                  GPS Device ID
-                </label>
-                <p className="text-sm sm:text-base mt-1">
-                  {truck.gps_device_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                  Libre Key
-                </label>
-                <p className="text-sm sm:text-base mt-1">
-                  {truck.libre_key || "—"}
-                </p>
-              </div>
-              {truck.created_at && (
+      {/* Main Content - Scrollable */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y scrollbar-hide"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
+        }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pb-4">
+          {/* Basic Information */}
+          <Card className="p-2 flex flex-col gap-2">
+            <CardHeader className="p-0">
+              <CardTitle className="text-[10px] font-semibold">
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-muted-foreground">
-                    Created At
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Plate Number
                   </label>
-                  <p className="text-sm sm:text-base mt-1">
-                    {formatDate(truck.created_at)}
+                  <p className="text-xs font-semibold text-brand-primary mt-0 leading-none">
+                    {truck.plate_number}
                   </p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    VIN
+                  </label>
+                  <p className="text-xs font-mono mt-0 leading-none">
+                    {truck.vin}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Status
+                  </label>
+                  <div className="mt-0">
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "font-semibold text-[10px] px-0.5 py-0 h-3.5",
+                        getStatusColor(truck.status)
+                      )}
+                    >
+                      {truck.status
+                        ? truck.status
+                            .replace(/_/g, " ")
+                            .charAt(0)
+                            .toUpperCase() +
+                          truck.status.replace(/_/g, " ").slice(1)
+                        : "Unknown"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Truck Type
+                  </label>
+                  <p className="text-xs capitalize mt-0 leading-none">
+                    {truck.truck_type}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Registration Date
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {formatDate(truck.registration_date)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vehicle Details */}
+          <Card className="p-2 flex flex-col gap-2">
+            <CardHeader className="p-0">
+              <CardTitle className="text-[10px] font-semibold">
+                Vehicle Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Make
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.make || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Model
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.model || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Year
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.year || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Color
+                  </label>
+                  <p className="text-xs capitalize mt-0 leading-none">
+                    {truck.color || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Capacity
+                  </label>
+                  <p className="text-xs font-semibold mt-0 leading-none">
+                    {truck.capacity_quintal} Q
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Information */}
+          <Card className="p-2 flex flex-col gap-2">
+            <CardHeader className="p-0">
+              <CardTitle className="text-[10px] font-semibold">
+                Additional Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Government ID
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.gov_id || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    GPS Device ID
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.gps_device_id || "—"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                    Libre Key
+                  </label>
+                  <p className="text-xs mt-0 leading-none">
+                    {truck.libre_key || "—"}
+                  </p>
+                </div>
+                {truck.created_at && (
+                  <div>
+                    <label className="text-[10px] font-medium text-muted-foreground leading-none">
+                      Created At
+                    </label>
+                    <p className="text-xs mt-0 leading-none">
+                      {formatDate(truck.created_at)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Documents Section */}
+        <div className="space-y-3 mt-4 sm:mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold">Documents</h2>
+            <Button onClick={() => setIsUploadModalOpen(true)} className="h-8">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Document
+            </Button>
+          </div>
+
+          {/* Documents Table */}
+          <DataTable
+            columns={documentColumns(
+              handleViewDocument,
+              handleDeleteDocument,
+              deleteDocumentMutation.isPending
+            )}
+            data={(documents || []) as DocumentTableRow[]}
+            searchKey="document_type"
+            searchPlaceholder="Search documents..."
+            // Client-side pagination
+            manualPagination={false}
+            perPage={10}
+            isLoading={documentsLoading}
+          />
+        </div>
       </div>
 
       {/* Edit Modal */}
@@ -262,6 +392,14 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
           handleSuccess();
           router.push("/fleet");
         }}
+      />
+
+      {/* Upload Document Modal */}
+      <UploadDocumentModal
+        isOpen={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        onUpload={handleUploadDocument}
+        isUploading={uploadDocumentMutation.isPending}
       />
     </div>
   );
@@ -287,4 +425,3 @@ export function TruckDetailView({ id }: TruckDetailViewProps) {
     </Suspense>
   );
 }
-

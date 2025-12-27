@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Truck,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -84,6 +85,8 @@ interface DataTableProps<TData, TValue> {
   isScrolled?: boolean;
   // Mobile add button (shown in filter area when scrolled)
   mobileAddButton?: React.ReactNode;
+  // Loading state
+  isLoading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -106,6 +109,7 @@ export function DataTable<TData, TValue>({
   onScrollChange,
   isScrolled,
   mobileAddButton,
+  isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -416,7 +420,14 @@ export function DataTable<TData, TValue>({
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="grid grid-cols-2 gap-2 p-1 pb-2">
-          {visibleRows.length ? (
+          {isLoading ? (
+            <div className="col-span-2 flex items-center justify-center py-8">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Loading...</span>
+              </div>
+            </div>
+          ) : visibleRows.length ? (
             <>
               {visibleRows.map((row) => (
                 <MobileCardView key={row.id} row={row} />
@@ -506,7 +517,21 @@ export function DataTable<TData, TValue>({
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows?.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          Loading...
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}

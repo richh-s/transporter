@@ -119,5 +119,85 @@ export const truckApi = {
       method: "DELETE",
     });
   },
+
+  /**
+   * Upload a document for a truck
+   */
+  uploadDocument: async (id: string, file: File, documentType: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("document_type", documentType);
+
+    const response = await fetch(`${API_URL}/truck/${id}/documents`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to upload document",
+        status,
+      };
+    }
+
+    return { data: result as string, status };
+  },
+
+  /**
+   * Get documents for a truck
+   */
+  getDocuments: async (id: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    
+    const response = await fetch(`${API_URL}/truck/${id}/documents`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to get documents",
+        status,
+      };
+    }
+
+    // API returns an array of documents
+    return { data: Array.isArray(result) ? result : [], status };
+  },
+
+  /**
+   * Delete a document for a truck
+   */
+  deleteDocument: async (id: string, documentId: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    
+    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    const status = response.status;
+
+    if (!response.ok) {
+      const text = await response.text();
+      const result = text ? JSON.parse(text) : undefined;
+      return {
+        error: result?.detail || result?.message || "Failed to delete document",
+        status,
+      };
+    }
+
+    return { data: { success: true }, status };
+  },
 };
 
