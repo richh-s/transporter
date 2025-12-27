@@ -21,7 +21,7 @@ export interface CreateGPSDeviceRequest {
   device_name?: string;
   device_model?: string;
   expire_date: string; // ISO 8601 datetime
-  last_synced_at: string; // ISO 8601 datetime
+  last_synced_at: string; // ISO 8601 datetime (required, cannot be null)
   status?: boolean;
   truck_id: number;
 }
@@ -32,7 +32,7 @@ export interface UpdateGPSDeviceRequest {
   device_name?: string;
   device_model?: string;
   expire_date?: string; // ISO 8601 datetime
-  last_synced_at?: string; // ISO 8601 datetime
+  last_synced_at?: string; // ISO 8601 datetime (required, cannot be null - keep existing value if not updating)
   status?: boolean;
   truck_id?: number; // Use 0 to unlink, or truck_id to assign
 }
@@ -75,7 +75,10 @@ export interface GPSDeviceFilters {
 
 export interface Truck {
   id: number;
-  license_plate: string;
+  license_plate?: string;
+  license_plate_number?: string;
+  plate_number?: string;
+  gps_device_id?: number | null; // GPS device ID if assigned, null if unassigned
   // Add other truck fields as needed
 }
 

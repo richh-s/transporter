@@ -5,6 +5,7 @@ export interface Truck {
     license_plate?: string;
     license_plate_number?: string;
     plate_number?: string;
+    gps_device_id?: number | null; // GPS device ID if assigned, null if unassigned
     // Add other truck fields as needed based on your API response
 }
 

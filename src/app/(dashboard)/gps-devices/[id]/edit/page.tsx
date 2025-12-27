@@ -36,7 +36,7 @@ import {
   useGPSDevice,
   useUpdateGPSDevice,
 } from "@/hooks/use-gps-devices";
-import { useTrucks } from "@/hooks/use-trucks";
+import { useUnassignedTrucks } from "@/hooks/use-trucks";
 
 const formSchema = z.object({
   external_device_id: z
@@ -50,12 +50,12 @@ const formSchema = z.object({
   device_name: z.string().max(255).optional().or(z.literal("")),
   device_model: z.string().max(255).optional().or(z.literal("")),
   expire_date: z.date({
-    required_error: "Expire date is required",
+    message: "Expire date is required",
   }),
   last_synced_at: z.date().optional(), // Will be set automatically to now()
   status: z.boolean(),
   truck_id: z.number().optional(),
-  unlink_truck: z.boolean().default(false),
+  unlink_truck: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -66,7 +66,8 @@ export default function EditGPSDevicePage() {
   const id = Number(params.id);
 
   const { data: device, isLoading } = useGPSDevice(id);
-  const { data: trucks = [], isLoading: loadingTrucks } = useTrucks();
+  // Include current truck in unassigned list if it exists (so user can keep it or change it)
+  const { data: trucks = [], isLoading: loadingTrucks } = useUnassignedTrucks(device?.truck_id);
   const updateMutation = useUpdateGPSDevice();
   const hasPopulatedForm = useRef(false);
 
@@ -115,21 +116,27 @@ export default function EditGPSDevicePage() {
       device_name: values.device_name || undefined,
       device_model: values.device_model || undefined,
       expire_date: values.expire_date.toISOString(),
-      last_synced_at: new Date().toISOString(), // Automatically set to current time
       status: values.status,
     };
 
     // Handle truck assignment
     if (values.unlink_truck) {
       updateData.truck_id = 0;
+      // Don't update last_synced_at when unlinked - keep existing value (cannot be null)
     } else if (values.truck_id) {
       updateData.truck_id = values.truck_id;
+      // Update last_synced_at to now() when assigning/reassigning to a truck
+      updateData.last_synced_at = new Date().toISOString();
     }
+    // If no truck selected and not unlinked, don't update truck_id or last_synced_at
 
     updateMutation.mutate(
       { id, data: updateData },
       {
         onSuccess: (updatedDevice) => {
+          // Log for debugging
+          console.log("Updated device:", updatedDevice);
+          console.log("Truck ID:", updatedDevice.truck_id);
           router.push(`/gps-devices/${updatedDevice.id}`);
         },
       }
@@ -379,12 +386,12 @@ export default function EditGPSDevicePage() {
                           onValueChange={(value) =>
                             field.onChange(Number(value))
                           }
-                          value={field.value?.toString()}
+                          value={field.value?.toString() || undefined}
                           disabled={loadingTrucks}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a truck (optional)" />
+                              <SelectValue placeholder={device?.truck_id ? `Truck #${device.truck_id} (current)` : "Select a truck (optional)"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -393,11 +400,11 @@ export default function EditGPSDevicePage() {
                                 Loading trucks...
                               </SelectItem>
                             ) : trucks.length === 0 ? (
-                              <SelectItem value="no-trucks" disabled>
-                                No trucks available
+                              <SelectItem value="no-trucks" disabled className="text-red-500">
+                                No available truck to assign
                               </SelectItem>
                             ) : (
-                              trucks.map((truck) => (
+                              trucks.map((truck: { id: number; license_plate?: string; license_plate_number?: string; plate_number?: string }) => (
                                 <SelectItem
                                   key={truck.id}
                                   value={truck.id.toString()}
@@ -409,9 +416,13 @@ export default function EditGPSDevicePage() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          {trucks.length === 0 && !loadingTrucks
-                            ? "No trucks found. Please check your API endpoint configuration or ensure you have trucks in your fleet."
-                            : "Select a different truck to reassign this device"}
+                          {trucks.length === 0 && !loadingTrucks ? (
+                            <span className="text-red-500">
+                              No available truck to assign. All trucks are currently assigned to GPS devices.
+                            </span>
+                          ) : (
+                            "Select a different truck to reassign this device"
+                          )}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

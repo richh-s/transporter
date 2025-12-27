@@ -72,6 +72,12 @@ export class GPSDeviceService {
             throw new Error("Failed to fetch GPS devices");
         }
 
+        // Debug: Log response to check if truck_id is included
+        if (process.env.NODE_ENV === "development" && data.items.length > 0) {
+            console.log("GPS Devices API Response:", data);
+            console.log("First device truck_id:", data.items[0]?.truck_id);
+        }
+
         return data;
     }
 
@@ -92,6 +98,12 @@ export class GPSDeviceService {
 
         if (!data) {
             throw new Error("Failed to fetch GPS device");
+        }
+
+        // Debug logging
+        if (process.env.NODE_ENV === "development") {
+            console.log(`[GPS Device API] Device ${id} detail response:`, data);
+            console.log(`[GPS Device API] Device ${id} truck_id:`, data.truck_id);
         }
 
         return data;

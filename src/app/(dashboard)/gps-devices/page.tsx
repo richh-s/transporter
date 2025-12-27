@@ -73,6 +73,12 @@ export default function GPSDevicesPage() {
   const total = devicesResponse?.total || 0;
   const pages = devicesResponse?.pages || 0;
 
+  // Debug: Log device data to check truck_id
+  if (devices.length > 0 && process.env.NODE_ENV === "development") {
+    console.log("GPS Devices in table:", devices);
+    console.log("Device with ID 6:", devices.find((d) => d.id === 6));
+  }
+
   const handleApplyFilters = () => {
     setAppliedFilters(filters);
     setPage(1);
@@ -236,6 +242,7 @@ export default function GPSDevicesPage() {
                       <TableHead>IMEI Number</TableHead>
                       <TableHead>Device Name</TableHead>
                       <TableHead>Device Model</TableHead>
+                      <TableHead>Truck</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Expire Date</TableHead>
                       <TableHead>Last Synced</TableHead>
@@ -267,6 +274,17 @@ export default function GPSDevicesPage() {
                           {device.device_model || (
                             <span className="text-muted-foreground">
                               N/A
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {device.truck_id ? (
+                            <span className="font-medium text-green-600">
+                              Assigned
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Unassigned
                             </span>
                           )}
                         </TableCell>

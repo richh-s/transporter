@@ -5,8 +5,10 @@ import type {
   CreateGPSDeviceRequest,
   UpdateGPSDeviceRequest,
   GPSDeviceFilters,
+  GPSDeviceListResponse,
 } from "@/types/gps-device";
 import { toast } from "sonner";
+import { truckKeys } from "./use-trucks";
 
 // Query keys
 export const gpsDeviceKeys = {
@@ -29,6 +31,10 @@ export function useGPSDevices(
   return useQuery({
     queryKey: gpsDeviceKeys.list(filters, page, perPage),
     queryFn: () => GPSDeviceService.listDevices(page, perPage, filters),
+    staleTime: 0, // Data is immediately stale, will refetch when needed
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch when network reconnects
   });
 }
 
@@ -40,6 +46,10 @@ export function useGPSDevice(id: number) {
     queryKey: gpsDeviceKeys.detail(id),
     queryFn: () => GPSDeviceService.getDevice(id),
     enabled: !!id,
+    staleTime: 0, // Data is immediately stale, will refetch when needed
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch when network reconnects
   });
 }
 
@@ -57,6 +67,11 @@ export function useCreateGPSDevice() {
       queryClient.invalidateQueries({ queryKey: gpsDeviceKeys.lists() });
       // Add the new device to cache
       queryClient.setQueryData(gpsDeviceKeys.detail(device.id), device);
+      // Invalidate unassigned trucks cache since a truck was just assigned
+      queryClient.invalidateQueries({
+        queryKey: truckKeys.unassigned(),
+        refetchType: 'active'
+      });
       toast.success("GPS device created successfully");
     },
     onError: (error: Error) => {
@@ -82,8 +97,46 @@ export function useUpdateGPSDevice() {
     onSuccess: (device) => {
       // Update the device in cache
       queryClient.setQueryData(gpsDeviceKeys.detail(device.id), device);
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: gpsDeviceKeys.lists() });
+
+      // Update all list queries in cache with the new device data
+      // This ensures truck_id is immediately visible even if list API doesn't return it
+      queryClient.setQueriesData(
+        { queryKey: gpsDeviceKeys.lists() },
+        (oldData: GPSDeviceListResponse | undefined) => {
+          if (!oldData) return oldData;
+
+          // Find and update the device in the items array
+          const updatedItems = oldData.items.map((item: GPSDevice) =>
+            item.id === device.id
+              ? { ...item, truck_id: device.truck_id }
+              : item
+          );
+
+          return {
+            ...oldData,
+            items: updatedItems,
+          };
+        }
+      );
+
+      // Also invalidate to refetch in background (in case backend adds truck_id later)
+      queryClient.invalidateQueries({
+        queryKey: gpsDeviceKeys.lists(),
+        refetchType: 'active'
+      });
+
+      // Invalidate unassigned trucks cache since assignment changed
+      // Force refetch immediately (don't use cache)
+      queryClient.invalidateQueries({
+        queryKey: truckKeys.unassigned(),
+        refetchType: 'active'
+      });
+
+      // Also remove from cache to force fresh fetch
+      queryClient.removeQueries({
+        queryKey: truckKeys.unassigned()
+      });
+
       toast.success("GPS device updated successfully");
     },
     onError: (error: Error) => {

@@ -28,9 +28,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { GPSDeviceService } from "@/lib/gps-device-api";
-import { fetchTrucks } from "@/lib/trucks-api";
-import type { Truck } from "@/lib/trucks-api";
+import { useUnassignedTrucks } from "@/hooks/use-trucks";
+import { useCreateGPSDevice } from "@/hooks/use-gps-devices";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -59,7 +58,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function CreateGPSDevicePage() {
   const router = useRouter();
-  const { data: trucks = [], isLoading: loadingTrucks } = useTrucks();
+  const { data: trucks = [], isLoading: loadingTrucks } = useUnassignedTrucks();
   const createMutation = useCreateGPSDevice();
 
   const form = useForm<FormValues>({
@@ -83,9 +82,10 @@ export default function CreateGPSDevicePage() {
       device_name: values.device_name || undefined,
       device_model: values.device_model || undefined,
       expire_date: values.expire_date.toISOString(),
-      last_synced_at: new Date().toISOString(), // Automatically set to current time
+      // Always set last_synced_at to now() when creating (required field, cannot be null)
+      last_synced_at: new Date().toISOString(),
       status: values.status,
-      truck_id: values.truck_id,
+      truck_id: values.truck_id!,
     };
 
     createMutation.mutate(deviceData, {
@@ -196,8 +196,8 @@ export default function CreateGPSDevicePage() {
                                 Loading trucks...
                               </SelectItem>
                             ) : trucks.length === 0 ? (
-                              <SelectItem value="no-trucks" disabled>
-                                No trucks available
+                              <SelectItem value="no-trucks" disabled className="text-red-500">
+                                No available truck to assign
                               </SelectItem>
                             ) : (
                               trucks.map((truck) => (
@@ -212,9 +212,13 @@ export default function CreateGPSDevicePage() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          {trucks.length === 0 && !loadingTrucks
-                            ? "No trucks found. Please check your API endpoint configuration or ensure you have trucks in your fleet."
-                            : "Truck must belong to your organization"}
+                          {trucks.length === 0 && !loadingTrucks ? (
+                            <span className="text-red-500">
+                              No available truck to assign. All trucks are currently assigned to GPS devices.
+                            </span>
+                          ) : (
+                            "Select a truck to assign this GPS device to"
+                          )}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -353,7 +357,7 @@ export default function CreateGPSDevicePage() {
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/gps-devices")}
-                  disabled={submitting}
+                  disabled={createMutation.isPending}
                 >
                   Cancel
                 </Button>

@@ -221,13 +221,24 @@ export default function GPSDeviceDetailPage() {
             <label className="text-sm font-medium text-muted-foreground">
               Truck Assignment
             </label>
-            <p className="mt-1 text-sm font-semibold">
+            <div className="mt-2 flex items-center gap-2">
               {device.truck_id ? (
-                <>Truck #{device.truck_id}</>
+                <>
+                  <p className="text-sm font-semibold">
+                    Truck #{device.truck_id}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/fleet?truck=${device.truck_id}`)}
+                  >
+                    View Truck
+                  </Button>
+                </>
               ) : (
                 <span className="text-muted-foreground">Unassigned</span>
               )}
-            </p>
+            </div>
           </div>
 
           <Separator />
