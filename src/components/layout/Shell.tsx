@@ -122,7 +122,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-x-hidden">
       {/* Mobile sidebar */}
       <div
         className={cn(
@@ -152,7 +152,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </div>
 
-      <div className="flex flex-1 flex-col lg:pl-72">
+      <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden overflow-y-hidden h-screen">
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -244,8 +244,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </DialogContent>
         </Dialog>
 
-        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-hidden h-full">
+          <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-hidden h-full">{children}</div>
         </main>
 
         {/* Mobile Bottom Navigation */}
