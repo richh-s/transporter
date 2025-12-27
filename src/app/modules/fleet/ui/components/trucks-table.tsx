@@ -104,7 +104,7 @@ function TrucksTableContent({
 
       // Handle array response (fallback)
       if (Array.isArray(data)) {
-        const trucksArray = data as any[];
+        const trucksArray = data as Truck[];
         return {
           trucks: trucksArray,
           total: trucksArray.length,

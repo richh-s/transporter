@@ -12,20 +12,16 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type Row,
+  type Column,
 } from "@tanstack/react-table";
 import {
   ChevronDown,
   ChevronsUpDown,
-  MoreHorizontal,
-  Edit2,
-  Trash2,
-  Eye,
   ChevronRight,
   ChevronLeft,
-  Truck,
   Loader2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,9 +29,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -63,7 +57,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   searchKey?: string;
   searchPlaceholder?: string;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
   // Server-side pagination
   pageCount?: number;
   page?: number;
@@ -121,7 +115,6 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [isPerPageOpen, setIsPerPageOpen] = React.useState(false);
   const [isColumnsOpen, setIsColumnsOpen] = React.useState(false);
-  const router = useRouter();
   const mobileScrollRef = React.useRef<HTMLDivElement>(null);
 
   // Debounce search to prevent excessive API calls
@@ -213,9 +206,8 @@ export function DataTable<TData, TValue>({
   }, [data, onScrollChange]);
 
   // Mobile Card View Component - Renders table rows as cards on mobile screens
-  const MobileCardView = ({ row }: { row: any }) => {
-    const rowData = row.original;
-    const visibleCells = row.getVisibleCells().filter((cell: any) => {
+  const MobileCardView = ({ row }: { row: Row<TData> }) => {
+    const visibleCells = row.getVisibleCells().filter((cell) => {
       // Always show plate_number and actions, filter others based on visibility
       if (cell.column.id === "actions" || cell.column.id === "plate_number")
         return true;
@@ -225,26 +217,28 @@ export function DataTable<TData, TValue>({
 
     // Find plate_number cell for header
     const plateCell = visibleCells.find(
-      (cell: any) =>
+      (cell) =>
         cell.column.id === "plate_number" ||
-        cell.column.accessorKey === "plate_number"
+        (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
+          "plate_number"
     );
 
     // Find actions cell
     const actionsCell = visibleCells.find(
-      (cell: any) => cell.column.id === "actions"
+      (cell) => cell.column.id === "actions"
     );
 
     // Other cells for body
     const bodyCells = visibleCells.filter(
-      (cell: any) =>
+      (cell) =>
         cell.column.id !== "plate_number" &&
         cell.column.id !== "actions" &&
-        cell.column.accessorKey !== "plate_number"
+        (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
+          "plate_number"
     );
 
     // Get header label for a column
-    const getHeaderLabel = (column: any) => {
+    const getHeaderLabel = (column: Column<TData, unknown>) => {
       const labelMap: Record<string, string> = {
         plate_number: "Plate / VIN",
         truck_type: "Type",
@@ -292,7 +286,7 @@ export function DataTable<TData, TValue>({
 
         {/* Card Body - Compact Label-Value Pairs */}
         <div className="flex-1 space-y-2">
-          {bodyCells.map((cell: any) => {
+          {bodyCells.map((cell) => {
             const headerLabel = getHeaderLabel(cell.column);
             const cellValue = flexRender(
               cell.column.columnDef.cell,
@@ -352,7 +346,6 @@ export function DataTable<TData, TValue>({
   const allRows = table.getRowModel().rows;
   const visibleRows = allRows; // Show all fetched cards
   const hasMore = pageCount ? page < pageCount : false;
-  const remainingCount = total ? Math.max(0, total - page * perPage) : 0;
 
   // Handle "See More" click - fetch next page from server
   const handleSeeMore = () => {
@@ -487,8 +480,9 @@ export function DataTable<TData, TValue>({
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="border-b">
                     {headerGroup.headers.map((header, index) => {
-                      const isSticky = (header.column.columnDef.meta as any)
-                        ?.sticky;
+                      const isSticky = (
+                        header.column.columnDef.meta as { sticky?: boolean }
+                      )?.sticky;
                       return (
                         <TableHead
                           key={header.id}
@@ -538,8 +532,9 @@ export function DataTable<TData, TValue>({
                       data-state={row.getIsSelected() && "selected"}
                     >
                       {row.getVisibleCells().map((cell) => {
-                        const isSticky = (cell.column.columnDef.meta as any)
-                          ?.sticky;
+                        const isSticky = (
+                          cell.column.columnDef.meta as { sticky?: boolean }
+                        )?.sticky;
                         return (
                           <TableCell
                             key={cell.id}

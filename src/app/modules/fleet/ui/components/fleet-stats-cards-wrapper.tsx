@@ -1,7 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { truckApi, type GetTrucksParams } from "@/lib/api/trucks";
+import { truckApi, type GetTrucksParams, type Truck } from "@/lib/api/trucks";
 import { FleetStatsCards } from "./fleet-stats-cards";
 
 interface FleetStatsCardsWrapperProps {
@@ -48,14 +48,22 @@ export function FleetStatsCardsWrapper({
         "page" in data &&
         "status" in data
       ) {
-        const paginatedData = data as any;
+        const paginatedData = data as {
+          items?: Truck[];
+          total?: number;
+          page?: number;
+          per_page?: number;
+          pages?: number;
+          status?: boolean;
+          message?: string;
+        };
         
         if (!paginatedData.status) {
           throw new Error(paginatedData.message || "Failed to fetch trucks");
         }
         
         return {
-          trucks: paginatedData.items || [],
+          trucks: (paginatedData.items || []) as Truck[],
           total: paginatedData.total || 0,
           page: paginatedData.page || 1,
           per_page: paginatedData.per_page || perPage,
@@ -65,17 +73,18 @@ export function FleetStatsCardsWrapper({
       
       // Handle array response (fallback)
       if (Array.isArray(data)) {
+        const trucksArray = data as Truck[];
         return {
-          trucks: data,
-          total: data.length,
+          trucks: trucksArray,
+          total: trucksArray.length,
           page: 1,
-          per_page: data.length,
+          per_page: trucksArray.length,
           pages: 1,
         };
       }
       
       return {
-        trucks: [],
+        trucks: [] as Truck[],
         total: 0,
         page: 1,
         per_page: perPage,
@@ -85,7 +94,7 @@ export function FleetStatsCardsWrapper({
     staleTime: 1000 * 60 * 5,
   });
 
-  const trucks = trucksData?.trucks || [];
+  const trucks = (trucksData?.trucks || []) as Truck[];
   const total = trucksData?.total || 0;
 
   return <FleetStatsCards total={total} trucks={trucks} />;

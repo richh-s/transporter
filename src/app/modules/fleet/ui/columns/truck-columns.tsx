@@ -16,6 +16,51 @@ import type { Truck } from "@/lib/api/trucks";
 
 export type TruckTableRow = Truck;
 
+// Separate component for actions cell to allow use of hooks
+function ActionsCell({
+  truck,
+  meta,
+}: {
+  truck: Truck;
+  meta?: {
+    onEdit?: (truck: Truck) => void;
+    onDelete?: (truck: Truck) => void;
+  };
+}) {
+  const router = useRouter();
+
+  return (
+    <div className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => router.push(`/fleet/${truck.id}`)}>
+            <Eye className="mr-2 h-4 w-4" /> View Details
+          </DropdownMenuItem>
+          {meta?.onEdit && (
+            <DropdownMenuItem onClick={() => meta.onEdit?.(truck)}>
+              <Edit2 className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+          )}
+          {meta?.onDelete && (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => meta.onDelete?.(truck)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 export const truckColumns: ColumnDef<TruckTableRow>[] = [
   {
     accessorKey: "plate_number",
@@ -163,44 +208,12 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     enableHiding: false, // Always visible on mobile
     cell: ({ row, table }) => {
       const truck = row.original;
-      const router = useRouter();
       const meta = table.options.meta as {
         onEdit?: (truck: Truck) => void;
         onDelete?: (truck: Truck) => void;
       };
 
-      return (
-        <div className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => router.push(`/fleet/${truck.id}`)}
-              >
-                <Eye className="mr-2 h-4 w-4" /> View Details
-              </DropdownMenuItem>
-              {meta?.onEdit && (
-                <DropdownMenuItem onClick={() => meta.onEdit?.(truck)}>
-                  <Edit2 className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
-              )}
-              {meta?.onDelete && (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => meta.onDelete?.(truck)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+      return <ActionsCell truck={truck} meta={meta} />;
     },
   },
 ];

@@ -120,7 +120,8 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
       form.reset(defaultValues);
       createTruckMutation.reset();
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // form, defaultValues, and createTruckMutation are stable references
 
   // Ensure scrollable area works properly when modal opens or step changes
   useEffect(() => {
@@ -177,7 +178,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
       setIsOpen(false);
       form.reset();
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error is already handled by the mutation's onError
       // Just ensure it doesn't break the app - the error will be displayed in the Alert
       console.error("Failed to create truck:", err);
@@ -269,11 +270,16 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                 >
                   <XCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">
-                    {createTruckMutation.error instanceof Error
-                      ? createTruckMutation.error.message
-                      : typeof createTruckMutation.error === "string"
-                      ? createTruckMutation.error
-                      : "Failed to create truck. Please try again."}
+                    {(() => {
+                      const error = createTruckMutation.error as unknown;
+                      if (error instanceof Error) {
+                        return error.message;
+                      }
+                      if (typeof error === "string") {
+                        return error;
+                      }
+                      return "Failed to create truck. Please try again.";
+                    })()}
                   </AlertDescription>
                 </Alert>
               )}

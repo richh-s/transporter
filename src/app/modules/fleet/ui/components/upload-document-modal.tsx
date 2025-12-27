@@ -72,8 +72,10 @@ export function UploadDocumentModal({
         fileInputRef.current.value = "";
       }
       onOpenChange(false);
-    } catch (error: any) {
-      setError(error.message || "Failed to upload document");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to upload document";
+      setError(errorMessage);
     }
   };
 

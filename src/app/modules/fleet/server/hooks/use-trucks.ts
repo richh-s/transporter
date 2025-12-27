@@ -74,11 +74,12 @@ export function useTrucks(options: UseTrucksOptions = {}) {
       
       // Handle array response (non-paginated fallback)
       if (Array.isArray(data)) {
+        const trucksArray = data as Truck[];
         return {
-          trucks: data,
-          total: data.length,
+          trucks: trucksArray,
+          total: trucksArray.length,
           page: 1,
-          per_page: data.length,
+          per_page: trucksArray.length,
           pages: 1,
         };
       }

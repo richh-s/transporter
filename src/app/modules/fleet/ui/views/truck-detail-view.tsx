@@ -20,7 +20,6 @@ import {
   UploadDocumentModal,
 } from "../components";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Truck } from "@/lib/api/trucks";
 import { DataTable } from "@/components/ui/data-table";
 import { documentColumns } from "../columns/document-columns";
 import type { DocumentTableRow } from "../columns/document-columns";
@@ -88,7 +87,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
           truckId: id,
           documentId: String(documentId),
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to delete document:", error);
       }
     }

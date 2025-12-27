@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { truckApi } from "@/lib/api/trucks";
-import type { Truck } from "@/lib/api/trucks";
 
 export function useTruck(id: string | number) {
   return useSuspenseQuery({

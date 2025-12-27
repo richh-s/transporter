@@ -34,7 +34,7 @@ export interface CreateTruckRequest {
   gps_device_id?: number | null;
 }
 
-export interface UpdateTruckRequest extends Partial<CreateTruckRequest> {}
+export type UpdateTruckRequest = Partial<CreateTruckRequest>;
 
 export interface GetTrucksParams {
   page?: number;

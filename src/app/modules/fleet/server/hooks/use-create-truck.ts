@@ -75,7 +75,7 @@ export function useCreateTruck() {
 
       // Optimistically create a temporary truck object
       const optimisticTruck: Truck = {
-        id: tempId as any, // Temporary ID (will be replaced by server response)
+        id: tempId as unknown as number, // Temporary ID (will be replaced by server response)
         ...newTruckData,
         registration_date: new Date().toISOString().split("T")[0],
       } as Truck;

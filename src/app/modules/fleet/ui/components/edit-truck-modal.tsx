@@ -138,7 +138,8 @@ export function EditTruckModal({
         gps_device_id: truck.gps_device_id,
       });
     }
-  }, [truck, isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [truck, isOpen]); // form and updateTruckMutation are stable references
 
   const onSubmit = async (values: TruckFormValues) => {
     if (!truck) return;
@@ -151,7 +152,7 @@ export function EditTruckModal({
       // Only close modal and show success on actual success
       onOpenChange(false);
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update truck:", err);
       // Modal stays open to show error message
     }
