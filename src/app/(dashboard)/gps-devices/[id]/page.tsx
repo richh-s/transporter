@@ -18,6 +18,8 @@ import {
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGPSDevice, useDeactivateGPSDevice } from "@/hooks/use-gps-devices";
+import { useTrucks } from "@/hooks/use-trucks";
+import { useMemo } from "react";
 
 export default function GPSDeviceDetailPage() {
   const router = useRouter();
@@ -28,6 +30,30 @@ export default function GPSDeviceDetailPage() {
 
   const { data: device, isLoading, error } = useGPSDevice(id);
   const deactivateMutation = useDeactivateGPSDevice();
+  
+  // Fetch all trucks to create mapping (same as table)
+  const { data: trucks = [] } = useTrucks();
+
+  // Create mapping object: { [gps_device_id]: truck_id }
+  // Only include trucks that have a gps_device_id (assigned trucks)
+  const gpsDeviceToTruckMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    trucks.forEach((truck) => {
+      if (truck.gps_device_id !== null && truck.gps_device_id !== undefined) {
+        map[truck.gps_device_id] = truck.id;
+      }
+    });
+    if (process.env.NODE_ENV === "development") {
+      console.log("[GPS Device Detail] GPS Device to Truck Mapping:", map);
+      console.log("[GPS Device Detail] Device ID:", id);
+      console.log("[GPS Device Detail] Device truck_id from API:", device?.truck_id);
+      console.log("[GPS Device Detail] Truck ID from mapping:", map[id]);
+    }
+    return map;
+  }, [trucks, id, device?.truck_id]);
+
+  // Get the assigned truck ID from the mapping (more reliable than device.truck_id)
+  const assignedTruckId = device ? gpsDeviceToTruckMap[device.id] : undefined;
 
   const handleDeactivate = () => {
     deactivateMutation.mutate(id, {
@@ -222,15 +248,15 @@ export default function GPSDeviceDetailPage() {
               Truck Assignment
             </label>
             <div className="mt-2 flex items-center gap-2">
-              {device.truck_id ? (
+              {assignedTruckId ? (
                 <>
                   <p className="text-sm font-semibold">
-                    Truck #{device.truck_id}
+                    Truck #{assignedTruckId}
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(`/fleet?truck=${device.truck_id}`)}
+                    onClick={() => router.push(`/fleet?truck=${assignedTruckId}`)}
                   >
                     View Truck
                   </Button>
@@ -281,9 +307,9 @@ export default function GPSDeviceDetailPage() {
             <p className="text-sm">
               <strong>IMEI:</strong> {device.imei_number}
             </p>
-            {device.truck_id && (
+            {assignedTruckId && (
               <p className="text-sm">
-                <strong>Current Truck:</strong> Truck #{device.truck_id}
+                <strong>Current Truck:</strong> Truck #{assignedTruckId}
               </p>
             )}
           </div>

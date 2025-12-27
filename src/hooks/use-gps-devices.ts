@@ -99,7 +99,7 @@ export function useUpdateGPSDevice() {
       queryClient.setQueryData(gpsDeviceKeys.detail(device.id), device);
 
       // Update all list queries in cache with the new device data
-      // This ensures truck_id is immediately visible even if list API doesn't return it
+      // This ensures truck_id and status are immediately visible even if list API doesn't return them
       queryClient.setQueriesData(
         { queryKey: gpsDeviceKeys.lists() },
         (oldData: GPSDeviceListResponse | undefined) => {
@@ -108,7 +108,11 @@ export function useUpdateGPSDevice() {
           // Find and update the device in the items array
           const updatedItems = oldData.items.map((item: GPSDevice) =>
             item.id === device.id
-              ? { ...item, truck_id: device.truck_id }
+              ? { 
+                  ...item, 
+                  truck_id: device.truck_id,
+                  status: device.status,
+                }
               : item
           );
 

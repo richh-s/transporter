@@ -42,7 +42,11 @@ import { format } from "date-fns";
 import {
   useGPSDevices,
   useDeactivateGPSDevice,
+  useUpdateGPSDevice,
 } from "@/hooks/use-gps-devices";
+import { useTrucks } from "@/hooks/use-trucks";
+import { Switch } from "@/components/ui/switch";
+import { useMemo } from "react";
 
 export default function GPSDevicesPage() {
   const router = useRouter();
@@ -68,10 +72,29 @@ export default function GPSDevicesPage() {
   } = useGPSDevices(page, perPage, appliedFilters);
 
   const deactivateMutation = useDeactivateGPSDevice();
+  const updateMutation = useUpdateGPSDevice();
+  
+  // Fetch all trucks to create mapping
+  const { data: trucks = [] } = useTrucks();
 
   const devices = devicesResponse?.items || [];
   const total = devicesResponse?.total || 0;
   const pages = devicesResponse?.pages || 0;
+
+  // Create mapping object: { [gps_device_id]: truck_id }
+  // Only include trucks that have a gps_device_id (assigned trucks)
+  const gpsDeviceToTruckMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    trucks.forEach((truck) => {
+      if (truck.gps_device_id !== null && truck.gps_device_id !== undefined) {
+        map[truck.gps_device_id] = truck.id;
+      }
+    });
+    if (process.env.NODE_ENV === "development") {
+      console.log("[GPS Devices Table] GPS Device to Truck Mapping:", map);
+    }
+    return map;
+  }, [trucks]);
 
   // Debug: Log device data to check truck_id
   if (devices.length > 0 && process.env.NODE_ENV === "development") {
@@ -105,6 +128,15 @@ export default function GPSDevicesPage() {
     deactivateMutation.mutate(id);
   };
 
+  const handleStatusChange = (device: any, newStatus: boolean) => {
+    updateMutation.mutate({
+      id: device.id,
+      data: {
+        status: newStatus,
+      },
+    });
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "MMM dd, yyyy");
@@ -122,30 +154,34 @@ export default function GPSDevicesPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 max-w-full overflow-x-hidden px-2 sm:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-brand-primary">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
             GPS Devices
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Manage and monitor your GPS tracking devices
           </p>
         </div>
-        <Button onClick={() => router.push("/gps-devices/create")}>
+        <Button 
+          onClick={() => router.push("/gps-devices/create")}
+          className="w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
-          Create New Device
+          <span className="hidden sm:inline">Create New Device</span>
+          <span className="sm:hidden">Create</span>
         </Button>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
+      <Card className="w-full">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
             <Input
               placeholder="External Device ID"
               value={filters.external_device_id || ""}
@@ -204,9 +240,18 @@ export default function GPSDevicesPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleApplyFilters}>Apply Filters</Button>
-            <Button variant="outline" onClick={handleClearFilters}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 pt-2">
+            <Button 
+              onClick={handleApplyFilters}
+              className="w-full sm:w-auto"
+            >
+              Apply Filters
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClearFilters}
+              className="w-full sm:w-auto"
+            >
               Clear Filters
             </Button>
           </div>
@@ -214,42 +259,43 @@ export default function GPSDevicesPage() {
       </Card>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>GPS Devices</CardTitle>
+      <Card className="w-full">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">GPS Devices</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
-            <div className="space-y-2">
+            <div className="space-y-2 p-6">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
           ) : devices.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 p-6">
               <p className="text-muted-foreground">
                 No GPS devices found. Create your first device.
               </p>
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>External Device ID</TableHead>
-                      <TableHead>IMEI Number</TableHead>
-                      <TableHead>Device Name</TableHead>
-                      <TableHead>Device Model</TableHead>
-                      <TableHead>Truck</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Expire Date</TableHead>
-                      <TableHead>Last Synced</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+                <div className="min-w-[800px] px-2 sm:px-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">ID</TableHead>
+                        <TableHead className="whitespace-nowrap">External Device ID</TableHead>
+                        <TableHead className="whitespace-nowrap">IMEI Number</TableHead>
+                        <TableHead className="whitespace-nowrap">Device Name</TableHead>
+                        <TableHead className="whitespace-nowrap">Device Model</TableHead>
+                        <TableHead className="whitespace-nowrap">Truck</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="whitespace-nowrap">Expire Date</TableHead>
+                        <TableHead className="whitespace-nowrap">Last Synced</TableHead>
+                        <TableHead className="whitespace-nowrap">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                     {devices.map((device) => (
                       <TableRow
                         key={device.id}
@@ -258,27 +304,27 @@ export default function GPSDevicesPage() {
                           router.push(`/gps-devices/${device.id}`)
                         }
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium whitespace-nowrap text-xs sm:text-sm">
                           {device.id}
                         </TableCell>
-                        <TableCell>{device.external_device_id}</TableCell>
-                        <TableCell>{device.imei_number}</TableCell>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.external_device_id}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.imei_number}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                           {device.device_name || (
                             <span className="text-muted-foreground">
                               N/A
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                           {device.device_model || (
                             <span className="text-muted-foreground">
                               N/A
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
-                          {device.truck_id ? (
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
+                          {gpsDeviceToTruckMap[device.id] ? (
                             <span className="font-medium text-green-600">
                               Assigned
                             </span>
@@ -288,20 +334,30 @@ export default function GPSDevicesPage() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={device.status ? "default" : "secondary"}
-                            className={
-                              device.status
-                                ? "bg-green-500 hover:bg-green-600"
-                                : "bg-gray-500 hover:bg-gray-600"
-                            }
-                          >
-                            {device.status ? "Active" : "Inactive"}
-                          </Badge>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Switch
+                              checked={device.status}
+                              onCheckedChange={(checked) =>
+                                handleStatusChange(device, checked)
+                              }
+                              disabled={updateMutation.isPending}
+                              className="scale-75 sm:scale-100"
+                            />
+                            <Badge
+                              variant={device.status ? "default" : "secondary"}
+                              className={
+                                device.status
+                                  ? "bg-green-500 hover:bg-green-600 text-[10px] sm:text-xs"
+                                  : "bg-gray-500 hover:bg-gray-600 text-[10px] sm:text-xs"
+                              }
+                            >
+                              {device.status ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
                         </TableCell>
-                        <TableCell>{formatDate(device.expire_date)}</TableCell>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{formatDate(device.expire_date)}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                           {formatDateTime(device.last_synced_at)}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
@@ -339,17 +395,22 @@ export default function GPSDevicesPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
+            </>
+          )}
+        </CardContent>
+        {!isLoading && devices.length > 0 && (
+          <CardContent className="pt-4 sm:pt-6">
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Showing {(page - 1) * perPage + 1} to{" "}
                   {Math.min(page * perPage, total)} of {total} devices
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                   <Select
                     value={perPage.toString()}
                     onValueChange={(value) => {
@@ -357,7 +418,7 @@ export default function GPSDevicesPage() {
                       setPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-[100px]">
+                    <SelectTrigger className="w-full sm:w-[100px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -401,10 +462,9 @@ export default function GPSDevicesPage() {
                     </PaginationContent>
                   </Pagination>
                 </div>
-              </div>
-            </>
-          )}
-        </CardContent>
+            </div>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
