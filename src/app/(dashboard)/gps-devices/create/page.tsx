@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +29,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUnassignedTrucks } from "@/hooks/use-trucks";
 import { useCreateGPSDevice } from "@/hooks/use-gps-devices";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
@@ -47,10 +45,10 @@ const formSchema = z.object({
   device_name: z.string().max(255).optional().or(z.literal("")),
   device_model: z.string().max(255).optional().or(z.literal("")),
   expire_date: z.date({
-    required_error: "Expire date is required",
+    message: "Expire date is required",
   }),
   last_synced_at: z.date().optional(), // Will be set automatically to now()
-  status: z.boolean().default(true),
+  status: z.boolean(),
   truck_id: z.number().min(1, "Truck selection is required"),
 });
 

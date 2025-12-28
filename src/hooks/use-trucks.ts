@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchTrucks, type Truck } from "@/lib/trucks-api";
+import { fetchTrucks } from "@/lib/trucks-api";
 
 // Query keys
 export const truckKeys = {

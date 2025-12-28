@@ -33,7 +33,7 @@ async function logout() {
 async function tryRefreshToken(): Promise<boolean> {
   try {
     console.log("🔄 Attempting to refresh access token...");
-    
+
     const response = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
       credentials: "include", // Send refresh_token cookie
@@ -90,7 +90,8 @@ export async function request<T>(
       console.warn("⚠️ Received 401 - Access token expired or invalid");
 
       // Don't try refresh on login/refresh endpoints (that's just invalid credentials)
-      const isAuthEndpoint = endpoint === "/auth/login" || endpoint === "/auth/refresh";
+      const isAuthEndpoint =
+        endpoint === "/auth/login" || endpoint === "/auth/refresh";
 
       if (!isAuthEndpoint) {
         // Try to refresh the token
@@ -108,11 +109,12 @@ export async function request<T>(
       }
     }
 
-    const result = await response.json();
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
 
     if (!response.ok) {
       return {
-        error: result.detail || result.message || "Something went wrong",
+        error: result?.detail || result?.message || "Something went wrong",
         status,
       };
     }
