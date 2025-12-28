@@ -101,6 +101,9 @@ export class PriceQuoteService {
 
     /**
      * Update a price quote
+     * Uses PATCH method as per API specification
+     * Allowed for: Draft and inactive (expired) quotes
+     * Not allowed for: Active quotes (returns 400 error)
      */
     static async updateQuote(
         id: number,
@@ -109,7 +112,7 @@ export class PriceQuoteService {
         const { data, error } = await request<PriceQuoteUpdateResponse>(
             `${this.BASE_ENDPOINT}/${id}`,
             {
-                method: "PUT",
+                method: "PATCH",
                 body: JSON.stringify(updateData),
             }
         );

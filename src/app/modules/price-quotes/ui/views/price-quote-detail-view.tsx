@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +119,15 @@ export function PriceQuoteDetailView() {
                     </div>
                 </div>
                 <div className="flex gap-2">
+                    {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.EXPIRED) && (
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push(`/price-quotes/${quote.id}/edit`)}
+                        >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </Button>
+                    )}
                     <Button
                         variant="destructive"
                         onClick={() => setDeleteDialogOpen(true)}

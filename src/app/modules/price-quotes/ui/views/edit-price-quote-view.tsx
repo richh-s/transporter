@@ -69,6 +69,7 @@ const formSchema = z.object({
     }).min(0.01, "Amount must be greater than 0"),
     currency: z.string().max(3),
     axle_type: z.nativeEnum(TruckAxleTypeEnum).optional().nullable(),
+    status: z.nativeEnum(PriceQuoteStatusEnum).optional(),
 }).refine((data) => data.origin !== data.destination, {
     message: "Origin and destination must be different",
     path: ["destination"],
@@ -100,6 +101,7 @@ export function EditPriceQuoteView() {
             amount: undefined,
             currency: "ETB",
             axle_type: undefined,
+            status: undefined,
         },
     });
 
@@ -116,6 +118,7 @@ export function EditPriceQuoteView() {
                 amount: quote.amount,
                 currency: quote.currency || "ETB",
                 axle_type: quote.axle_type ?? undefined,
+                status: quote.status,
             });
             hasPopulatedForm.current = true;
         }
@@ -137,6 +140,7 @@ export function EditPriceQuoteView() {
             amount: Number(values.amount),
             currency: values.currency,
             axle_type: values.axle_type ?? null,
+            status: values.status,
         };
 
         updateMutation.mutate(
@@ -169,7 +173,7 @@ export function EditPriceQuoteView() {
         );
     }
 
-    if (quote && quote.status !== PriceQuoteStatusEnum.DRAFT) {
+    if (quote && quote.status === PriceQuoteStatusEnum.ACTIVE) {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="flex items-center gap-4">
@@ -193,7 +197,7 @@ export function EditPriceQuoteView() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Cannot Edit</AlertTitle>
                     <AlertDescription>
-                        Only draft quotes can be edited. This quote is {quote.status}.
+                        Only draft and inactive (expired) quotes can be edited. This quote is active.
                     </AlertDescription>
                 </Alert>
             </div>
@@ -511,6 +515,43 @@ export function EditPriceQuoteView() {
                                                 </Select>
                                                 <FormDescription>
                                                     Currency for this quote
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold">Status</h3>
+                                <Separator />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="status"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Status</FormLabel>
+                                                <Select
+                                                    onValueChange={(value) => field.onChange(value as PriceQuoteStatusEnum)}
+                                                    value={field.value}
+                                                    key={`status-${field.value || 'empty'}`}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select status" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
+                                                        <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>Active</SelectItem>
+                                                        <SelectItem value={PriceQuoteStatusEnum.EXPIRED}>Expired</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormDescription>
+                                                    Change the status of this quote. Setting to "Active" will automatically set validity dates.
                                                 </FormDescription>
                                                 <FormMessage />
                                             </FormItem>

@@ -389,6 +389,13 @@ export function PriceQuotesListView() {
                                                             >
                                                                 View
                                                             </DropdownMenuItem>
+                                                            {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.EXPIRED) && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() => router.push(`/price-quotes/${quote.id}/edit`)}
+                                                                >
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                            )}
                                                             <DropdownMenuItem
                                                                 onClick={() => handleDeleteClick(quote)}
                                                                 className="text-destructive"
