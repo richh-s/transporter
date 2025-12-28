@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Fleet Management", href: "/fleet", icon: Truck },
+  { name: "Driver Management", href: "/drivers", icon: User },
   { name: "Active Orders", href: "/orders", icon: ClipboardList },
   { name: "Biweekly Quotes", href: "/quotes", icon: Tag },
   { name: "Payments", href: "/payments", icon: CreditCard },
