@@ -11,8 +11,15 @@ export function useUpdateDriver(driverId: number) {
       driverApi.updateDriver(driverId, payload),
 
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: driverKeys.all, exact: false });
-      qc.invalidateQueries({ queryKey: driverKeys.detail(driverId) });
+      qc.invalidateQueries({
+        queryKey: ["drivers", "list"],
+        exact: false,
+      });
+    
+      qc.invalidateQueries({
+        queryKey: driverKeys.detail(driverId),
+      });
     },
+    
   });
 }
