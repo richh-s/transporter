@@ -42,7 +42,6 @@ export function DriverManagementView() {
   const [open, setOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
-
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
 
@@ -59,7 +58,7 @@ export function DriverManagementView() {
     [search, status]
   );
 
-  const { data, isLoading, isError } = useDrivers(listParams);
+  const { data, isLoading } = useDrivers(listParams);
 
   const createDriver = useCreateDriver();
   const updateDriver = useUpdateDriver(selectedDriver?.id ?? 0);
@@ -93,7 +92,7 @@ export function DriverManagementView() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-5 flex items-center gap-4 bg-card border border-border">
+        <Card className="p-5 flex items-center gap-4">
           <Users className="h-5 w-5 text-muted-foreground" />
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -103,7 +102,7 @@ export function DriverManagementView() {
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
+        <Card className="p-5 flex items-center gap-4 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900">
           <UserCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -119,7 +118,7 @@ export function DriverManagementView() {
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-3">
         <Input
-          placeholder="Search name, license, phone..."
+          placeholder="Search name, license, phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="md:max-w-sm"
@@ -137,9 +136,27 @@ export function DriverManagementView() {
         </Select>
       </div>
 
-      {/* Table */}
-      {!isLoading && drivers.length > 0 && (
-        <div className="rounded-xl border overflow-hidden">
+      {/* Table Card */}
+      <Card className="p-0 overflow-hidden">
+        {/* Loading */}
+        {isLoading && (
+          <div className="p-12 text-center text-muted-foreground">
+            Loading drivers…
+          </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && drivers.length === 0 && (
+          <div className="p-12 text-center">
+            <p className="text-lg font-semibold">No drivers found</p>
+            <p className="text-muted-foreground mt-1">
+              Try adjusting your search or add a new driver.
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!isLoading && drivers.length > 0 && (
           <DataTable
             columns={driverColumns({
               onView: (driver) => router.push(`/drivers/${driver.id}`),
@@ -154,8 +171,8 @@ export function DriverManagementView() {
             })}
             data={drivers}
           />
-        </div>
-      )}
+        )}
+      </Card>
 
       {/* Create / Edit Dialog */}
       <DriverDialog
@@ -181,7 +198,7 @@ export function DriverManagementView() {
         }}
       />
 
-
+      {/* Delete Dialog */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -201,7 +218,7 @@ export function DriverManagementView() {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -218,11 +235,8 @@ export function DriverManagementView() {
               onClick={() => {
                 if (!driverToDelete) return;
 
-        
                 setDeleteOpen(false);
                 setDriverToDelete(null);
-
-
                 deleteDriver.mutate(driverToDelete.id);
               }}
             >
