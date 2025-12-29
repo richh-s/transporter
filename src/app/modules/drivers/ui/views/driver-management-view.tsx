@@ -16,6 +16,15 @@ import {
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck } from "lucide-react";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 import { driverColumns } from "../columns/driver-columns";
 import { DriverDialog } from "../components/driver-dialog";
 
@@ -25,19 +34,21 @@ import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 
 import type { CreateDriverInput } from "@/lib/zod/driver";
+import type { Driver } from "../../server/types";
 
 export function DriverManagementView() {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+
+  // 🔴 DELETE CONFIRM MODAL STATE
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
 
-  /* ==================================================
-     ✅ STABLE QUERY PARAMS (THIS IS THE REAL FIX)
-  ================================================== */
   const listParams = useMemo(
     () => ({
       first_name: search || undefined,
@@ -48,24 +59,16 @@ export function DriverManagementView() {
     [search, status]
   );
 
-  /* =======================
-     Queries & Mutations
-  ======================= */
   const { data, isLoading, isError } = useDrivers(listParams);
 
   const createDriver = useCreateDriver();
-  const updateDriver = useUpdateDriver(selectedDriver?.id);
+  const updateDriver = useUpdateDriver(selectedDriver?.id ?? 0);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
 
-  /* =======================
-     Stats
-  ======================= */
   const totalDrivers = drivers.length;
-  const activeDrivers = drivers.filter(
-    (d) => d.status === "active"
-  ).length;
+  const activeDrivers = drivers.filter((d) => d.status === "active").length;
 
   return (
     <div className="space-y-6">
@@ -78,12 +81,18 @@ export function DriverManagementView() {
           </p>
         </div>
 
-        <Button onClick={() => setOpen(true)}>+ Add New Driver</Button>
+        <Button
+          onClick={() => {
+            setSelectedDriver(null);
+            setOpen(true);
+          }}
+        >
+          + Add New Driver
+        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* TOTAL */}
         <Card className="p-5 flex items-center gap-4 bg-card border border-border">
           <Users className="h-5 w-5 text-muted-foreground" />
           <div>
@@ -94,7 +103,6 @@ export function DriverManagementView() {
           </div>
         </Card>
 
-        {/* ACTIVE */}
         <Card className="p-5 flex items-center gap-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
           <UserCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <div>
@@ -117,12 +125,7 @@ export function DriverManagementView() {
           className="md:max-w-sm"
         />
 
-        <Select
-          value={status}
-          onValueChange={(v) =>
-            setStatus(v as "all" | "active" | "inactive")
-          }
-        >
+        <Select value={status} onValueChange={(v) => setStatus(v as any)}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -134,28 +137,6 @@ export function DriverManagementView() {
         </Select>
       </div>
 
-      {/* States */}
-      {isLoading && (
-        <div className="border rounded-xl p-12 text-center text-muted-foreground">
-          Loading drivers...
-        </div>
-      )}
-
-      {isError && (
-        <div className="border rounded-xl p-12 text-center text-destructive">
-          Failed to load drivers
-        </div>
-      )}
-
-      {!isLoading && drivers.length === 0 && (
-        <div className="border rounded-xl p-12 text-center">
-          <p className="text-lg font-semibold">No drivers found</p>
-          <p className="text-muted-foreground mt-1">
-            Try adjusting your search or add a new driver.
-          </p>
-        </div>
-      )}
-
       {/* Table */}
       {!isLoading && drivers.length > 0 && (
         <div className="rounded-xl border overflow-hidden">
@@ -166,20 +147,26 @@ export function DriverManagementView() {
                 setSelectedDriver(driver);
                 setOpen(true);
               },
-              onDelete: (driver) => deleteDriver.mutate(driver.id),
+              onDelete: (driver) => {
+                setDriverToDelete(driver);
+                setDeleteOpen(true);
+              },
             })}
             data={drivers}
           />
         </div>
       )}
 
-      {/* Dialog */}
+      {/* Create / Edit Dialog */}
       <DriverDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(val: boolean | ((prevState: boolean) => boolean)) => {
+          setOpen(val);
+          if (!val) setSelectedDriver(null);
+        }}
         driver={selectedDriver}
         onSubmit={(values: CreateDriverInput) => {
-          if (selectedDriver) {
+          if (selectedDriver?.id) {
             updateDriver.mutate(values, {
               onSuccess: () => {
                 setOpen(false);
@@ -193,6 +180,57 @@ export function DriverManagementView() {
           }
         }}
       />
+
+      {/* ✅ DELETE CONFIRM MODAL */}
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(val) => {
+          setDeleteOpen(val);
+          if (!val) setDriverToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Driver</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">
+                {driverToDelete?.first_name} {driverToDelete?.last_name}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteOpen(false);
+                setDriverToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={!driverToDelete || deleteDriver.isPending}
+              onClick={() => {
+                if (!driverToDelete) return;
+
+                // ✅ CLOSE MODAL IMMEDIATELY
+                setDeleteOpen(false);
+                setDriverToDelete(null);
+
+                // 🔥 THEN DELETE IN BACKGROUND
+                deleteDriver.mutate(driverToDelete.id);
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
