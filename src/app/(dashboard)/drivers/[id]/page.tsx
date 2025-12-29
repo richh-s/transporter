@@ -30,7 +30,7 @@ export default function DriverDetailsPage() {
   }
 
   return (
-    // 🔑 THIS FIXES SCROLLING
+   
     <div className="h-full min-h-0 overflow-y-auto">
       <div className="space-y-6 p-6 max-w-6xl mx-auto">
         {/* Header */}

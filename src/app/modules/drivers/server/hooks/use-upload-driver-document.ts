@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { driverDocumentSchema } from "@/lib/zod/driver";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
+import { driverApi } from "../api/driver.api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
@@ -13,19 +14,10 @@ type UploadInput = {
   replace_document_id?: number;
 };
 
-type RollbackContext = {
-  previous?: Array<[QueryKey, unknown]>;
-};
-
 export function useUploadDriverDocument(driverId: number) {
   const qc = useQueryClient();
 
-  return useMutation<
-    DriverDocument,
-    unknown,
-    UploadInput,
-    RollbackContext
-  >({
+  return useMutation<DriverDocument, unknown, UploadInput>({
     mutationFn: async (payload) => {
       const formData = new FormData();
       formData.append("document_type", payload.document_type);
@@ -55,11 +47,6 @@ export function useUploadDriverDocument(driverId: number) {
         queryKey: driverKeys.documents(driverId),
       });
 
-      const previous = qc.getQueriesData({
-        queryKey: driverKeys.documents(driverId),
-      });
-
-      // 🔑 OPTIMISTIC REPLACE
       if (payload.replace_document_id) {
         qc.setQueryData<DriverDocument[]>(
           driverKeys.documents(driverId),
@@ -69,29 +56,24 @@ export function useUploadDriverDocument(driverId: number) {
             )
         );
       }
-
-      return { previous };
     },
 
-    onError: (_err, _vars, ctx) => {
-      ctx?.previous?.forEach(([key, data]) => {
-        qc.setQueryData(key, data);
-      });
-    },
-
-    onSuccess: (newDoc, vars) => {
-      qc.setQueryData<DriverDocument[]>(
-        driverKeys.documents(driverId),
-        (old = []) => {
-          // Replace → insert new document
-          if (vars.replace_document_id) {
-            return [...old, newDoc];
-          }
-
-          // Normal upload
-          return [...old, newDoc];
+    onSuccess: async (_newDoc, vars) => {
+      // 🔥 HARD DELETE OLD DOCUMENT
+      if (vars.replace_document_id) {
+        try {
+          await driverApi.deleteDriverDocument(
+            driverId,
+            vars.replace_document_id
+          );
+        } catch (e) {
+          console.error("Failed to delete old document", e);
         }
-      );
+      }
+
+      qc.invalidateQueries({
+        queryKey: driverKeys.documents(driverId),
+      });
     },
   });
 }

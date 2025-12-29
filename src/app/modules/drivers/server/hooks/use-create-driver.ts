@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
-import type { CreateDriverPayload } from "../types";
+
 
 export function useCreateDriver() {
   const qc = useQueryClient();

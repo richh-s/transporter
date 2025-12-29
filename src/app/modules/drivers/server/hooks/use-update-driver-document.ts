@@ -1,5 +1,3 @@
-// server/hooks/use-update-driver-document.ts
-
 import { driverDocumentSchema } from "@/lib/zod/driver";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;

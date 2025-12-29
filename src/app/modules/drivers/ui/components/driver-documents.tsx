@@ -67,7 +67,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [documentType, setDocumentType] = useState<DocumentType | "">("");
   const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
 
-  // 🔴 DELETE MODAL STATE
+  // DELETE MODAL STATE
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
@@ -239,7 +239,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         )}
       </Card>
 
-      {/* ✅ DELETE CONFIRM MODAL */}
+      {/* DELETE CONFIRM MODAL */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -273,11 +273,11 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               onClick={() => {
                 if (!docToDelete) return;
 
-                // ✅ CLOSE MODAL IMMEDIATELY
+
                 setDeleteOpen(false);
                 setDocToDelete(null);
 
-                // 🔥 DELETE IN BACKGROUND
+
                 deleteMutation.mutate({
                   driverId,
                   documentId: docToDelete,

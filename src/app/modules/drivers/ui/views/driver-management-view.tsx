@@ -42,7 +42,7 @@ export function DriverManagementView() {
   const [open, setOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
-  // 🔴 DELETE CONFIRM MODAL STATE
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
 
@@ -181,7 +181,7 @@ export function DriverManagementView() {
         }}
       />
 
-      {/* ✅ DELETE CONFIRM MODAL */}
+
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -218,11 +218,11 @@ export function DriverManagementView() {
               onClick={() => {
                 if (!driverToDelete) return;
 
-                // ✅ CLOSE MODAL IMMEDIATELY
+        
                 setDeleteOpen(false);
                 setDriverToDelete(null);
 
-                // 🔥 THEN DELETE IN BACKGROUND
+
                 deleteDriver.mutate(driverToDelete.id);
               }}
             >

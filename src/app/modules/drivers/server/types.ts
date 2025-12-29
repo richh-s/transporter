@@ -1,4 +1,3 @@
-// src/app/modules/drivers/server/types.ts
 
 export type DriverStatus = "active" | "inactive";
 

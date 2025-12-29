@@ -8,9 +8,7 @@ import type {
   ApiResult,
 } from "../types";
 
-/* =========================
-   Helpers
-========================= */
+// helpers
 function toQueryString(params?: Record<string, any>) {
   if (!params) return "";
   const search = new URLSearchParams(
@@ -20,12 +18,9 @@ function toQueryString(params?: Record<string, any>) {
   );
   return search.toString() ? `?${search}` : "";
 }
-
-/* =========================
-   Driver API (FINAL - Updated)
-========================= */
+// driver api
 export const driverApi = {
-  /* ---------- Drivers ---------- */
+// drivers
   getDrivers: (params?: Record<string, any>) =>
     apiRequest<DriversResponse>(`/driver${toQueryString(params)}`),
 
@@ -49,21 +44,21 @@ export const driverApi = {
       method: "DELETE",
     }),
 
-  /* ---------- Documents ---------- */
+// docs
 
-  // LIST: returns array wrapped in ApiResult
+  // list
   getDriverDocuments: (driverId: number) =>
     apiRequest<ApiResult<DriverDocument[]>>(
       `/driver/${driverId}/documents`
     ),
 
-  // GET SINGLE: returns raw DriverDocument directly (NOT wrapped in ApiResult)
+  // get single
   getDriverDocument: (driverId: number, documentId: number) =>
-    apiRequest<DriverDocument>( // ← Changed from ApiResult<DriverDocument>
+    apiRequest<DriverDocument>( 
       `/driver/${driverId}/documents/${documentId}`
     ),
 
-  // UPLOAD: returns wrapped in ApiResult
+  //upload
   uploadDriverDocument: (
     driverId: number,
     payload: { document_type: string; file: File }
@@ -81,7 +76,7 @@ export const driverApi = {
     );
   },
 
-  // DELETE: returns null wrapped in ApiResult
+  // delete
   deleteDriverDocument: (driverId: number, documentId: number) =>
     apiRequest<ApiResult<null>>(
       `/driver/${driverId}/documents/${documentId}`,
