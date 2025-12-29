@@ -132,7 +132,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
               Truck Details
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
               View and manage truck information
             </p>
           </div>

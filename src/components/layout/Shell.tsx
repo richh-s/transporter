@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Satellite,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -42,6 +43,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Fleet Management", href: "/fleet", icon: Truck },
   { name: "Driver Management", href: "/drivers", icon: User },
+  { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
   { name: "Active Orders", href: "/orders", icon: ClipboardList },
   { name: "Biweekly Quotes", href: "/quotes", icon: Tag },
   { name: "Payments", href: "/payments", icon: CreditCard },
@@ -74,7 +76,9 @@ export function Sidebar({
       </div>
       <nav className="flex-1 space-y-1 px-4 py-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          // Check if pathname matches the href or starts with it (for nested routes)
+          const isActive =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.name}
@@ -253,7 +257,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
           <div className="flex justify-around items-center h-16">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.name}

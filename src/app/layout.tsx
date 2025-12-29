@@ -19,7 +19,8 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { TanstackProvider } from "@/components/providers/tanstack-provider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -37,9 +38,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TanstackProvider>
-            <AuthProvider>{children}</AuthProvider>
-          </TanstackProvider>
+          <QueryProvider>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
