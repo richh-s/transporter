@@ -41,7 +41,7 @@ import type { PriceQuoteFilters, PriceQuote } from "@/types/price-quote";
 import {
     LocationEnum,
     TruckTypeEnum,
-    ContainerSizeEnum,
+
     PriceQuoteStatusEnum,
 } from "@/types/price-quote";
 import {
@@ -77,7 +77,7 @@ export function PriceQuotesListView() {
 
     const [appliedFilters, setAppliedFilters] = useState<PriceQuoteFilters>({});
     const [searchTerm, setSearchTerm] = useState("");
-
+    console.log(setPerPage)
     const { data: quotesResponse, isLoading } = usePriceQuotes(
         page,
         perPage,
@@ -218,7 +218,7 @@ export function PriceQuotesListView() {
                                 <SelectItem value="all">All Status</SelectItem>
                                 <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
                                 <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>Active</SelectItem>
-                                <SelectItem value={PriceQuoteStatusEnum.EXPIRED}>Expired</SelectItem>
+                                <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>Inactive</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -358,23 +358,29 @@ export function PriceQuotesListView() {
                                                     {quote.amount.toLocaleString()} {quote.currency}
                                                 </TableCell>
                                                 <TableCell onClick={(e) => e.stopPropagation()}>
-                                                    <Select
-                                                        value={quote.status}
-                                                        onValueChange={(value) => handleStatusChange(quote.id, value as PriceQuoteStatusEnum)}
-                                                    >
-                                                        <SelectTrigger className="w-[100px] sm:w-[120px] h-7 sm:h-8 text-xs border-0 bg-transparent hover:bg-transparent focus:ring-0 focus:ring-offset-0 p-0 h-auto">
-                                                            <SelectValue>
-                                                                <Badge variant={getStatusVariant(quote.status)} className="text-xs cursor-pointer">
-                                                                    {quote.status}
-                                                                </Badge>
-                                                            </SelectValue>
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
-                                                            <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>Active</SelectItem>
-                                                            <SelectItem value={PriceQuoteStatusEnum.EXPIRED}>Expired</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    {quote.status === PriceQuoteStatusEnum.ACTIVE ? (
+                                                        <Badge variant={getStatusVariant(quote.status)} className="text-xs">
+                                                            {quote.status}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Select
+                                                            value={quote.status}
+                                                            onValueChange={(value) => handleStatusChange(quote.id, value as PriceQuoteStatusEnum)}
+                                                        >
+                                                            <SelectTrigger className="w-[100px] sm:w-[120px] h-7 sm:h-8 text-xs border-0 bg-transparent hover:bg-transparent focus:ring-0 focus:ring-offset-0 p-0 h-auto">
+                                                                <SelectValue>
+                                                                    <Badge variant={getStatusVariant(quote.status)} className="text-xs cursor-pointer">
+                                                                        {quote.status}
+                                                                    </Badge>
+                                                                </SelectValue>
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
+                                                                <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>Active</SelectItem>
+                                                                <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>Inactive</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell onClick={(e) => e.stopPropagation()} className="sticky right-0 z-10 bg-background text-xs sm:text-sm">
                                                     <DropdownMenu>
@@ -389,19 +395,21 @@ export function PriceQuotesListView() {
                                                             >
                                                                 View
                                                             </DropdownMenuItem>
-                                                            {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.EXPIRED) && (
+                                                            {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.INACTIVE) && (
                                                                 <DropdownMenuItem
                                                                     onClick={() => router.push(`/price-quotes/${quote.id}/edit`)}
                                                                 >
                                                                     Edit
                                                                 </DropdownMenuItem>
                                                             )}
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleDeleteClick(quote)}
-                                                                className="text-destructive"
-                                                            >
-                                                                Delete
-                                                            </DropdownMenuItem>
+                                                            {quote.status !== PriceQuoteStatusEnum.ACTIVE && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleDeleteClick(quote)}
+                                                                    className="text-destructive"
+                                                                >
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </TableCell>

@@ -35,10 +35,15 @@ export function PriceQuoteDetailView() {
             return dateString;
         }
     };
-
+    console.log(formatDate)
     const formatDateTime = (dateString: string) => {
         try {
-            return format(new Date(dateString), "MMMM dd, yyyy 'at' HH:mm");
+            if (!dateString) return "—";
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return dateString;
+            }
+            return format(date, "MMMM dd, yyyy 'at' h:mm a");
         } catch {
             return dateString;
         }
@@ -119,7 +124,7 @@ export function PriceQuoteDetailView() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.EXPIRED) && (
+                    {(quote.status === PriceQuoteStatusEnum.DRAFT || quote.status === PriceQuoteStatusEnum.INACTIVE) && (
                         <Button
                             variant="outline"
                             onClick={() => router.push(`/price-quotes/${quote.id}/edit`)}
@@ -128,13 +133,15 @@ export function PriceQuoteDetailView() {
                             Edit
                         </Button>
                     )}
-                    <Button
-                        variant="destructive"
-                        onClick={() => setDeleteDialogOpen(true)}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                    </Button>
+                    {quote.status !== PriceQuoteStatusEnum.ACTIVE && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => setDeleteDialogOpen(true)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -208,14 +215,17 @@ export function PriceQuoteDetailView() {
                         </div>
                     </div>
 
-                    <Separator />
-
-                    <div>
-                        <p className="text-sm text-muted-foreground">Created</p>
-                        <p className="font-medium">
-                            {formatDateTime(quote.created_at)}
-                        </p>
-                    </div>
+                    {quote.created_at && (
+                        <>
+                            <Separator />
+                            <div>
+                                <p className="text-sm text-muted-foreground">Created</p>
+                                <p className="font-medium">
+                                    {formatDateTime(quote.created_at)}
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
 

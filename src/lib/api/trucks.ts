@@ -69,7 +69,7 @@ export const truckApi = {
    */
   getTrucks: async (params?: GetTrucksParams) => {
     const queryParams = new URLSearchParams();
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
@@ -77,10 +77,10 @@ export const truckApi = {
         }
       });
     }
-    
+
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/truck/?${queryString}` : "/truck/";
-    
+
     return request<PaginatedTrucksResponse>(endpoint);
   },
 
@@ -154,7 +154,7 @@ export const truckApi = {
    */
   getDocuments: async (id: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    
+
     const response = await fetch(`${API_URL}/truck/${id}/documents`, {
       method: "GET",
       credentials: "include",
@@ -176,11 +176,70 @@ export const truckApi = {
   },
 
   /**
+   * Get a specific document for a truck
+   */
+  getDocument: async (id: string, documentId: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to get document",
+        status,
+      };
+    }
+
+    return { data: result, status };
+  },
+
+  /**
+   * Update a document for a truck
+   */
+  updateDocument: async (id: string, documentId: string, updateData: { document_type?: string; file?: File }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const formData = new FormData();
+    if (updateData.document_type) {
+      formData.append("document_type", updateData.document_type);
+    }
+    if (updateData.file) {
+      formData.append("file", updateData.file);
+    }
+
+    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
+      method: "PATCH",
+      credentials: "include",
+      body: formData,
+    });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to update document",
+        status,
+      };
+    }
+
+    return { data: result, status };
+  },
+
+  /**
    * Delete a document for a truck
    */
   deleteDocument: async (id: string, documentId: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    
+
     const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
       method: "DELETE",
       credentials: "include",

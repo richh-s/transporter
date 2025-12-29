@@ -29,7 +29,7 @@ export enum TruckAxleTypeEnum {
 export enum PriceQuoteStatusEnum {
     DRAFT = "draft",
     ACTIVE = "active",
-    EXPIRED = "expired",
+    INACTIVE = "inactive",
 }
 
 export interface PriceQuote {

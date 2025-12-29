@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { PriceQuoteService } from "@/lib/price-quote-api";
 import type {
-    PriceQuoteFilters,
-    PriceQuoteListResponse,
+    PriceQuoteFilters
 } from "@/types/price-quote";
 import { priceQuoteKeys } from "./price-quote-keys";
 

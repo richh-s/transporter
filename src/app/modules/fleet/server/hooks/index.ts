@@ -6,6 +6,7 @@ export { useDeleteTruck } from "./use-delete-truck";
 export {
   useTruckDocuments,
   useUploadTruckDocument,
+  useUpdateTruckDocument,
   useDeleteTruckDocument,
 } from "./use-truck-documents";
 

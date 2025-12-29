@@ -71,7 +71,7 @@ export function getStatusVariant(
     > = {
         [PriceQuoteStatusEnum.DRAFT]: "secondary",
         [PriceQuoteStatusEnum.ACTIVE]: "default",
-        [PriceQuoteStatusEnum.EXPIRED]: "destructive",
+        [PriceQuoteStatusEnum.INACTIVE]: "destructive",
     };
     return variants[statusStr] || "outline";
 }

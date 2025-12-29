@@ -197,7 +197,7 @@ export function EditPriceQuoteView() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Cannot Edit</AlertTitle>
                     <AlertDescription>
-                        Only draft and inactive (expired) quotes can be edited. This quote is active.
+                        Only draft and inactive quotes can be edited. This quote is active.
                     </AlertDescription>
                 </Alert>
             </div>
@@ -547,11 +547,11 @@ export function EditPriceQuoteView() {
                                                     <SelectContent>
                                                         <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
                                                         <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>Active</SelectItem>
-                                                        <SelectItem value={PriceQuoteStatusEnum.EXPIRED}>Expired</SelectItem>
+                                                        <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>Inactive</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                                 <FormDescription>
-                                                    Change the status of this quote. Setting to "Active" will automatically set validity dates.
+                                                    Change the status of this quote. Setting to &quoteActive&quote will automatically set validity dates.
                                                 </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
