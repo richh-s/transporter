@@ -73,7 +73,7 @@ export function PriceQuotesListView() {
         status: undefined,
         currency: undefined,
     });
-
+    console.log(setPerPage)
     const [appliedFilters, setAppliedFilters] = useState<PriceQuoteFilters>({});
 
     const { data: quotesResponse, isLoading } = usePriceQuotes(
