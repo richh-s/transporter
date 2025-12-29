@@ -35,6 +35,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import {
   Eye,
@@ -45,13 +53,8 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
-const DOCUMENT_TYPES = [
-  "trade_licence",
-  "id",
-  "other",
-] as const;
-
-type DocumentType = typeof DOCUMENT_TYPES[number];
+const DOCUMENT_TYPES = ["trade_licence", "id", "other"] as const;
+type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
   const queryClient = useQueryClient();
@@ -63,6 +66,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DocumentType | "">("");
   const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
+
+  // 🔴 DELETE MODAL STATE
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
   const handleView = async (documentId: number) => {
     const res = await queryClient.fetchQuery({
@@ -94,12 +101,6 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
     );
   };
 
-  const handleDelete = (documentId: number) => {
-    if (confirm("Delete this document?")) {
-      deleteMutation.mutate({ driverId, documentId });
-    }
-  };
-
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Driver Documents</h2>
@@ -113,7 +114,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label>Document Type</Label>
-            <Select value={documentType} onValueChange={(v) => setDocumentType(v as DocumentType)}>
+            <Select
+              value={documentType}
+              onValueChange={(v) => setDocumentType(v as DocumentType)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -217,7 +221,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDelete(doc.id)}
+                          onClick={() => {
+                            setDocToDelete(doc.id);
+                            setDeleteOpen(true);
+                          }}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
@@ -231,6 +238,57 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           </Table>
         )}
       </Card>
+
+      {/* ✅ DELETE CONFIRM MODAL */}
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(val) => {
+          setDeleteOpen(val);
+          if (!val) setDocToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Document</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this document? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteOpen(false);
+                setDocToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={!docToDelete || deleteMutation.isPending}
+              onClick={() => {
+                if (!docToDelete) return;
+
+                // ✅ CLOSE MODAL IMMEDIATELY
+                setDeleteOpen(false);
+                setDocToDelete(null);
+
+                // 🔥 DELETE IN BACKGROUND
+                deleteMutation.mutate({
+                  driverId,
+                  documentId: docToDelete,
+                });
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
