@@ -1,127 +1,82 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, ArrowUpDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 
-
-export type Driver = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  driver_license_number: string;
-  status: "active" | "inactive";
+type Actions = {
+  onView: (driver: any) => void;
+  onEdit: (driver: any) => void;
+  onDelete: (driver: any) => void;
 };
 
-// header
-function TableHeader({ title }: { title: string }) {
-  return (
-    <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-      {title}
-      <ArrowUpDown className="h-3 w-3 opacity-40" />
-    </div>
-  );
-}
-
-//    Driver Columns
-
-export const driverColumns = (
-  onEdit: (driver: Driver) => void,
-  onDelete: (driver: Driver) => void
-): ColumnDef<Driver>[] => [
-  /* License (1st column) */
+export const driverColumns = ({
+  onView,
+  onEdit,
+  onDelete,
+}: Actions): ColumnDef<any>[] => [
   {
     accessorKey: "driver_license_number",
-    header: () => <TableHeader title="License No" />,
-    cell: ({ row }) => (
-      <Link
-        href={`/drivers/${row.original.id}`}
-        className="font-medium text-primary hover:underline"
-      >
-        {row.original.driver_license_number}
-      </Link>
-    ),
+    header: "License No",
   },
-
-// driver name
   {
-    id: "driver_name",
-    header: () => <TableHeader title="Driver Name" />,
-    cell: ({ row }) => (
-      <Link
-        href={`/drivers/${row.original.id}`}
-        className="font-semibold text-foreground hover:text-primary hover:underline"
-      >
-        {row.original.first_name} {row.original.last_name}
-      </Link>
-    ),
+    accessorKey: "first_name",
+    header: "Driver Name",
   },
-
-// phone
   {
     accessorKey: "phone_number",
-    header: () => <TableHeader title="Phone" />,
-    cell: ({ row }) => (
-      <span className="text-muted-foreground">
-        {row.original.phone_number}
-      </span>
-    ),
+    header: "Phone",
   },
-
-// status
   {
     accessorKey: "status",
-    header: () => <TableHeader title="Status" />,
+    header: "Status",
     cell: ({ row }) => (
-      <Badge
-        variant="secondary"
-        className={
-          row.original.status === "active"
-            ? "bg-green-100 text-green-700 px-3 py-1 rounded-full capitalize"
-            : "bg-gray-100 text-gray-600 px-3 py-1 rounded-full capitalize"
-        }
-      >
+      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-600">
         {row.original.status}
-      </Badge>
-    ),
-  },
-
-// actions
-  {
-    id: "actions",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Actions
       </span>
     ),
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        {/* Edit */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hover:bg-muted"
-          onClick={() => onEdit(row.original)}
-          title="Edit Driver"
-        >
-          <Pencil className="h-4 w-4 text-muted-foreground" />
-        </Button>
+  },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row }) => {
+      const driver = row.original;
 
-        {/* Delete */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hover:bg-destructive/10"
-          onClick={() => onDelete(row.original)}
-          title="Delete Driver"
-        >
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
-    ),
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem onClick={() => onView(driver)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => onEdit(driver)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(driver)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];

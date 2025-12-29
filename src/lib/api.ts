@@ -1,15 +1,18 @@
+/* =====================================================
+   API TRANSPORT LAYER (SINGLE SOURCE OF TRUTH)
+===================================================== */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_BASE_URL) {
-  throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+  throw new Error("NEXT_PUBLIC_API_URL is not defined");
 }
 
-interface RequestOptions extends RequestInit {
+export type RequestOptions = RequestInit & {
   requireAuth?: boolean;
-}
+};
 
-/* ---------------- ERROR CLASS ---------------- */
+/* ================= ERROR ================= */
 
 export class ApiError extends Error {
   constructor(
@@ -22,42 +25,38 @@ export class ApiError extends Error {
   }
 }
 
-/* ---------------- CORE REQUEST ---------------- */
+/* ================= CORE REQUEST ================= */
 
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
   const { requireAuth = true, ...fetchOptions } = options;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(fetchOptions.headers as Record<string, string>),
   };
 
-  // Transporter app uses access token
-  if (requireAuth) {
+  // ✅ Handle JSON vs FormData automatically
+  const isFormData =
+    typeof FormData !== "undefined" &&
+    fetchOptions.body instanceof FormData;
+
+  if (!isFormData) {
+    headers["Content-Type"] ??= "application/json";
+  }
+
+  // ✅ Auth header
+  if (requireAuth && typeof window !== "undefined") {
     const token = sessionStorage.getItem("access_token");
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  let response: Response;
-
-  try {
-    response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...fetchOptions,
-      headers,
-      credentials: "include", // important if backend uses cookies
-    });
-  } catch (error) {
-    throw new Error(
-      `Network error: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  }
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...fetchOptions,
+    headers,
+    credentials: "include",
+  });
 
   const contentType = response.headers.get("content-type");
   const isJson = contentType?.includes("application/json");
@@ -65,23 +64,24 @@ async function apiRequest<T>(
   if (!response.ok) {
     const errorBody = isJson ? await response.json() : null;
 
-    const message =
+    throw new ApiError(
+      response.status,
+      response.statusText,
       errorBody?.detail ||
-      errorBody?.message ||
-      response.statusText ||
-      "Request failed";
-
-    throw new ApiError(response.status, response.statusText, message);
+        errorBody?.message ||
+        response.statusText ||
+        "Request failed"
+    );
   }
 
   return isJson ? (await response.json()) : ({} as T);
 }
 
-/* ---------------- API METHODS ---------------- */
+/* ================= AUTH API =================
+   (Auth is global, stays here)
+============================================= */
 
-export const api = {
-  /* ---------- AUTH ---------- */
-
+export const authApi = {
   login: (email: string, password: string) =>
     apiRequest<{
       access_token: string;
@@ -91,11 +91,7 @@ export const api = {
       role: "transporter";
     }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({
-        email,
-        password,
-        role: "transporter",
-      }),
+      body: JSON.stringify({ email, password, role: "transporter" }),
       requireAuth: false,
     }),
 
@@ -107,49 +103,21 @@ export const api = {
   me: () =>
     apiRequest<{
       id: number;
-      username: string;
       email: string;
-      phone: string | null;
       first_name: string | null;
       last_name: string | null;
-      full_name: string;
-      user_type: "transporter";
       transporter_id: number;
       organization_id: number | null;
-      created_at: string;
-      updated_at: string;
     }>("/auth/me"),
 
   refresh: (refreshToken: string) =>
     apiRequest<{
       access_token: string;
-      token_type: "bearer";
       expires_in: number;
+      token_type: "bearer";
     }>("/auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refresh_token: refreshToken }),
       requireAuth: false,
     }),
-
-//  TRANSPORTER DOMAIN ---------- */
-
-  getTrucks: () =>
-    apiRequest("/truck"),
-
-  getDrivers: () =>
-    apiRequest("/driver"),
-
-  getOrders: () =>
-    apiRequest("/order"),
-
-  getOrderById: (id: string) =>
-    apiRequest(`/order/${id}`),
-
-  updateOrderStatus: (id: string, status: string) =>
-    apiRequest(`/order/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    }),
 };
-
-export default api;

@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,130 +16,61 @@ import {
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck } from "lucide-react";
 
-import { driverColumns, Driver } from "../columns/driver-columns";
+import { driverColumns } from "../columns/driver-columns";
 import { DriverDialog } from "../components/driver-dialog";
 
+import { useDrivers } from "../../server/hooks/use-drivers";
+import { useCreateDriver } from "../../server/hooks/use-create-driver";
+import { useUpdateDriver } from "../../server/hooks/use-update-driver";
+import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 
-const MOCK_DATA: Driver[] = [
-    {
-      id: "1",
-      first_name: "Abebe",
-      last_name: "Kebede",
-      phone_number: "0912345678",
-      email: "abebe@example.com",
-      driver_license_number: "DL-12345",
-      status: "active",
-    },
-    {
-      id: "2",
-      first_name: "Tesfaye",
-      last_name: "Alemu",
-      phone_number: "0911223344",
-      email: "tesfaye@example.com",
-      driver_license_number: "DL-67890",
-      status: "inactive",
-    },
-    {
-      id: "3",
-      first_name: "Bekele",
-      last_name: "Tadesse",
-      phone_number: "0923456789",
-      email: "bekele@example.com",
-      driver_license_number: "DL-33456",
-      status: "active",
-    },
-    {
-      id: "4",
-      first_name: "Mulugeta",
-      last_name: "Haile",
-      phone_number: "0934567890",
-      email: "mulugeta@example.com",
-      driver_license_number: "DL-44567",
-      status: "active",
-    },
-    {
-      id: "5",
-      first_name: "Solomon",
-      last_name: "Getachew",
-      phone_number: "0919876543",
-      email: "solomon@example.com",
-      driver_license_number: "DL-55678",
-      status: "inactive",
-    },
-    {
-      id: "6",
-      first_name: "Yonas",
-      last_name: "Mengistu",
-      phone_number: "0921122334",
-      email: "yonas@example.com",
-      driver_license_number: "DL-66789",
-      status: "active",
-    },
-    {
-      id: "7",
-      first_name: "Dawit",
-      last_name: "Assefa",
-      phone_number: "0932233445",
-      email: "dawit@example.com",
-      driver_license_number: "DL-77890",
-      status: "active",
-    },
-    {
-      id: "8",
-      first_name: "Samuel",
-      last_name: "Bekele",
-      phone_number: "0943344556",
-      email: "samuel@example.com",
-      driver_license_number: "DL-88901",
-      status: "inactive",
-    },
-    {
-      id: "9",
-      first_name: "Henok",
-      last_name: "Tesfahun",
-      phone_number: "0954455667",
-      email: "henok@example.com",
-      driver_license_number: "DL-99012",
-      status: "active",
-    },
-  ];
-  
+import type { CreateDriverInput } from "@/lib/zod/driver";
+
 export function DriverManagementView() {
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
 
-// filter
-  const filteredDrivers = useMemo(() => {
-    return MOCK_DATA.filter((driver) => {
-      const fullName = `${driver.first_name} ${driver.last_name}`.toLowerCase();
+  /* ==================================================
+     ✅ STABLE QUERY PARAMS (THIS IS THE REAL FIX)
+  ================================================== */
+  const listParams = useMemo(
+    () => ({
+      first_name: search || undefined,
+      driver_license_number: search || undefined,
+      phone_number: search || undefined,
+      status: status === "all" ? undefined : status,
+    }),
+    [search, status]
+  );
 
-      const matchesSearch =
-        fullName.includes(search.toLowerCase()) ||
-        driver.driver_license_number
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        driver.phone_number.includes(search);
+  /* =======================
+     Queries & Mutations
+  ======================= */
+  const { data, isLoading, isError } = useDrivers(listParams);
 
-      const matchesStatus =
-        status === "all" ? true : driver.status === status;
+  const createDriver = useCreateDriver();
+  const updateDriver = useUpdateDriver(selectedDriver?.id);
+  const deleteDriver = useDeleteDriver();
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [search, status]);
+  const drivers = data?.items ?? [];
 
-// stats
-  const totalDrivers = filteredDrivers.length;
-  const activeDrivers = filteredDrivers.filter(
+  /* =======================
+     Stats
+  ======================= */
+  const totalDrivers = drivers.length;
+  const activeDrivers = drivers.filter(
     (d) => d.status === "active"
   ).length;
 
   return (
     <div className="space-y-6">
-  {/* header */}
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-muted/50 border rounded-xl px-6 py-4">
         <div>
           <h1 className="text-2xl font-bold">Driver Management</h1>
           <p className="text-muted-foreground">
@@ -145,37 +78,37 @@ export function DriverManagementView() {
           </p>
         </div>
 
-        <Button onClick={() => setOpen(true)}>
-          + Add New Driver
-        </Button>
+        <Button onClick={() => setOpen(true)}>+ Add New Driver</Button>
       </div>
 
-  {/* stat card */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-5 flex items-center gap-4">
-          <Users className="text-muted-foreground" />
+        {/* TOTAL */}
+        <Card className="p-5 flex items-center gap-4 bg-card border border-border">
+          <Users className="h-5 w-5 text-muted-foreground" />
           <div>
-            <p className="text-xs text-muted-foreground uppercase">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Total Drivers
             </p>
             <p className="text-2xl font-bold">{totalDrivers}</p>
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center gap-4 bg-blue-50">
-          <UserCheck className="text-blue-600" />
+        {/* ACTIVE */}
+        <Card className="p-5 flex items-center gap-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
+          <UserCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <div>
-            <p className="text-xs text-muted-foreground uppercase">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Active Drivers
             </p>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {activeDrivers}
             </p>
           </div>
         </Card>
       </div>
 
-{/* search */}
+      {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-3">
         <Input
           placeholder="Search name, license, phone..."
@@ -200,8 +133,21 @@ export function DriverManagementView() {
           </SelectContent>
         </Select>
       </div>
-{/* no driversfound  */}
-      {filteredDrivers.length === 0 && (
+
+      {/* States */}
+      {isLoading && (
+        <div className="border rounded-xl p-12 text-center text-muted-foreground">
+          Loading drivers...
+        </div>
+      )}
+
+      {isError && (
+        <div className="border rounded-xl p-12 text-center text-destructive">
+          Failed to load drivers
+        </div>
+      )}
+
+      {!isLoading && drivers.length === 0 && (
         <div className="border rounded-xl p-12 text-center">
           <p className="text-lg font-semibold">No drivers found</p>
           <p className="text-muted-foreground mt-1">
@@ -210,41 +156,41 @@ export function DriverManagementView() {
         </div>
       )}
 
-     {/* table */}
-      {filteredDrivers.length > 0 && (
-        <div
-          className="
-            rounded-xl border overflow-hidden
-            [&_thead]:sticky [&_thead]:top-0 [&_thead]:bg-muted
-            [&_tbody_tr:nth-child(even)]:bg-muted/30
-            [&_tbody_tr:hover]:bg-muted/60
-            transition-colors
-          "
-        >
+      {/* Table */}
+      {!isLoading && drivers.length > 0 && (
+        <div className="rounded-xl border overflow-hidden">
           <DataTable
-            columns={driverColumns(
-              (driver) => {
+            columns={driverColumns({
+              onView: (driver) => router.push(`/drivers/${driver.id}`),
+              onEdit: (driver) => {
                 setSelectedDriver(driver);
                 setOpen(true);
               },
-              (driver) => {
-                console.log("delete", driver);
-              }
-            )}
-            data={filteredDrivers}
+              onDelete: (driver) => deleteDriver.mutate(driver.id),
+            })}
+            data={drivers}
           />
         </div>
       )}
 
-{/* add dialog */}
+      {/* Dialog */}
       <DriverDialog
         open={open}
         onOpenChange={setOpen}
         driver={selectedDriver}
-        onSubmit={(data: any) => {
-          console.log(data);
-          setOpen(false);
-          setSelectedDriver(null);
+        onSubmit={(values: CreateDriverInput) => {
+          if (selectedDriver) {
+            updateDriver.mutate(values, {
+              onSuccess: () => {
+                setOpen(false);
+                setSelectedDriver(null);
+              },
+            });
+          } else {
+            createDriver.mutate(values, {
+              onSuccess: () => setOpen(false),
+            });
+          }
         }}
       />
     </div>
