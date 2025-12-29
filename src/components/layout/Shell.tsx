@@ -16,6 +16,7 @@ import {
   LogOut,
   Bell,
   Satellite,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -205,6 +206,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/organization/documents" className="cursor-pointer">
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>Organization Documents</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

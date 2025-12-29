@@ -62,11 +62,13 @@ interface DataTableProps<TData, TValue> {
   pageCount?: number;
   page?: number;
   onPageChange?: (page: number) => void;
+  onPageCountChange?: (pageCount: number) => void;
   total?: number;
   perPage?: number;
   onPerPageChange?: (perPage: number) => void;
   // Server-side filtering
   onSearchChange?: (search: string) => void;
+  onSearchFocus?: (isFocused: boolean) => void;
   manualPagination?: boolean;
   manualFiltering?: boolean;
   // Filter controls
@@ -92,10 +94,12 @@ export function DataTable<TData, TValue>({
   pageCount,
   page = 1,
   onPageChange,
+  onPageCountChange,
   total,
   perPage = 20,
   onPerPageChange,
   onSearchChange,
+  onSearchFocus,
   manualPagination = false,
   manualFiltering = false,
   filterControls,
@@ -345,7 +349,22 @@ export function DataTable<TData, TValue>({
   // Show all rows from current page (server fetches 10 per page)
   const allRows = table.getRowModel().rows;
   const visibleRows = allRows; // Show all fetched cards
-  const hasMore = pageCount ? page < pageCount : false;
+  
+  // Calculate page count for client-side pagination
+  const calculatedPageCount = manualPagination
+    ? pageCount
+    : Math.ceil(data.length / perPage);
+  
+  // Notify parent of page count changes
+  React.useEffect(() => {
+    if (onPageCountChange && !manualPagination) {
+      onPageCountChange(calculatedPageCount);
+    } else if (onPageCountChange && manualPagination && pageCount !== undefined) {
+      onPageCountChange(pageCount);
+    }
+  }, [calculatedPageCount, pageCount, manualPagination, onPageCountChange]);
+  
+  const hasMore = pageCount ? page < pageCount : calculatedPageCount ? page < calculatedPageCount : false;
 
   // Handle "See More" click - fetch next page from server
   const handleSeeMore = () => {
@@ -384,6 +403,8 @@ export function DataTable<TData, TValue>({
                 placeholder={searchPlaceholder}
                 value={globalFilter ?? ""}
                 onChange={(event) => handleSearchChange(event.target.value)}
+                onFocus={() => onSearchFocus?.(true)}
+                onBlur={() => onSearchFocus?.(false)}
                 className="flex-1 md:max-w-sm h-9 text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 py-2"
               />
             )}
