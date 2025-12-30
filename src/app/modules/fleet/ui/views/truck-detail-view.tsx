@@ -10,6 +10,7 @@ import {
   useTruck,
   useTruckDocuments,
   useUploadTruckDocument,
+  useUpdateTruckDocument,
   useDeleteTruckDocument,
 } from "@/app/modules/fleet/server/hooks";
 import { cn } from "@/lib/utils";
@@ -18,11 +19,14 @@ import {
   EditTruckModal,
   DeleteTruckModal,
   UploadDocumentModal,
+  UpdateDocumentModal,
+  DeleteDocumentModal,
 } from "../components";
 import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/ui/data-table";
 import { documentColumns } from "../columns/document-columns";
 import type { DocumentTableRow } from "../columns/document-columns";
+import type { TruckDocument } from "@/app/modules/fleet/server/hooks/use-truck-documents";
 
 interface TruckDetailContentProps {
   id: string;
@@ -35,10 +39,14 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUpdateDocumentModalOpen, setIsUpdateDocumentModalOpen] = useState(false);
+  const [isDeleteDocumentModalOpen, setIsDeleteDocumentModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<TruckDocument | null>(null);
 
   const { data: documents, isLoading: documentsLoading } =
     useTruckDocuments(id);
   const uploadDocumentMutation = useUploadTruckDocument();
+  const updateDocumentMutation = useUpdateTruckDocument();
   const deleteDocumentMutation = useDeleteTruckDocument();
 
   const handleSuccess = () => {
@@ -80,16 +88,51 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
   };
 
-  const handleDeleteDocument = async (documentId: number) => {
-    if (confirm("Are you sure you want to delete this document?")) {
-      try {
-        await deleteDocumentMutation.mutateAsync({
-          truckId: id,
-          documentId: String(documentId),
-        });
-      } catch (error: unknown) {
-        console.error("Failed to delete document:", error);
-      }
+  const handleUpdateDocument = (documentId: number) => {
+    const doc = documents?.find((d) => d.id === documentId);
+    if (doc) {
+      setSelectedDocument(doc);
+      setIsUpdateDocumentModalOpen(true);
+    }
+  };
+
+  const handleUpdateDocumentSubmit = async (documentType: string, file?: File) => {
+    if (!selectedDocument) return;
+    try {
+      await updateDocumentMutation.mutateAsync({
+        truckId: id,
+        documentId: String(selectedDocument.id),
+        updateData: {
+          document_type: documentType,
+          ...(file && { file }),
+        },
+      });
+      setIsUpdateDocumentModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error: unknown) {
+      console.error("Failed to update document:", error);
+    }
+  };
+
+  const handleDeleteDocument = (documentId: number) => {
+    const doc = documents?.find((d) => d.id === documentId);
+    if (doc) {
+      setSelectedDocument(doc);
+      setIsDeleteDocumentModalOpen(true);
+    }
+  };
+
+  const handleDeleteDocumentConfirm = async () => {
+    if (!selectedDocument) return;
+    try {
+      await deleteDocumentMutation.mutateAsync({
+        truckId: id,
+        documentId: String(selectedDocument.id),
+      });
+      setIsDeleteDocumentModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error: unknown) {
+      console.error("Failed to delete document:", error);
     }
   };
 
@@ -360,6 +403,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
           <DataTable
             columns={documentColumns(
               handleViewDocument,
+              handleUpdateDocument,
               handleDeleteDocument,
               deleteDocumentMutation.isPending
             )}
@@ -399,6 +443,24 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
         onOpenChange={setIsUploadModalOpen}
         onUpload={handleUploadDocument}
         isUploading={uploadDocumentMutation.isPending}
+      />
+
+      {/* Update Document Modal */}
+      <UpdateDocumentModal
+        document={selectedDocument}
+        isOpen={isUpdateDocumentModalOpen}
+        onOpenChange={setIsUpdateDocumentModalOpen}
+        onUpdate={handleUpdateDocumentSubmit}
+        isUpdating={updateDocumentMutation.isPending}
+      />
+
+      {/* Delete Document Modal */}
+      <DeleteDocumentModal
+        document={selectedDocument}
+        isOpen={isDeleteDocumentModalOpen}
+        onOpenChange={setIsDeleteDocumentModalOpen}
+        onConfirm={handleDeleteDocumentConfirm}
+        isDeleting={deleteDocumentMutation.isPending}
       />
     </div>
   );

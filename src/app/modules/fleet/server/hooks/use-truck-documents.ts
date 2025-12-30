@@ -4,7 +4,8 @@ import { truckApi } from "@/lib/api/trucks";
 export interface TruckDocument {
   id: number;
   document_type: string;
-  file_url: string;
+  file_url?: string;
+  presigned_url?: string;
   created_at?: string;
 }
 
@@ -39,6 +40,33 @@ export function useUploadTruckDocument() {
       const response = await truckApi.uploadDocument(truckId, file, documentType);
       if (!response.data) {
         throw new Error(response.error || "Failed to upload document");
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["truck-documents", variables.truckId],
+      });
+    },
+  });
+}
+
+export function useUpdateTruckDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      truckId,
+      documentId,
+      updateData,
+    }: {
+      truckId: string;
+      documentId: string;
+      updateData: { document_type?: string; file?: File };
+    }) => {
+      const response = await truckApi.updateDocument(truckId, documentId, updateData);
+      if (!response.data) {
+        throw new Error(response.error || "Failed to update document");
       }
       return response.data;
     },
