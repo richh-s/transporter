@@ -410,14 +410,10 @@ export function DataTable<TData, TValue>({
             )}
             <div className="flex flex-1 md:flex-initial items-center gap-2">
               {filterControls}
-              {/* Mobile Add Button - Show next to filters when stats cards are hidden (scrolled or on last page) */}
-              {mobileAddButton &&
-                (isScrolled ||
-                  (pageCount !== undefined &&
-                    pageCount > 0 &&
-                    page === pageCount)) && (
-                  <div className="md:hidden flex-1">{mobileAddButton}</div>
-                )}
+              {/* Mobile Add Button - Always visible on mobile */}
+              {mobileAddButton && (
+                <div className="md:hidden flex-1">{mobileAddButton}</div>
+              )}
             </div>
           </div>
           {headerActions && (

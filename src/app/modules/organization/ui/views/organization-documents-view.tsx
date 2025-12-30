@@ -235,15 +235,6 @@ export function OrganizationDocumentsView() {
               Upload and manage organization-related documents securely
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <Button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="h-8 text-xs"
-            >
-              <Upload className="h-3.5 w-3.5 mr-1.5" />
-              Upload Document
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -256,22 +247,6 @@ export function OrganizationDocumentsView() {
         }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />
-      </div>
-
-      {/* Upload Button - Mobile only - Hide when scrolled or on last page */}
-      <div
-        className={`block sm:hidden shrink-0 transition-all duration-300 ${
-          isScrolled || (pageCount > 0 && page === pageCount)
-            ? "hidden"
-            : "block"
-        }`}
-      >
-        <Button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="w-full h-9 text-xs bg-brand-primary hover:bg-brand-secondary text-white"
-        >
-          Upload
-        </Button>
       </div>
 
       {/* Main Content - Table - Takes remaining space */}
