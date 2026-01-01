@@ -16,6 +16,7 @@ import {
   LogOut,
   Bell,
   Satellite,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -44,7 +45,7 @@ const navigation = [
   { name: "Fleet Management", href: "/fleet", icon: Truck },
   { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
   { name: "Active Orders", href: "/orders", icon: ClipboardList },
-  { name: "Biweekly Quotes", href: "/quotes", icon: Tag },
+  { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
   { name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
@@ -156,7 +157,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </div>
 
-      <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden overflow-y-hidden h-screen">
+      <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden min-h-screen">
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -206,6 +207,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/organization/documents" className="cursor-pointer">
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>Organization Documents</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogoutClick}
@@ -248,8 +255,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </DialogContent>
         </Dialog>
 
-        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-hidden h-full">
-          <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-hidden h-full">{children}</div>
+        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-auto min-h-0">
+          <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-visible">{children}</div>
         </main>
 
         {/* Mobile Bottom Navigation */}
