@@ -17,6 +17,7 @@ import {
   Bell,
   Satellite,
   FileText,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -39,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PasswordResetDialog } from "@/components/profile/password-reset-dialog";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -112,6 +114,7 @@ export function Sidebar({
 export default function Shell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -203,6 +206,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     <User className="mr-2 h-4 w-4" />
                     <span>My Profile</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setPasswordDialogOpen(true)}
+                    className="cursor-pointer"
+                  >
+                    <Lock className="mr-2 h-4 w-4" />
+                    <span>Change Password</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
@@ -254,6 +264,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <PasswordResetDialog
+          open={passwordDialogOpen}
+          onOpenChange={setPasswordDialogOpen}
+        />
 
         <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-auto min-h-0">
           <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-visible">{children}</div>
