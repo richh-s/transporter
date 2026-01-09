@@ -29,6 +29,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
@@ -213,12 +214,12 @@ export const SignInView = () => {
                             <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                               Password
                             </FormLabel>
-                            <a
-                              href="#"
-                              className="text-xs text-brand-accent hover:text-brand-accent/80 hover:underline"
-                            >
-                              Forgot?
-                            </a>
+                            <Link
+  href="/forgot-password"
+  className="text-xs text-amber-600 hover:underline"
+>
+  Forgot?
+</Link>
                           </div>
                           <FormControl>
                             <div className="relative">
