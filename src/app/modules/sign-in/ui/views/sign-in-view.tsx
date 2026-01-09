@@ -72,7 +72,9 @@ export const SignInView = () => {
     // Make captcha errors more user-friendly
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
-      setError("Unable to load security code. Please refresh the page and try again.");
+      setError(
+        "Unable to load security code. Please refresh the page and try again."
+      );
     } else {
       setError(msg);
     }
@@ -97,9 +99,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("invalid captcha") ||
         lowerErrorMessage.includes("captcha expired") ||
         lowerErrorMessage.includes("captcha verification") ||
-        (lowerErrorMessage.includes("400") && (lowerErrorMessage.includes("captcha") || lowerErrorMessage.includes("code")))
+        (lowerErrorMessage.includes("400") &&
+          (lowerErrorMessage.includes("captcha") ||
+            lowerErrorMessage.includes("code")))
       ) {
-        setError("The security code you entered is incorrect. Please enter the code from the new image below.");
+        setError(
+          "The security code you entered is incorrect. Please enter the code from the new image below."
+        );
         // Refresh captcha on error
         setCaptchaSolution("");
         setCaptchaId("");
@@ -128,8 +134,10 @@ export const SignInView = () => {
         lowerErrorMessage.includes("incorrect password") ||
         lowerErrorMessage.includes("wrong password") ||
         lowerErrorMessage.includes("credentials") ||
-        (lowerErrorMessage.includes("invalid") && !lowerErrorMessage.includes("captcha")) ||
-        (lowerErrorMessage.includes("incorrect") && !lowerErrorMessage.includes("captcha")) ||
+        (lowerErrorMessage.includes("invalid") &&
+          !lowerErrorMessage.includes("captcha")) ||
+        (lowerErrorMessage.includes("incorrect") &&
+          !lowerErrorMessage.includes("captcha")) ||
         lowerErrorMessage.includes("401")
       ) {
         setError(
@@ -329,7 +337,11 @@ export const SignInView = () => {
                   <Button
                     type="submit"
                     className="w-full h-11 bg-brand-primary hover:bg-brand-secondary text-white transition-all shadow-md active:scale-[0.98]"
-                    disabled={pending || !captchaId || captchaSolution.trim().length === 0}
+                    disabled={
+                      pending ||
+                      !captchaId ||
+                      captchaSolution.trim().length === 0
+                    }
                   >
                     {pending ? (
                       <>
