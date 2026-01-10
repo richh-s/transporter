@@ -116,6 +116,7 @@ export const SignInView = () => {
         return;
       }
 
+
       // Network/Connection errors
       if (
         lowerErrorMessage.includes("failed to fetch") ||
@@ -262,6 +263,8 @@ export const SignInView = () => {
                       )}
                     />
 
+
+
                     <FormField
                       control={form.control}
                       name="password"
@@ -333,6 +336,7 @@ export const SignInView = () => {
                       </div>
                     </Alert>
                   )}
+
 
                   <Button
                     type="submit"
@@ -414,6 +418,7 @@ export const SignInView = () => {
                 </p>
               </div>
 
+
               {/* Bottom Accent */}
               <div className="absolute bottom-8 left-8 right-8 z-10">
                 <div className="flex justify-between items-center text-[10px] text-white/40 uppercase tracking-[0.2em]">
@@ -457,3 +462,4 @@ export const SignInView = () => {
     </div>
   );
 };
+

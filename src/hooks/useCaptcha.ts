@@ -74,7 +74,7 @@ export const useCaptcha = (): UseCaptchaReturn => {
 
   // Store imageUrl in ref to avoid dependency issues
   const imageUrlRef = useRef<string | null>(null);
-  
+
   useEffect(() => {
     if (captchaData?.imageUrl) {
       // Revoke old URL if it exists
@@ -108,4 +108,3 @@ export const useCaptcha = (): UseCaptchaReturn => {
     cleanup,
   };
 };
-

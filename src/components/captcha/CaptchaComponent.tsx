@@ -121,7 +121,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
     setUserInput(value);
-    
+
     // If deferVerification is true, call onCaptchaVerified when user completes 6 characters
     if (deferVerification && captchaData && value.trim().length >= 6 && onCaptchaVerified) {
       onCaptchaVerified(captchaData.captchaId, value);
@@ -133,6 +133,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
       handleVerify();
     }
   };
+
 
   return (
     <div className="space-y-2">
@@ -205,4 +206,3 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
 };
 
 export default CaptchaComponent;
-
