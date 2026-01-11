@@ -45,41 +45,88 @@ export enum DocumentStatusEnum {
     REJECTED = "Rejected",
 }
 
+
+export interface Container {
+    id: number;
+    container_number: string;
+    container_type: string;
+    status: string;
+    weight: number;
+    volume: number;
+}
+
+export interface Truck {
+    id: number;
+    vin: string;
+    plate_number: string;
+    make: string | null;
+    model: string | null;
+    year: number | null;
+    truck_type: string;
+    status: string;
+    registration_date: string;
+    gov_id: string | null;
+}
+
+export interface Driver {
+    id: number;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    email: string;
+    driver_license_number: string;
+    license_expiry_date: string;
+    status: string;
+}
+
 export interface Ship {
     id: number;
     shipper_id: number;
-    origin: LocationEnum;
-    destination: LocationEnum;
-    pickup_date: string; // ISO Date string
-    delivery_date: string; // ISO Date string
-    pickup_facility: Record<string, any>;
-    delivery_facility: Record<string, any>;
-    shipment_details: Record<string, any>;
-    status: ShipStatusEnum;
-    // Relationships
+    origin: string; // Location code e.g. "ADDIS_ABABA"
+    destination: string; // Location code e.g. "DJIBOUTI"
+    status: string;
+    created_at: string;
+    updated_at: string;
+    shipper_name: string;
+    shipper_email?: string;
+    shipper_phone?: string;
+    estimated_departure?: string;
+    estimated_arrival?: string;
+    total_containers: number;
+    assigned_containers: number;
+    containers?: Container[];
     ship_items?: ShipItem[];
-    ship_documents?: ShipDocument[];
+    documents?: ShipDocument[];
 }
 
 export interface ShipItem {
     id: number;
     ship_id: number;
-    truck_id?: number | null;
-    driver_id?: number | null;
     transporter_id: number;
-    ship?: Ship;
-    computed_price: number;
+    container_id: number;
+    status: string; // ShipItemStatusEnum
+    price: number;
     currency: string;
-    status: ShipItemStatusEnum;
+    assigned_driver_id: number | null;
+    assigned_truck_id: number | null;
+    pickup_scheduled_time: string | null;
+    delivery_scheduled_time: string | null;
+    actual_pickup_time: string | null;
+    actual_delivery_time: string | null;
+    created_at: string;
+    updated_at: string;
+    container: Container;
+    assigned_driver: Driver | null;
+    assigned_truck: Truck | null;
 }
 
 export interface ShipDocument {
     id: number;
-    ship_id: number;
-    document_type: ShipDocumentTypeEnum;
-    status: DocumentStatusEnum;
+    document_type: string; // ShipDocumentTypeEnum
     file_path: string;
+    file_name: string;
     file_ext: string;
-    expired_at?: string | null;
-    rejection_reason?: string | null;
+    created_at: string;
+    updated_at?: string;
 }
+

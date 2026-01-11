@@ -49,18 +49,22 @@ export const columns: ColumnDef<Ship>[] = [
         },
     },
     {
-        accessorKey: "pickup_date",
-        header: "Pickup Date",
+        accessorKey: "estimated_departure",
+        header: "Est. Departure",
         cell: ({ row }) => {
-            const date = new Date(row.getValue("pickup_date"));
+            const dateStr = row.getValue("estimated_departure") as string;
+            if (!dateStr) return <div>-</div>;
+            const date = new Date(dateStr);
             return <div>{format(date, "PPP")}</div>;
         },
     },
     {
-        accessorKey: "delivery_date",
-        header: "Delivery Date",
+        accessorKey: "estimated_arrival",
+        header: "Est. Arrival",
         cell: ({ row }) => {
-            const date = new Date(row.getValue("delivery_date"));
+            const dateStr = row.getValue("estimated_arrival") as string;
+            if (!dateStr) return <div>-</div>;
+            const date = new Date(dateStr);
             return <div>{format(date, "PPP")}</div>;
         },
     },
@@ -68,13 +72,13 @@ export const columns: ColumnDef<Ship>[] = [
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-            const status = row.getValue("status") as ShipStatusEnum;
+            const status = row.getValue("status") as string;
             return (
                 <Badge
                     variant={
-                        status === ShipStatusEnum.COMPLETED || status === ShipStatusEnum.DELIVERED
-                            ? "default" // Using default (primary) for completed/delivered usually looks okay, or we can make custom variants if needed
-                            : status === ShipStatusEnum.IN_TRANSIT
+                        status === "COMPLETED" || status === "DELIVERED"
+                            ? "default"
+                            : status === "IN_TRANSIT"
                                 ? "secondary"
                                 : "outline"
                     }
@@ -84,6 +88,7 @@ export const columns: ColumnDef<Ship>[] = [
             );
         },
     },
+
     {
         id: "actions",
         cell: ({ row }) => {

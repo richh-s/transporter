@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ShipItem, ShipItemStatusEnum } from "@/types/ship";
+import { ShipItem, ShipItemStatusEnum, Truck, Driver } from "@/types/ship";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -10,20 +10,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils"; // Assuming this utility exists, otherwise I'll just format manually
+import { formatCurrency } from "@/lib/utils";
 
-// Dummy Options
-const TRUCK_OPTIONS = [
-    { id: 1, plate: "ET-A-12345" },
-    { id: 2, plate: "ET-B-67890" },
-    { id: 3, plate: "ET-C-11223" },
-];
-
-const DRIVER_OPTIONS = [
-    { id: 1, name: "Abebe Kebede" },
-    { id: 2, name: "Chala Muhe" },
-    { id: 3, name: "Dawit Girma" },
-];
+// Define the shape of our table meta
+interface TableMeta {
+    trucks: Truck[];
+    drivers: Driver[];
+    onAssign: (itemId: number, type: 'truck' | 'driver', value: string) => void;
+}
 
 export const columns: ColumnDef<ShipItem>[] = [
     {
@@ -43,10 +37,10 @@ export const columns: ColumnDef<ShipItem>[] = [
         },
     },
     {
-        accessorKey: "computed_price",
-        header: "Computed Price",
+        accessorKey: "price",
+        header: "Price",
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("computed_price"));
+            const amount = parseFloat(row.getValue("price"));
             const currency = row.original.currency;
             return <div>{formatCurrency(amount, currency)}</div>;
         },
@@ -54,18 +48,23 @@ export const columns: ColumnDef<ShipItem>[] = [
     {
         id: "truck",
         header: "Truck",
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const item = row.original;
-            // In a real app, we'd have an onChange handler to update the backend
+            const meta = table.options.meta as unknown as TableMeta;
+            const trucks = meta?.trucks || [];
+
             return (
-                <Select defaultValue={item.truck_id?.toString()}>
+                <Select
+                    defaultValue={item.assigned_truck_id?.toString()}
+                    onValueChange={(value) => meta?.onAssign(item.id, 'truck', value)}
+                >
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select Truck" />
                     </SelectTrigger>
                     <SelectContent>
-                        {TRUCK_OPTIONS.map((truck) => (
+                        {trucks.map((truck) => (
                             <SelectItem key={truck.id} value={truck.id.toString()}>
-                                {truck.plate}
+                                {truck.plate_number}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -76,17 +75,23 @@ export const columns: ColumnDef<ShipItem>[] = [
     {
         id: "driver",
         header: "Driver",
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const item = row.original;
+            const meta = table.options.meta as unknown as TableMeta;
+            const drivers = meta?.drivers || [];
+
             return (
-                <Select defaultValue={item.driver_id?.toString()}>
+                <Select
+                    defaultValue={item.assigned_driver_id?.toString()}
+                    onValueChange={(value) => meta?.onAssign(item.id, 'driver', value)}
+                >
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select Driver" />
                     </SelectTrigger>
                     <SelectContent>
-                        {DRIVER_OPTIONS.map((driver) => (
+                        {drivers.map((driver) => (
                             <SelectItem key={driver.id} value={driver.id.toString()}>
-                                {driver.name}
+                                {driver.first_name} {driver.last_name}
                             </SelectItem>
                         ))}
                     </SelectContent>
