@@ -4,6 +4,8 @@ import { Ship, ShipDocument } from "@/types/ship";
 export interface GetShipsParams {
     page?: number;
     per_page?: number;
+    origin?: string;
+    destination?: string;
 }
 
 export interface PaginatedShipsResponse {
@@ -56,7 +58,7 @@ export const shipApi = {
      * Get ship details for transporter
      */
     getShip: async (id: number | string) => {
-        return request<Ship>(`/ship/transporter/${id}`);
+        return request<Ship>(`/ship/transporter/${id}/`);
     },
 
     /**

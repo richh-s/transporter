@@ -49,20 +49,36 @@ export const columns: ColumnDef<Ship>[] = [
         },
     },
     {
-        accessorKey: "estimated_departure",
-        header: "Est. Departure",
+        accessorKey: "pickup_facility.name",
+        header: "Pickup Facility",
         cell: ({ row }) => {
-            const dateStr = row.getValue("estimated_departure") as string;
+            const facility = row.original.pickup_facility;
+            return <div>{facility?.name || "-"}</div>;
+        },
+    },
+    {
+        accessorKey: "delivery_facility.name",
+        header: "Delivery Facility",
+        cell: ({ row }) => {
+            const facility = row.original.delivery_facility;
+            return <div>{facility?.name || "-"}</div>;
+        },
+    },
+    {
+        accessorKey: "pickup_date",
+        header: "Pickup Date",
+        cell: ({ row }) => {
+            const dateStr = row.getValue("pickup_date") as string;
             if (!dateStr) return <div>-</div>;
             const date = new Date(dateStr);
             return <div>{format(date, "PPP")}</div>;
         },
     },
     {
-        accessorKey: "estimated_arrival",
-        header: "Est. Arrival",
+        accessorKey: "delivery_date",
+        header: "Delivery Date",
         cell: ({ row }) => {
-            const dateStr = row.getValue("estimated_arrival") as string;
+            const dateStr = row.getValue("delivery_date") as string;
             if (!dateStr) return <div>-</div>;
             const date = new Date(dateStr);
             return <div>{format(date, "PPP")}</div>;

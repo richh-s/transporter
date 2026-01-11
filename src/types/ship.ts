@@ -79,24 +79,35 @@ export interface Driver {
     status: string;
 }
 
+export interface Facility {
+    country: string;
+    region: string;
+    name: string;
+    address: string;
+    contact_name: string;
+    contact_phone_number: string;
+    contact_email: string;
+}
+
+export interface ShipmentDetails {
+    bill_of_lading_number: string;
+    pickup_number: string;
+    delivery_number: string;
+}
+
 export interface Ship {
     id: number;
     shipper_id: number;
-    origin: string; // Location code e.g. "ADDIS_ABABA"
-    destination: string; // Location code e.g. "DJIBOUTI"
+    origin: string; // Location code e.g. "addis_ababa"
+    destination: string; // Location code e.g. "djibouti"
+    pickup_date: string;
+    delivery_date: string;
+    pickup_facility: Facility;
+    delivery_facility: Facility;
+    shipment_details: ShipmentDetails;
     status: string;
-    created_at: string;
-    updated_at: string;
-    shipper_name: string;
-    shipper_email?: string;
-    shipper_phone?: string;
-    estimated_departure?: string;
-    estimated_arrival?: string;
-    total_containers: number;
-    assigned_containers: number;
-    containers?: Container[];
-    ship_items?: ShipItem[];
-    documents?: ShipDocument[];
+    ship_items: ShipItem[];
+    containers: Container[];
 }
 
 export interface ShipItem {
@@ -104,8 +115,11 @@ export interface ShipItem {
     ship_id: number;
     transporter_id: number;
     container_id: number;
+    truck_id?: number | null;
+    driver_id?: number | null;
     status: string; // ShipItemStatusEnum
     price: number;
+    computed_price: number;
     currency: string;
     assigned_driver_id: number | null;
     assigned_truck_id: number | null;
@@ -116,6 +130,7 @@ export interface ShipItem {
     created_at: string;
     updated_at: string;
     container: Container;
+    containers?: Container[];
     assigned_driver: Driver | null;
     assigned_truck: Truck | null;
 }

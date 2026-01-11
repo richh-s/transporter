@@ -1,8 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ShipItem, ShipItemStatusEnum, Truck, Driver } from "@/types/ship";
+import { ShipItem, Truck, Driver } from "@/types/ship";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -10,39 +11,40 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
 
-// Define the shape of our table meta
-interface TableMeta {
+interface ShipItemsTableMeta {
+    onViewContainers: (containers: any[]) => void;
     trucks: Truck[];
     drivers: Driver[];
-    onAssign: (itemId: number, type: 'truck' | 'driver', value: string) => void;
+    onAssign: (shipItemId: number, truckId: number | null, driverId: number | null) => void;
+    selectedTrucks: Record<number, number | null>;
+    selectedDrivers: Record<number, number | null>;
+    onTruckChange: (shipItemId: number, truckId: number | null) => void;
+    onDriverChange: (shipItemId: number, driverId: number | null) => void;
 }
 
 export const columns: ColumnDef<ShipItem>[] = [
     {
         accessorKey: "id",
-        header: "ID",
+        header: "Ship Item ID",
+        cell: ({ row }) => <div className="font-medium">{row.getValue("id")}</div>,
     },
     {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-            const status = row.getValue("status") as ShipItemStatusEnum;
-            return (
-                <Badge variant={status === ShipItemStatusEnum.DELIVERED ? "default" : "secondary"}>
-                    {status}
-                </Badge>
-            );
+        id: "origin",
+        header: "Origin",
+        cell: ({ row, table }) => {
+            // Access ship data from table meta if available
+            const meta = table.options.meta as any;
+            return <div>{meta?.ship?.origin || "-"}</div>;
         },
     },
     {
-        accessorKey: "price",
-        header: "Price",
-        cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("price"));
-            const currency = row.original.currency;
-            return <div>{formatCurrency(amount, currency)}</div>;
+        id: "destination",
+        header: "Destination",
+        cell: ({ row, table }) => {
+            // Access ship data from table meta if available
+            const meta = table.options.meta as any;
+            return <div>{meta?.ship?.destination || "-"}</div>;
         },
     },
     {
@@ -50,21 +52,22 @@ export const columns: ColumnDef<ShipItem>[] = [
         header: "Truck",
         cell: ({ row, table }) => {
             const item = row.original;
-            const meta = table.options.meta as unknown as TableMeta;
+            const meta = table.options.meta as unknown as ShipItemsTableMeta;
             const trucks = meta?.trucks || [];
+            const selectedTruckId = meta?.selectedTrucks?.[item.id] ?? (item.truck_id || item.assigned_truck_id);
 
             return (
                 <Select
-                    defaultValue={item.assigned_truck_id?.toString()}
-                    onValueChange={(value) => meta?.onAssign(item.id, 'truck', value)}
+                    value={selectedTruckId?.toString() || ""}
+                    onValueChange={(value) => meta?.onTruckChange(item.id, value ? Number(value) : null)}
                 >
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select Truck" />
+                        <SelectValue placeholder="Select truck" />
                     </SelectTrigger>
                     <SelectContent>
                         {trucks.map((truck) => (
                             <SelectItem key={truck.id} value={truck.id.toString()}>
-                                {truck.plate_number}
+                                {truck.plate_number} - {truck.make} {truck.model}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -77,16 +80,17 @@ export const columns: ColumnDef<ShipItem>[] = [
         header: "Driver",
         cell: ({ row, table }) => {
             const item = row.original;
-            const meta = table.options.meta as unknown as TableMeta;
+            const meta = table.options.meta as unknown as ShipItemsTableMeta;
             const drivers = meta?.drivers || [];
+            const selectedDriverId = meta?.selectedDrivers?.[item.id] ?? (item.driver_id || item.assigned_driver_id);
 
             return (
                 <Select
-                    defaultValue={item.assigned_driver_id?.toString()}
-                    onValueChange={(value) => meta?.onAssign(item.id, 'driver', value)}
+                    value={selectedDriverId?.toString() || ""}
+                    onValueChange={(value) => meta?.onDriverChange(item.id, value ? Number(value) : null)}
                 >
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select Driver" />
+                        <SelectValue placeholder="Select driver" />
                     </SelectTrigger>
                     <SelectContent>
                         {drivers.map((driver) => (
@@ -96,6 +100,66 @@ export const columns: ColumnDef<ShipItem>[] = [
                         ))}
                     </SelectContent>
                 </Select>
+            );
+        },
+    },
+    {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+            const status = row.getValue("status") as string;
+            return (
+                <Badge
+                    variant={
+                        status === "DELIVERED"
+                            ? "default"
+                            : status === "IN_TRANSIT"
+                                ? "secondary"
+                                : "outline"
+                    }
+                >
+                    {status || "-"}
+                </Badge>
+            );
+        },
+    },
+    {
+        id: "containers",
+        header: "Containers",
+        cell: ({ row, table }) => {
+            const containers = row.original.containers || [];
+            const meta = table.options.meta as unknown as ShipItemsTableMeta;
+
+            return (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => meta?.onViewContainers(containers)}
+                    className="flex items-center gap-2"
+                >
+                    <Badge variant="secondary">{containers.length}</Badge>
+                    View
+                </Button>
+            );
+        },
+    },
+    {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row, table }) => {
+            const item = row.original;
+            const meta = table.options.meta as unknown as ShipItemsTableMeta;
+            const selectedTruckId = meta?.selectedTrucks?.[item.id] ?? (item.truck_id || item.assigned_truck_id);
+            const selectedDriverId = meta?.selectedDrivers?.[item.id] ?? (item.driver_id || item.assigned_driver_id);
+
+            return (
+                <Button
+                    size="sm"
+                    onClick={() => meta?.onAssign(item.id, selectedTruckId || null, selectedDriverId || null)}
+                    disabled={!selectedTruckId && !selectedDriverId}
+                >
+                    Assign
+                </Button>
             );
         },
     },

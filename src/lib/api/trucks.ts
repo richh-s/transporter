@@ -4,7 +4,7 @@ export interface Truck {
   id: number;
   vin: string;
   plate_number: string;
-  status: "active" | "inactive" | "maintenance" | "out_of_service";
+  status: string;
   truck_type: "flatbed" | "trailer";
   registration_date: string;
   gov_id: string | null;
@@ -39,7 +39,7 @@ export type UpdateTruckRequest = Partial<CreateTruckRequest>;
 export interface GetTrucksParams {
   page?: number;
   per_page?: number;
-  status?: "active" | "inactive" | "maintenance" | "out_of_service" | null;
+  status?: string | null;
   truck_type?: "flatbed" | "trailer" | null;
   vin?: string | null;
   plate_number?: string | null;
