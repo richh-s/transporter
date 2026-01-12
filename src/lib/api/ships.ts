@@ -1,6 +1,11 @@
 import { request } from "../api-client";
 import { Ship, ShipDocument } from "@/types/ship";
 
+export interface BaseResponse {
+    status: boolean;
+    message: string;
+}
+
 export interface GetShipsParams {
     page?: number;
     per_page?: number;
@@ -18,9 +23,12 @@ export interface PaginatedShipsResponse {
     items: Ship[];
 }
 
-export interface AssignResourceRequest {
-    driver_id?: number;
-    truck_id?: number;
+export interface AssignTruckRequest {
+    truck_id: number;
+}
+
+export interface AssignDriverRequest {
+    driver_id: number;
 }
 
 export interface PaginatedDocumentsResponse {
@@ -62,9 +70,28 @@ export const shipApi = {
     },
 
     /**
+     * Assign truck to ship item
+     */
+    assignTruck: async (shipItemId: number | string, data: AssignTruckRequest) => {
+        return request<BaseResponse>(`/ship-item/${shipItemId}/assign_truck?truck_id=${data.truck_id}`, {
+            method: "PATCH",
+        });
+    },
+
+    /**
+     * Assign driver to ship item
+     */
+    assignDriver: async (shipItemId: number | string, data: AssignDriverRequest) => {
+        return request<BaseResponse>(`/ship-item/${shipItemId}/assign_driver?driver_id=${data.driver_id}`, {
+            method: "PATCH",
+        });
+    },
+
+    /**
+     * @deprecated Use assignTruck and assignDriver instead
      * Assign driver and truck to ship item
      */
-    assignResources: async (shipItemId: number | string, data: AssignResourceRequest) => {
+    assignResources: async (shipItemId: number | string, data: { driver_id?: number; truck_id?: number }) => {
         return request<any>(`/ship-item/${shipItemId}/assign`, {
             method: "PATCH",
             body: JSON.stringify(data),

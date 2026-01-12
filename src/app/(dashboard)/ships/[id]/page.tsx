@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Building2, FileText, Truck as TruckIcon } from "lucide-react";
-import { useShip } from "@/hooks/use-ships";
+import { useShip, useAssignTruck, useAssignDriver } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -22,6 +22,9 @@ export default function ShipDetailsPage() {
     const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
     const { data: trucksData, isLoading: isTrucksLoading } = useTrucksQuery({ per_page: 100 });
     const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
+
+    const assignTruck = useAssignTruck(id);
+    const assignDriver = useAssignDriver(id);
 
     const trucks = trucksData?.items || [];
     const drivers = driversData?.items || [];
@@ -50,11 +53,13 @@ export default function ShipDetailsPage() {
         }));
     };
 
-    const handleAssign = async (shipItemId: number, truckId: number | null, driverId: number | null) => {
-        // TODO: Implement assignment logic
-        console.log("Assigning:", { shipItemId, truckId, driverId });
-        // For now, just log the assignment
-        // You can implement the API call here later
+    const handleAssign = (shipItemId: number, truckId: number | null, driverId: number | null) => {
+        if (truckId) {
+            assignTruck.mutate({ shipItemId, data: { truck_id: truckId } });
+        }
+        if (driverId) {
+            assignDriver.mutate({ shipItemId, data: { driver_id: driverId } });
+        }
     };
 
     const [showContainersModal, setShowContainersModal] = useState(false);
