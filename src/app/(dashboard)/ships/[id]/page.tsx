@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Building2, FileText, Truck as TruckIcon } from "lucide-react";
-import { shipApi } from "@/lib/api/ships";
-import { truckApi } from "@/lib/api/trucks";
-import { driverApi } from "@/lib/api/drivers";
+import { useShip } from "@/hooks/use-ships";
+import { useTrucksQuery } from "@/hooks/use-trucks-query";
+import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
 import { DataTable } from "@/components/ui/data-table";
 import { columns as shipItemColumns } from "./ship-items-columns";
@@ -19,55 +19,14 @@ export default function ShipDetailsPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const [ship, setShip] = useState<Ship | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [showContainersModal, setShowContainersModal] = useState(false);
-    const [modalContainers, setModalContainers] = useState<Container[]>([]);
-    const [modalTitle, setModalTitle] = useState("Containers");
+    const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
+    const { data: trucksData, isLoading: isTrucksLoading } = useTrucksQuery({ per_page: 100 });
+    const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
 
-    // Trucks and Drivers state
-    const [trucks, setTrucks] = useState<Truck[]>([]);
-    const [drivers, setDrivers] = useState<Driver[]>([]);
-    const [selectedTrucks, setSelectedTrucks] = useState<Record<number, number | null>>({});
-    const [selectedDrivers, setSelectedDrivers] = useState<Record<number, number | null>>({});
-
-    useEffect(() => {
-        const loadData = async () => {
-            if (!id) return;
-            setIsLoading(true);
-            setError(null);
-            try {
-                // Fetch ship details
-                const shipRes = await shipApi.getShip(id);
-                if (shipRes.error) throw new Error(shipRes.error);
-
-                const currentShip = shipRes.data;
-                if (currentShip) {
-                    setShip(currentShip);
-                } else {
-                    throw new Error("Ship data not found");
-                }
-
-                // Fetch trucks and drivers for the transporter
-                const [trucksRes, driversRes] = await Promise.all([
-                    truckApi.getTrucks({ per_page: 100 }),
-                    driverApi.getDrivers({ per_page: 100 })
-                ]);
-
-                setTrucks(trucksRes.data?.items || []);
-                setDrivers(driversRes.data?.items || []);
-
-            } catch (err: any) {
-                console.error("Failed to load ship details", err);
-                setError(err.message || "Failed to load ship details");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadData();
-    }, [id]);
+    const trucks = trucksData?.items || [];
+    const drivers = driversData?.items || [];
+    const isLoading = isShipLoading || isTrucksLoading || isDriversLoading;
+    const error = shipError ? (shipError as Error).message : null;
 
 
 
@@ -97,6 +56,12 @@ export default function ShipDetailsPage() {
         // For now, just log the assignment
         // You can implement the API call here later
     };
+
+    const [showContainersModal, setShowContainersModal] = useState(false);
+    const [modalContainers, setModalContainers] = useState<Container[]>([]);
+    const [modalTitle, setModalTitle] = useState("Containers");
+    const [selectedTrucks, setSelectedTrucks] = useState<Record<number, number | null>>({});
+    const [selectedDrivers, setSelectedDrivers] = useState<Record<number, number | null>>({});
 
     if (isLoading) {
         return <div className="p-10 flex justify-center">Loading ship details...</div>;

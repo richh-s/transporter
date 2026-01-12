@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
-import { Ship } from "@/types/ship";
-import { shipApi } from "@/lib/api/ships";
+import { useShips } from "@/hooks/use-ships";
 import {
     Select,
     SelectContent,
@@ -30,37 +29,14 @@ const LOCATIONS = [
 ];
 
 export default function ShipsPage() {
-    const [data, setData] = useState<Ship[]>([]);
-    const [loading, setLoading] = useState(false);
     const [origin, setOrigin] = useState<string>("");
     const [destination, setDestination] = useState<string>("");
 
-    const fetchShips = async () => {
-        setLoading(true);
-        try {
-            const params: any = { per_page: 100 };
-            if (origin) params.origin = origin;
-            if (destination) params.destination = destination;
-
-            const response = await shipApi.getShips(params);
-            if (response.data) {
-                setData(response.data.items);
-            }
-        } catch (error) {
-            console.error("Failed to fetch ships", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Debounce filter changes
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchShips();
-        }, 500); // Wait 500ms after user stops selecting
-
-        return () => clearTimeout(timer);
-    }, [origin, destination]);
+    const { data, isLoading } = useShips({
+        per_page: 100,
+        origin: origin || undefined,
+        destination: destination || undefined,
+    });
 
     const clearFilters = () => {
         setOrigin("");
@@ -68,6 +44,7 @@ export default function ShipsPage() {
     };
 
     const hasActiveFilters = origin || destination;
+    const ships = data?.items || [];
 
     return (
         <div className="container mx-auto py-10">
@@ -121,7 +98,7 @@ export default function ShipsPage() {
                 )}
             </div>
 
-            <DataTable columns={columns} data={data} searchKey="origin" />
+            <DataTable columns={columns} data={ships} isLoading={isLoading} searchKey="origin" />
         </div>
     );
 }
