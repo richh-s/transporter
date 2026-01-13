@@ -66,6 +66,7 @@ export interface Truck {
     status: string;
     registration_date: string;
     gov_id: string | null;
+    capacity_quintal?: number;
 }
 
 export interface Driver {
@@ -133,6 +134,8 @@ export interface ShipItem {
     containers?: Container[];
     assigned_driver: Driver | null;
     assigned_truck: Truck | null;
+    driver?: Driver | null;
+    truck?: Truck | null;
 }
 
 export interface ShipDocument {

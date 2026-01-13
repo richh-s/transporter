@@ -70,9 +70,9 @@ export const captchaService = {
         captchaId,
         imageUrl,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('CAPTCHA Fetch Error:', error);
-      const errorMsg = error.message || 'Unknown error';
+      const errorMsg = (error as Error).message || 'Unknown error';
 
       // Make error messages user-friendly
       if (errorMsg.toLowerCase().includes('cors') || errorMsg.toLowerCase().includes('header')) {
@@ -108,8 +108,8 @@ export const captchaService = {
 
       const data = await response.json();
       return data;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Network error during CAPTCHA verification';
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message || 'Network error during CAPTCHA verification';
       const lowerMsg = errorMessage.toLowerCase();
 
       // Make error messages user-friendly

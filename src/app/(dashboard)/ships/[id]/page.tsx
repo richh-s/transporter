@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { Ship, Container, Truck, Driver } from "@/types/ship";
+import { Container, Ship } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building2, FileText, Truck as TruckIcon } from "lucide-react";
-import { useShip, useAssignTruck, useAssignDriver } from "@/hooks/use-ships";
+import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useShip, useAssignTruck, useAssignDriver, useShipItems } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -22,32 +23,37 @@ export default function ShipDetailsPage() {
     const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
     const { data: trucksData, isLoading: isTrucksLoading } = useTrucksQuery({ per_page: 100 });
     const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
+    const { data: globalShipItemsData, isLoading: isGlobalLoading } = useShipItems({ per_page: 1000 });
+
+    console.log("🚛 Trucks Data Response:", trucksData);
+    console.log("🌐 Global Ship Items Response:", globalShipItemsData);
 
     const assignTruck = useAssignTruck(id);
     const assignDriver = useAssignDriver(id);
 
-    const trucks = trucksData?.items || [];
-    const drivers = driversData?.items || [];
-    const isLoading = isShipLoading || isTrucksLoading || isDriversLoading;
+    const trucks = Array.isArray(trucksData) ? trucksData : (trucksData as any)?.items || [];
+    const drivers = Array.isArray(driversData) ? driversData : (driversData as any)?.items || [];
+    const globalShipItems = globalShipItemsData?.items || [];
+
+    console.log("🚛 Parsed Trucks:", trucks);
+    console.log("📦 Parsed Global Ship Items:", globalShipItems);
+
+    const isLoading = isShipLoading || isTrucksLoading || isDriversLoading || isGlobalLoading;
     const error = shipError ? (shipError as Error).message : null;
-
-
-
     const handleViewShipItemContainers = (containers: Container[]) => {
         setModalContainers(containers);
-        setModalTitle("Ship Item Containers");
         setShowContainersModal(true);
     };
 
     const handleTruckChange = (shipItemId: number, truckId: number | null) => {
-        setSelectedTrucks(prev => ({
+        setSelectedTrucks((prev: Record<number, number | null>) => ({
             ...prev,
             [shipItemId]: truckId
         }));
     };
 
     const handleDriverChange = (shipItemId: number, driverId: number | null) => {
-        setSelectedDrivers(prev => ({
+        setSelectedDrivers((prev: Record<number, number | null>) => ({
             ...prev,
             [shipItemId]: driverId
         }));
@@ -64,7 +70,6 @@ export default function ShipDetailsPage() {
 
     const [showContainersModal, setShowContainersModal] = useState(false);
     const [modalContainers, setModalContainers] = useState<Container[]>([]);
-    const [modalTitle, setModalTitle] = useState("Containers");
     const [selectedTrucks, setSelectedTrucks] = useState<Record<number, number | null>>({});
     const [selectedDrivers, setSelectedDrivers] = useState<Record<number, number | null>>({});
 
@@ -85,6 +90,14 @@ export default function ShipDetailsPage() {
 
     return (
         <div className="container mx-auto py-10 space-y-8">
+            <Link
+                href="/ships"
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit"
+            >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Ships</span>
+            </Link>
+
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -232,6 +245,7 @@ export default function ShipDetailsPage() {
                             onTruckChange: handleTruckChange,
                             onDriverChange: handleDriverChange,
                             ship,
+                            globalShipItems,
                         }}
                     />
                 </section>

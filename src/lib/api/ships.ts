@@ -1,5 +1,5 @@
 import { request } from "../api-client";
-import { Ship, ShipDocument } from "@/types/ship";
+import { Ship, ShipDocument, ShipItem } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -9,8 +9,29 @@ export interface BaseResponse {
 export interface GetShipsParams {
     page?: number;
     per_page?: number;
-    origin?: string;
-    destination?: string;
+    ship_id?: number | string;
+    transporter_id?: number | string;
+    truck_id?: number | string;
+    driver_id?: number | string;
+}
+
+export interface GetShipItemsParams {
+    page?: number;
+    per_page?: number;
+    ship_id?: number | string;
+    transporter_id?: number | string;
+    truck_id?: number | string;
+    driver_id?: number | string;
+}
+
+export interface PaginatedShipItemsResponse {
+    status: boolean;
+    message: string;
+    total: number;
+    page: number;
+    pages: number;
+    per_page: number;
+    items: ShipItem[];
 }
 
 export interface PaginatedShipsResponse {
@@ -47,7 +68,21 @@ export const shipApi = {
      */
     getShips: async (params?: GetShipsParams) => {
         const queryParams = new URLSearchParams();
+        if (params) {
+            if (params.page) queryParams.append("page", params.page.toString());
+            if (params.per_page) queryParams.append("per_page", params.per_page.toString());
+        }
+        const queryString = queryParams.toString();
+        const endpoint = queryString ? `/ship/transporter/?${queryString}` : "/ship/transporter/";
 
+        return request<PaginatedShipsResponse>(endpoint);
+    },
+
+    /**
+     * Get ship items (assignments)
+     */
+    getShipItems: async (params?: GetShipItemsParams) => {
+        const queryParams = new URLSearchParams();
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== "") {
@@ -55,11 +90,9 @@ export const shipApi = {
                 }
             });
         }
-
         const queryString = queryParams.toString();
-        const endpoint = queryString ? `/ship/transporter/?${queryString}` : "/ship/transporter/";
-
-        return request<PaginatedShipsResponse>(endpoint);
+        const endpoint = queryString ? `/ship-item/?${queryString}` : "/ship-item/";
+        return request<PaginatedShipItemsResponse>(endpoint);
     },
 
     /**
@@ -92,7 +125,7 @@ export const shipApi = {
      * Assign driver and truck to ship item
      */
     assignResources: async (shipItemId: number | string, data: { driver_id?: number; truck_id?: number }) => {
-        return request<any>(`/ship-item/${shipItemId}/assign`, {
+        return request<BaseResponse>(`/ship-item/${shipItemId}/assign`, {
             method: "PATCH",
             body: JSON.stringify(data),
         });

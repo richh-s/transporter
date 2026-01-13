@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ShipItem, Truck, Driver } from "@/types/ship";
+import { ShipItem, Truck, Driver, Ship, Container } from "@/types/ship";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 
 interface ShipItemsTableMeta {
-    onViewContainers: (containers: any[]) => void;
+    onViewContainers: (containers: Container[]) => void;
     trucks: Truck[];
     drivers: Driver[];
     onAssign: (shipItemId: number, truckId: number | null, driverId: number | null) => void;
@@ -21,6 +21,8 @@ interface ShipItemsTableMeta {
     selectedDrivers: Record<number, number | null>;
     onTruckChange: (shipItemId: number, truckId: number | null) => void;
     onDriverChange: (shipItemId: number, driverId: number | null) => void;
+    ship: Ship;
+    globalShipItems: ShipItem[];
 }
 
 export const columns: ColumnDef<ShipItem>[] = [
@@ -34,7 +36,7 @@ export const columns: ColumnDef<ShipItem>[] = [
         header: "Origin",
         cell: ({ row, table }) => {
             // Access ship data from table meta if available
-            const meta = table.options.meta as any;
+            const meta = table.options.meta as ShipItemsTableMeta;
             return <div>{meta?.ship?.origin || "-"}</div>;
         },
     },
@@ -43,7 +45,7 @@ export const columns: ColumnDef<ShipItem>[] = [
         header: "Destination",
         cell: ({ row, table }) => {
             // Access ship data from table meta if available
-            const meta = table.options.meta as any;
+            const meta = table.options.meta as ShipItemsTableMeta;
             return <div>{meta?.ship?.destination || "-"}</div>;
         },
     },
@@ -53,8 +55,63 @@ export const columns: ColumnDef<ShipItem>[] = [
         cell: ({ row, table }) => {
             const item = row.original;
             const meta = table.options.meta as unknown as ShipItemsTableMeta;
-            const trucks = meta?.trucks || [];
-            const selectedTruckId = meta?.selectedTrucks?.[item.id] ?? (item.truck_id || item.assigned_truck_id);
+            const availableTrucks = meta?.trucks || [];
+
+            // The currently assigned truck object from DB
+            const assignedTruck = item.truck || item.assigned_truck;
+            // The currently assigned truck ID from DB
+            const dbTruckId = assignedTruck?.id || item.truck_id || item.assigned_truck_id;
+
+            // The currently selected truck (either from DB or changed by user)
+            const selectedTruckId = meta?.selectedTrucks?.[item.id] ?? dbTruckId;
+
+            // Calculate which trucks are "taken" by other items (Global + Local)
+            const takenTruckIds = new Set([
+                // Local table selections (current ship)
+                ...table.options.data
+                    .filter(otherItem => Number(otherItem.id) !== Number(item.id))
+                    .map(otherItem => {
+                        const id = meta?.selectedTrucks?.[otherItem.id] ?? ((otherItem.truck || otherItem.assigned_truck)?.id || otherItem.truck_id || otherItem.assigned_truck_id);
+                        return id ? Number(id) : null;
+                    }),
+
+                // Global assignments (other ships)
+                ...meta.globalShipItems
+                    .filter(gItem => {
+                        const status = String(gItem.status || "").toUpperCase();
+                        return Number(gItem.ship_id) !== Number(meta.ship.id) &&
+                            status !== "DELIVERED" &&
+                            status !== "COMPLETED" &&
+                            status !== "CANCELLED";
+                    })
+                    .map(gItem => {
+                        const id = (gItem.truck || gItem.assigned_truck)?.id || gItem.truck_id || gItem.assigned_truck_id;
+                        return id ? Number(id) : null;
+                    })
+            ].filter(Boolean) as number[]);
+
+            // Merge available trucks with assigned truck, filtering out taken ones
+            const dropdownTrucks = availableTrucks.filter(t => !takenTruckIds.has(Number(t.id)));
+
+            console.log(`🚛 Ship Item ${item.id} - Taken Trucks:`, Array.from(takenTruckIds));
+            console.log(`🚛 Ship Item ${item.id} - Available Trucks in Dropdown:`, dropdownTrucks);
+
+            // If we have an assigned truck object, ensure it's in the list
+            if (assignedTruck) {
+                if (!dropdownTrucks.find(t => String(t.id) === String(assignedTruck.id))) {
+                    dropdownTrucks.unshift(assignedTruck);
+                }
+            } else if (dbTruckId) {
+                // If we only have the ID but no object, add a placeholder
+                if (!dropdownTrucks.find(t => String(t.id) === String(dbTruckId))) {
+                    dropdownTrucks.unshift({
+                        id: Number(dbTruckId),
+                        plate_number: `Truck #${dbTruckId}`,
+                        make: "",
+                        model: ""
+                    } as any);
+                }
+            }
 
             return (
                 <Select
@@ -65,11 +122,14 @@ export const columns: ColumnDef<ShipItem>[] = [
                         <SelectValue placeholder="Select truck" />
                     </SelectTrigger>
                     <SelectContent>
-                        {trucks.map((truck) => (
+                        {dropdownTrucks.map((truck) => (
                             <SelectItem key={truck.id} value={truck.id.toString()}>
-                                {truck.plate_number} - {truck.make} {truck.model}
+                                {truck.plate_number} {truck.make ? `- ${truck.make}` : ""} {truck.model || ""} ({truck.capacity_quintal || 0} Qtl)
                             </SelectItem>
                         ))}
+                        {dropdownTrucks.length === 0 && (
+                            <SelectItem value="none" disabled>No active trucks available</SelectItem>
+                        )}
                     </SelectContent>
                 </Select>
             );
@@ -81,8 +141,59 @@ export const columns: ColumnDef<ShipItem>[] = [
         cell: ({ row, table }) => {
             const item = row.original;
             const meta = table.options.meta as unknown as ShipItemsTableMeta;
-            const drivers = meta?.drivers || [];
-            const selectedDriverId = meta?.selectedDrivers?.[item.id] ?? (item.driver_id || item.assigned_driver_id);
+            const availableDrivers = meta?.drivers || [];
+
+            // The currently assigned driver object from DB
+            const assignedDriver = item.driver || item.assigned_driver;
+            // The currently assigned driver ID from DB
+            const dbDriverId = assignedDriver?.id || item.driver_id || item.assigned_driver_id;
+
+            // The currently selected driver (either from DB or changed by user)
+            const selectedDriverId = meta?.selectedDrivers?.[item.id] ?? dbDriverId;
+
+            // Calculate which drivers are "taken" by other items (Global + Local)
+            const takenDriverIds = new Set([
+                // Local table selections (current ship)
+                ...table.options.data
+                    .filter(otherItem => Number(otherItem.id) !== Number(item.id))
+                    .map(otherItem => {
+                        const id = meta?.selectedDrivers?.[otherItem.id] ?? ((otherItem.driver || otherItem.assigned_driver)?.id || otherItem.driver_id || otherItem.assigned_driver_id);
+                        return id ? Number(id) : null;
+                    }),
+
+                // Global assignments (other ships)
+                ...meta.globalShipItems
+                    .filter(gItem => {
+                        const status = String(gItem.status || "").toUpperCase();
+                        return Number(gItem.ship_id) !== Number(meta.ship.id) &&
+                            status !== "DELIVERED" &&
+                            status !== "COMPLETED" &&
+                            status !== "CANCELLED";
+                    })
+                    .map(gItem => {
+                        const id = (gItem.driver || gItem.assigned_driver)?.id || gItem.driver_id || gItem.assigned_driver_id;
+                        return id ? Number(id) : null;
+                    })
+            ].filter(Boolean) as number[]);
+
+            // Merge available drivers with assigned driver, filtering out taken ones
+            const dropdownDrivers = availableDrivers.filter(d => !takenDriverIds.has(Number(d.id)));
+
+            // If we have an assigned driver object, ensure it's in the list
+            if (assignedDriver) {
+                if (!dropdownDrivers.find(d => String(d.id) === String(assignedDriver.id))) {
+                    dropdownDrivers.unshift(assignedDriver);
+                }
+            } else if (dbDriverId) {
+                // If we only have the ID but no object, add a placeholder
+                if (!dropdownDrivers.find(d => String(d.id) === String(dbDriverId))) {
+                    dropdownDrivers.unshift({
+                        id: Number(dbDriverId),
+                        first_name: "Driver",
+                        last_name: `#${dbDriverId}`
+                    } as any);
+                }
+            }
 
             return (
                 <Select
@@ -93,11 +204,14 @@ export const columns: ColumnDef<ShipItem>[] = [
                         <SelectValue placeholder="Select driver" />
                     </SelectTrigger>
                     <SelectContent>
-                        {drivers.map((driver) => (
+                        {dropdownDrivers.map((driver) => (
                             <SelectItem key={driver.id} value={driver.id.toString()}>
                                 {driver.first_name} {driver.last_name}
                             </SelectItem>
                         ))}
+                        {dropdownDrivers.length === 0 && (
+                            <SelectItem value="none" disabled>No active drivers available</SelectItem>
+                        )}
                     </SelectContent>
                 </Select>
             );
@@ -141,6 +255,35 @@ export const columns: ColumnDef<ShipItem>[] = [
                     View
                 </Button>
             );
+        },
+    },
+    {
+        id: "assignment_status",
+        header: "Assignment Status",
+        cell: ({ row }) => {
+            const item = row.original;
+            const hasTruck = !!(item.truck || item.truck_id || item.assigned_truck_id);
+            const hasDriver = !!(item.driver || item.driver_id || item.assigned_driver_id);
+
+            if (hasTruck && hasDriver) {
+                return (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                        Fully Assigned
+                    </Badge>
+                );
+            } else if (hasTruck || hasDriver) {
+                return (
+                    <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700">
+                        Partially Assigned
+                    </Badge>
+                );
+            } else {
+                return (
+                    <Badge variant="default" className="bg-red-600 hover:bg-red-700">
+                        Unassigned
+                    </Badge>
+                );
+            }
         },
     },
     {
