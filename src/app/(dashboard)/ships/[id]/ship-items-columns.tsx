@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface ShipItemsTableMeta {
     onViewContainers: (containers: Container[]) => void;
@@ -22,6 +23,7 @@ interface ShipItemsTableMeta {
     onTruckChange: (shipItemId: number, truckId: number | null) => void;
     onDriverChange: (shipItemId: number, driverId: number | null) => void;
     ship: Ship;
+    isAssigning?: boolean;
 }
 
 export const columns: ColumnDef<ShipItem>[] = [
@@ -103,7 +105,7 @@ export const columns: ColumnDef<ShipItem>[] = [
                     value={selectedTruckId?.toString() || ""}
                     onValueChange={(value) => meta?.onTruckChange(item.id, value ? Number(value) : null)}
                 >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] cursor-pointer">
                         <SelectValue placeholder="Select truck" />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,7 +173,7 @@ export const columns: ColumnDef<ShipItem>[] = [
                     value={selectedDriverId?.toString() || ""}
                     onValueChange={(value) => meta?.onDriverChange(item.id, value ? Number(value) : null)}
                 >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] cursor-pointer">
                         <SelectValue placeholder="Select driver" />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,7 +230,7 @@ export const columns: ColumnDef<ShipItem>[] = [
                         variant="outline"
                         size="sm"
                         onClick={() => meta?.onViewContainers(containers)}
-                        className="flex items-center gap-2 h-8"
+                        className="flex items-center gap-2 h-8 cursor-pointer"
                     >
                         <Badge variant="secondary" className="px-1.5 min-w-[1.25rem] justify-center">
                             {containers.length}
@@ -286,9 +288,13 @@ export const columns: ColumnDef<ShipItem>[] = [
                 <Button
                     size="sm"
                     onClick={() => meta?.onAssign(item.id, selectedTruckId || null, selectedDriverId || null)}
-                    disabled={!selectedTruckId && !selectedDriverId}
+                    disabled={(!selectedTruckId && !selectedDriverId) || meta?.isAssigning}
+                    className={cn(
+                        "cursor-pointer transition-all duration-200",
+                        meta?.isAssigning && "opacity-50 cursor-not-allowed"
+                    )}
                 >
-                    Assign
+                    {meta?.isAssigning ? "Assigning..." : "Assign"}
                 </Button>
             );
         },

@@ -324,6 +324,7 @@ export default function ShipDetailsPage() {
                                 onTruckChange: handleTruckChange,
                                 onDriverChange: handleDriverChange,
                                 ship,
+                                isAssigning: assignTruck.isPending || assignDriver.isPending,
                             }}
                         />
                     )}

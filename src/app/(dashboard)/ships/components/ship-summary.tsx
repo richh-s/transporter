@@ -46,14 +46,14 @@ export function ShipSummary({ ships, isLoading }: ShipSummaryProps) {
     return (
         <div className="space-y-6 mb-10 flex justify-center">
             <div className="grid gap-6 md:grid-cols-2 w-full max-w-5xl">
-                <Card className="hover:shadow-md transition-all duration-300 border-primary/10">
+                <Card className="hover:shadow-md transition-all duration-300 border-primary/10 cursor-pointer group">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Ships</CardTitle>
-                        <ShipIcon className="h-4 w-4 text-primary" />
+                        <ShipIcon className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-4xl font-bold tracking-tight">{totalShips}</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1 text-balance">
                             Current assigned shipments
                         </p>
                     </CardContent>
@@ -69,7 +69,7 @@ export function ShipSummary({ ships, isLoading }: ShipSummaryProps) {
                             {routeEntries.map(([route, count]) => {
                                 const [origin, destination] = route.split(" -> ");
                                 return (
-                                    <div key={route} className="flex items-center justify-between group hover:bg-muted/50 p-2 rounded-lg transition-colors border border-transparent hover:border-border">
+                                    <div key={route} className="flex items-center justify-between group hover:bg-muted/50 p-2 rounded-lg transition-colors border border-transparent hover:border-border cursor-pointer">
                                         <div className="flex items-center gap-2 text-sm capitalize">
                                             <span className="font-semibold">{origin.replace(/_/g, " ")}</span>
                                             <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
