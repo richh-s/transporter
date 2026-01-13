@@ -18,6 +18,7 @@ import {
   Satellite,
   FileText,
   Lock,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -44,6 +45,7 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Live Tracking", href: "/tracking", icon: MapPin }, 
   { name: "Fleet Management", href: "/fleet", icon: Truck },
   { name: "Driver Management", href: "/drivers", icon: User },
   { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
@@ -278,7 +280,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         {/* Mobile Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
           <div className="flex justify-around items-center h-16">
-            {navigation.map((item) => {
+            {navigation.slice(0, 4).map((item) => { // Show only first 4 items on mobile
               const isActive =
                 pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
