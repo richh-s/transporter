@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import { useShips } from "@/hooks/use-ships";
+import { ShipSummary } from "./components/ship-summary";
 
 
 export default function ShipsPage() {
@@ -20,6 +21,8 @@ export default function ShipsPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Ships</h1>
             </div>
+
+            <ShipSummary ships={ships} isLoading={isLoading} />
 
             <DataTable
                 columns={columns}

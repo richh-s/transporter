@@ -91,7 +91,7 @@ export const shipApi = {
             });
         }
         const queryString = queryParams.toString();
-        const endpoint = queryString ? `/ship-item/?${queryString}` : "/ship-item/";
+        const endpoint = queryString ? `/transporter/ship-item/?${queryString}` : "/transporter/ship-item/";
         return request<PaginatedShipItemsResponse>(endpoint);
     },
 

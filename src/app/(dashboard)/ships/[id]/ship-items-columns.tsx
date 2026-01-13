@@ -22,7 +22,6 @@ interface ShipItemsTableMeta {
     onTruckChange: (shipItemId: number, truckId: number | null) => void;
     onDriverChange: (shipItemId: number, driverId: number | null) => void;
     ship: Ship;
-    globalShipItems: ShipItem[];
 }
 
 export const columns: ColumnDef<ShipItem>[] = [
@@ -65,30 +64,16 @@ export const columns: ColumnDef<ShipItem>[] = [
             // The currently selected truck (either from DB or changed by user)
             const selectedTruckId = meta?.selectedTrucks?.[item.id] ?? dbTruckId;
 
-            // Calculate which trucks are "taken" by other items (Global + Local)
-            const takenTruckIds = new Set([
-                // Local table selections (current ship)
-                ...table.options.data
+            // Calculate which trucks are "taken" by other items in the current table
+            const takenTruckIds = new Set(
+                table.options.data
                     .filter(otherItem => Number(otherItem.id) !== Number(item.id))
                     .map(otherItem => {
                         const id = meta?.selectedTrucks?.[otherItem.id] ?? ((otherItem.truck || otherItem.assigned_truck)?.id || otherItem.truck_id || otherItem.assigned_truck_id);
                         return id ? Number(id) : null;
-                    }),
-
-                // Global assignments (other ships)
-                ...meta.globalShipItems
-                    .filter(gItem => {
-                        const status = String(gItem.status || "").toUpperCase();
-                        return Number(gItem.ship_id) !== Number(meta.ship.id) &&
-                            status !== "DELIVERED" &&
-                            status !== "COMPLETED" &&
-                            status !== "CANCELLED";
                     })
-                    .map(gItem => {
-                        const id = (gItem.truck || gItem.assigned_truck)?.id || gItem.truck_id || gItem.assigned_truck_id;
-                        return id ? Number(id) : null;
-                    })
-            ].filter(Boolean) as number[]);
+                    .filter(Boolean) as number[]
+            );
 
             // Merge available trucks with assigned truck, filtering out taken ones
             const dropdownTrucks = availableTrucks.filter(t => !takenTruckIds.has(Number(t.id)));
@@ -151,30 +136,16 @@ export const columns: ColumnDef<ShipItem>[] = [
             // The currently selected driver (either from DB or changed by user)
             const selectedDriverId = meta?.selectedDrivers?.[item.id] ?? dbDriverId;
 
-            // Calculate which drivers are "taken" by other items (Global + Local)
-            const takenDriverIds = new Set([
-                // Local table selections (current ship)
-                ...table.options.data
+            // Calculate which drivers are "taken" by other items in the current table
+            const takenDriverIds = new Set(
+                table.options.data
                     .filter(otherItem => Number(otherItem.id) !== Number(item.id))
                     .map(otherItem => {
                         const id = meta?.selectedDrivers?.[otherItem.id] ?? ((otherItem.driver || otherItem.assigned_driver)?.id || otherItem.driver_id || otherItem.assigned_driver_id);
                         return id ? Number(id) : null;
-                    }),
-
-                // Global assignments (other ships)
-                ...meta.globalShipItems
-                    .filter(gItem => {
-                        const status = String(gItem.status || "").toUpperCase();
-                        return Number(gItem.ship_id) !== Number(meta.ship.id) &&
-                            status !== "DELIVERED" &&
-                            status !== "COMPLETED" &&
-                            status !== "CANCELLED";
                     })
-                    .map(gItem => {
-                        const id = (gItem.driver || gItem.assigned_driver)?.id || gItem.driver_id || gItem.assigned_driver_id;
-                        return id ? Number(id) : null;
-                    })
-            ].filter(Boolean) as number[]);
+                    .filter(Boolean) as number[]
+            );
 
             // Merge available drivers with assigned driver, filtering out taken ones
             const dropdownDrivers = availableDrivers.filter(d => !takenDriverIds.has(Number(d.id)));
@@ -241,19 +212,35 @@ export const columns: ColumnDef<ShipItem>[] = [
         id: "containers",
         header: "Containers",
         cell: ({ row, table }) => {
-            const containers = row.original.containers || [];
+            const item = row.original;
+            const containers = item.containers && item.containers.length > 0
+                ? item.containers
+                : item.container
+                    ? [item.container]
+                    : [];
             const meta = table.options.meta as unknown as ShipItemsTableMeta;
 
+            const totalWeight = containers.reduce((acc, c) => acc + (c.gross_weight || c.weight || 0), 0);
+
             return (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => meta?.onViewContainers(containers)}
-                    className="flex items-center gap-2"
-                >
-                    <Badge variant="secondary">{containers.length}</Badge>
-                    View
-                </Button>
+                <div className="flex flex-col gap-1.5">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => meta?.onViewContainers(containers)}
+                        className="flex items-center gap-2 h-8"
+                    >
+                        <Badge variant="secondary" className="px-1.5 min-w-[1.25rem] justify-center">
+                            {containers.length}
+                        </Badge>
+                        View
+                    </Button>
+                    {containers.length > 0 && (
+                        <div className="text-[10px] sm:text-xs font-semibold text-brand-primary/80 whitespace-nowrap bg-brand-primary/5 px-1.5 py-0.5 rounded border border-brand-primary/10 w-fit">
+                            Σ {totalWeight.toLocaleString()} kg
+                        </div>
+                    )}
+                </div>
             );
         },
     },

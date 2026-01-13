@@ -50,9 +50,20 @@ export interface Container {
     id: number;
     container_number: string;
     container_type: string;
+    container_size?: string;
     status: string;
-    weight: number;
-    volume: number;
+    weight?: number; // Legacy or deprecated
+    gross_weight?: number;
+    gross_weight_unit?: string;
+    tare_weight?: number;
+    volume?: number;
+    recommended_truck_type?: string;
+    is_returning?: boolean;
+    return_location_info?: any | null;
+    container_details?: {
+        commodity?: string[];
+        instruction?: string;
+    };
 }
 
 export interface Truck {
