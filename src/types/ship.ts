@@ -78,6 +78,7 @@ export interface Truck {
     registration_date: string;
     gov_id: string | null;
     capacity_quintal?: number;
+    assigned?: boolean;
 }
 
 export interface Driver {
@@ -89,6 +90,7 @@ export interface Driver {
     driver_license_number: string;
     license_expiry_date: string;
     status: string;
+    assigned?: boolean;
 }
 
 export interface Facility {

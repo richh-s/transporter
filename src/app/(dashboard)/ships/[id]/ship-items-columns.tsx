@@ -77,10 +77,20 @@ export const columns: ColumnDef<ShipItem>[] = [
                     .filter(Boolean) as number[]
             );
 
-            // Merge available trucks with assigned truck, filtering out taken ones
-            const dropdownTrucks = availableTrucks.filter(t => !takenTruckIds.has(Number(t.id)));
+            // Merge available trucks with assigned truck, filtering out taken ones AND those assigned to other shipments in the API
+            const dropdownTrucks = availableTrucks.filter(t => {
+                const isActive = t.status === 'active';
+                const assignedVal = (t as any).assigned || (t as any).assigend || (t as any).is_assigned;
+                const isAssigned = !!assignedVal && String(assignedVal) !== "false";
 
-            console.log(`🚛 Ship Item ${item.id} - Taken Trucks:`, Array.from(takenTruckIds));
+                // Allow if:
+                // 1. It is the currently assigned truck for this item (to ensure it shows up)
+                // 2. OR (It is Active AND Not Assigned globally)
+                const isEligible = String(t.id) === String(dbTruckId) || (isActive && !isAssigned);
+
+                return isEligible && !takenTruckIds.has(Number(t.id));
+            });
+
             console.log(`🚛 Ship Item ${item.id} - Available Trucks in Dropdown:`, dropdownTrucks);
 
             // If we have an assigned truck object, ensure it's in the list
@@ -149,8 +159,19 @@ export const columns: ColumnDef<ShipItem>[] = [
                     .filter(Boolean) as number[]
             );
 
-            // Merge available drivers with assigned driver, filtering out taken ones
-            const dropdownDrivers = availableDrivers.filter(d => !takenDriverIds.has(Number(d.id)));
+            // Merge available drivers with assigned driver, filtering out taken ones AND those assigned to other shipments in the API
+            const dropdownDrivers = availableDrivers.filter(d => {
+                const isActive = d.status === 'active';
+                const assignedVal = (d as any).assigned || (d as any).assigend || (d as any).is_assigned;
+                const isAssigned = !!assignedVal && String(assignedVal) !== "false";
+
+                // Allow if:
+                // 1. It is the currently assigned driver for this item
+                // 2. OR (It is Active AND Not Assigned globally)
+                const isEligible = String(d.id) === String(dbDriverId) || (isActive && !isAssigned);
+
+                return isEligible && !takenDriverIds.has(Number(d.id));
+            });
 
             // If we have an assigned driver object, ensure it's in the list
             if (assignedDriver) {
