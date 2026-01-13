@@ -62,7 +62,7 @@ export function UploadDocumentModal({
       "image/jpg",
       "image/png",
     ];
-    
+
     if (!validTypes.includes(file.type)) {
       setError("Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG files.");
       return;
@@ -153,6 +153,7 @@ export function UploadDocumentModal({
   };
 
   const getFileIcon = (fileName: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ext = fileName.split(".").pop()?.toLowerCase();
     return <FileText className="h-5 w-5 text-muted-foreground" />;
   };
@@ -206,7 +207,7 @@ export function UploadDocumentModal({
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               disabled={isUploading}
             />
-            
+
             {!selectedFile ? (
               <div
                 onDragOver={handleDragOver}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { Container, Ship } from "@/types/ship";
+import { Container, Truck, Driver } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -31,8 +31,8 @@ export default function ShipDetailsPage() {
     const assignTruck = useAssignTruck(id);
     const assignDriver = useAssignDriver(id);
 
-    const trucks = Array.isArray(trucksData) ? trucksData : (trucksData as any)?.items || [];
-    const drivers = Array.isArray(driversData) ? driversData : (driversData as any)?.items || [];
+    const trucks = Array.isArray(trucksData) ? trucksData : (trucksData as unknown as { items: Truck[] })?.items || [];
+    const drivers = Array.isArray(driversData) ? driversData : (driversData as unknown as { items: Driver[] })?.items || [];
     const globalShipItems = globalShipItemsData?.items || [];
 
     console.log("🚛 Parsed Trucks:", trucks);

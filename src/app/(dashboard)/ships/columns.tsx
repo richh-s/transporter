@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Ship, ShipStatusEnum } from "@/types/ship";
+import { Ship } from "@/types/ship";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, MoreHorizontal, Eye } from "lucide-react";

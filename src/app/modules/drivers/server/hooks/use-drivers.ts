@@ -3,7 +3,7 @@ import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
 import type { DriversResponse } from "../types";
 
-export function useDrivers(params?: Record<string, any>) {
+export function useDrivers(params?: Record<string, unknown>) {
   return useQuery<DriversResponse>({
     queryKey: driverKeys.list(params ?? {}),
     queryFn: () => driverApi.getDrivers(params),

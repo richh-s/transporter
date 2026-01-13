@@ -9,12 +9,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface DriverFiltersProps {
+  search: string;
+  setSearch: (value: string) => void;
+  status: string;
+  setStatus: (value: string) => void;
+}
+
 export function DriverFilters({
   search,
   setSearch,
   status,
   setStatus,
-}: any) {
+}: DriverFiltersProps) {
   return (
     <div className="flex flex-col md:flex-row gap-3 md:items-center">
       <Input

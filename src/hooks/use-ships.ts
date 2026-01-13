@@ -11,7 +11,7 @@ export const shipKeys = {
     items: {
         all: () => [...shipKeys.all, "items"] as const,
         lists: () => [...shipKeys.items.all(), "list"] as const,
-        list: (params: any) => [...shipKeys.items.lists(), params] as const,
+        list: (params: Record<string, unknown>) => [...shipKeys.items.lists(), params] as const,
     }
 };
 
@@ -39,7 +39,7 @@ export function useShip(id: string | number) {
     });
 }
 
-export function useShipItems(params: any = {}) {
+export function useShipItems(params: Record<string, unknown> = {}) {
     return useQuery({
         queryKey: shipKeys.items.list(params),
         queryFn: async () => {

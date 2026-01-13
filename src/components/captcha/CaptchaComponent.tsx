@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useCaptcha } from '@/hooks/useCaptcha';
 import { RefreshCw, Loader2 } from 'lucide-react';
 
@@ -162,10 +163,13 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
       <div className="flex items-center gap-2">
         <div className="flex-1 relative border border-gray-200 rounded-md overflow-hidden bg-gray-50 flex items-center justify-center min-h-[60px]">
           {captchaData?.imageUrl ? (
-            <img
+            <Image
               src={captchaData.imageUrl}
               alt="CAPTCHA"
+              width={200}
+              height={60}
               className="max-h-[60px] w-auto"
+              unoptimized
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-4">

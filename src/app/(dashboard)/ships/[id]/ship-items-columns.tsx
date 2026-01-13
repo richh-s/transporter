@@ -34,7 +34,7 @@ export const columns: ColumnDef<ShipItem>[] = [
     {
         id: "origin",
         header: "Origin",
-        cell: ({ row, table }) => {
+        cell: ({ table }) => {
             // Access ship data from table meta if available
             const meta = table.options.meta as ShipItemsTableMeta;
             return <div>{meta?.ship?.origin || "-"}</div>;
@@ -43,7 +43,7 @@ export const columns: ColumnDef<ShipItem>[] = [
     {
         id: "destination",
         header: "Destination",
-        cell: ({ row, table }) => {
+        cell: ({ table }) => {
             // Access ship data from table meta if available
             const meta = table.options.meta as ShipItemsTableMeta;
             return <div>{meta?.ship?.destination || "-"}</div>;
@@ -109,7 +109,7 @@ export const columns: ColumnDef<ShipItem>[] = [
                         plate_number: `Truck #${dbTruckId}`,
                         make: "",
                         model: ""
-                    } as any);
+                    } as Truck);
                 }
             }
 
@@ -191,7 +191,7 @@ export const columns: ColumnDef<ShipItem>[] = [
                         id: Number(dbDriverId),
                         first_name: "Driver",
                         last_name: `#${dbDriverId}`
-                    } as any);
+                    } as Driver);
                 }
             }
 

@@ -55,8 +55,8 @@ export const useCaptcha = (): UseCaptchaReturn => {
       await captchaService.verifyCaptcha(captchaData.captchaId, solution);
       setIsVerified(true);
       return true;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
       // Auto-refresh CAPTCHA on failure
       setTimeout(fetchCaptcha, 1500);
       return false;
