@@ -4,7 +4,7 @@ export interface Truck {
   id: number;
   vin: string;
   plate_number: string;
-  status: string;
+  status: "active" | "inactive" | "maintenance" | "out_of_service";
   truck_type: "flatbed" | "trailer";
   registration_date: string;
   gov_id: string | null;

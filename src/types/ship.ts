@@ -62,8 +62,8 @@ export interface Truck {
     make: string | null;
     model: string | null;
     year: number | null;
-    truck_type: string;
-    status: string;
+    truck_type: "flatbed" | "trailer";
+    status: "active" | "inactive" | "maintenance" | "out_of_service";
     registration_date: string;
     gov_id: string | null;
     capacity_quintal?: number;

@@ -125,8 +125,8 @@ export function EditTruckModal({
       form.reset({
         vin: truck.vin,
         plate_number: truck.plate_number,
-        status: truck.status,
-        truck_type: truck.truck_type,
+        status: truck.status as TruckFormValues["status"],
+        truck_type: truck.truck_type as TruckFormValues["truck_type"],
         registration_date: truck.registration_date,
         gov_id: truck.gov_id || "",
         make: truck.make || "",
@@ -253,8 +253,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_TYPES.find(
-                                    (type) => type.value === field.value
-                                  )?.label
+                                  (type) => type.value === field.value
+                                )?.label
                                 : "Select type..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -323,8 +323,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_STATUSES.find(
-                                    (status) => status.value === field.value
-                                  )?.label
+                                  (status) => status.value === field.value
+                                )?.label
                                 : "Select status..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
