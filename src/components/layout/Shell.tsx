@@ -18,7 +18,7 @@ import {
   Satellite,
   FileText,
   Lock,
-  MapPin,
+  Anchor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -45,7 +45,7 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Live Tracking", href: "/tracking", icon: MapPin }, 
+  { name: "Ships", href: "/ships", icon: Anchor },
   { name: "Fleet Management", href: "/fleet", icon: Truck },
   { name: "Driver Management", href: "/drivers", icon: User },
   { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },

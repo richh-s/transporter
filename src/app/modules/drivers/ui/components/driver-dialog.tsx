@@ -7,13 +7,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DriverForm } from "./driver-form";
+import { Driver } from "../../server/types";
+import { CreateDriverInput } from "@/lib/zod/driver";
+
+interface DriverDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  driver: Driver | null;
+  onSubmit: (values: CreateDriverInput) => void;
+}
 
 export function DriverDialog({
   open,
   onOpenChange,
   driver,
   onSubmit,
-}: any) {
+}: DriverDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -24,7 +33,7 @@ export function DriverDialog({
         </DialogHeader>
 
         <DriverForm
-          defaultValues={driver}
+          defaultValues={driver || undefined}
           onSubmit={onSubmit}
         />
       </DialogContent>

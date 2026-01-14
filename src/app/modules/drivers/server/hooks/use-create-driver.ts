@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
+import type { DriversResponse } from "../types";
 
 
 export function useCreateDriver() {
@@ -16,7 +17,7 @@ export function useCreateDriver() {
 
       qc.setQueriesData(
         { queryKey: driverKeys.list({}), exact: false },
-        (old: any) => {
+        (old: DriversResponse | undefined) => {
           if (!old) return old;
           return {
             ...old,

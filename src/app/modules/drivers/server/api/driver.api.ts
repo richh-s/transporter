@@ -9,19 +9,19 @@ import type {
 } from "../types";
 
 // helpers
-function toQueryString(params?: Record<string, any>) {
+function toQueryString(params?: Record<string, unknown>) {
   if (!params) return "";
   const search = new URLSearchParams(
-    Object.entries(params).filter(
-      ([_, v]) => v !== undefined && v !== ""
-    )
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== "")
+      .map(([k, v]) => [k, String(v)])
   );
   return search.toString() ? `?${search}` : "";
 }
 // driver api
 export const driverApi = {
-// drivers
-  getDrivers: (params?: Record<string, any>) =>
+  // drivers
+  getDrivers: (params?: Record<string, unknown>) =>
     apiRequest<DriversResponse>(`/driver${toQueryString(params)}`),
 
   getDriver: (id: number) =>
@@ -44,7 +44,7 @@ export const driverApi = {
       method: "DELETE",
     }),
 
-// docs
+  // docs
 
   // list
   getDriverDocuments: (driverId: number) =>
@@ -54,7 +54,7 @@ export const driverApi = {
 
   // get single
   getDriverDocument: (driverId: number, documentId: number) =>
-    apiRequest<DriverDocument>( 
+    apiRequest<DriverDocument>(
       `/driver/${driverId}/documents/${documentId}`
     ),
 

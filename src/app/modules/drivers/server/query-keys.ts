@@ -1,7 +1,7 @@
 export const driverKeys = {
   all: ["drivers"] as const,
 
-  list: (params: Record<string, any>) =>
+  list: (params: Record<string, unknown>) =>
     ["drivers", "list", params] as const,
 
   detail: (id: number | string) =>

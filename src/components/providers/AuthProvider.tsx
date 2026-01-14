@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, captchaId?: string, captchaSolution?: string) => {
     console.log(email, password, captchaId, captchaSolution);
-    
+
     const { data, error } = await request<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({

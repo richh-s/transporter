@@ -83,6 +83,8 @@ interface DataTableProps<TData, TValue> {
   mobileAddButton?: React.ReactNode;
   // Loading state
   isLoading?: boolean;
+  // Row click handler
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -105,9 +107,9 @@ export function DataTable<TData, TValue>({
   filterControls,
   headerActions,
   onScrollChange,
-  isScrolled,
   mobileAddButton,
   isLoading = false,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -224,7 +226,7 @@ export function DataTable<TData, TValue>({
       (cell) =>
         cell.column.id === "plate_number" ||
         (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
-          "plate_number"
+        "plate_number"
     );
 
     // Find actions cell
@@ -238,7 +240,7 @@ export function DataTable<TData, TValue>({
         cell.column.id !== "plate_number" &&
         cell.column.id !== "actions" &&
         (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
-          "plate_number"
+        "plate_number"
     );
 
     // Get header label for a column
@@ -349,21 +351,21 @@ export function DataTable<TData, TValue>({
   // Show all rows from current page (server fetches 10 per page)
   const allRows = table.getRowModel().rows;
   const visibleRows = allRows; // Show all fetched cards
-  
+
   // Calculate page count for client-side pagination
   const calculatedPageCount = manualPagination
     ? pageCount
     : Math.ceil(data.length / perPage);
-  
+
   // Notify parent of page count changes
   React.useEffect(() => {
     if (onPageCountChange && !manualPagination) {
-      onPageCountChange(calculatedPageCount);
+      onPageCountChange(calculatedPageCount ?? 0);
     } else if (onPageCountChange && manualPagination && pageCount !== undefined) {
       onPageCountChange(pageCount);
     }
   }, [calculatedPageCount, pageCount, manualPagination, onPageCountChange]);
-  
+
   const hasMore = pageCount ? page < pageCount : calculatedPageCount ? page < calculatedPageCount : false;
 
   // Handle "See More" click - fetch next page from server
@@ -506,7 +508,7 @@ export function DataTable<TData, TValue>({
                           className={cn(
                             "bg-background",
                             isSticky &&
-                              "sticky left-0 z-30 bg-background border-r",
+                            "sticky left-0 z-30 bg-background border-r",
                             index === 0
                               ? "pl-0 sm:pl-1 pr-1 sm:pr-2"
                               : "pl-1 sm:pl-2 pr-1 sm:pr-2",
@@ -517,9 +519,9 @@ export function DataTable<TData, TValue>({
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                           </div>
                         </TableHead>
                       );
@@ -547,6 +549,8 @@ export function DataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
+                      onClick={() => onRowClick?.(row.original)}
+                      className={cn(onRowClick && "cursor-pointer hover:bg-muted/50 transition-colors")}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const isSticky = (
@@ -557,7 +561,7 @@ export function DataTable<TData, TValue>({
                             key={cell.id}
                             className={cn(
                               isSticky &&
-                                "sticky left-0 z-10 bg-background border-r",
+                              "sticky left-0 z-10 bg-background border-r",
                               "align-middle"
                             )}
                           >
@@ -592,9 +596,9 @@ export function DataTable<TData, TValue>({
           <div className="text-muted-foreground hidden sm:block">
             {total !== undefined
               ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(
-                  page * perPage,
-                  total
-                )} of ${total}`
+                page * perPage,
+                total
+              )} of ${total}`
               : `${table.getFilteredRowModel().rows.length} total`}
           </div>
           {onPerPageChange && (

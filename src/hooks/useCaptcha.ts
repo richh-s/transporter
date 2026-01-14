@@ -33,9 +33,9 @@ export const useCaptcha = (): UseCaptchaReturn => {
       const data = await captchaService.getCaptcha();
       setCaptchaData(data);
       setIsVerified(false);
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        setError(err.message);
+    } catch (err: unknown) {
+      if ((err as Error).name !== 'AbortError') {
+        setError((err as Error).message);
       }
     } finally {
       setIsLoading(false);
@@ -55,8 +55,8 @@ export const useCaptcha = (): UseCaptchaReturn => {
       await captchaService.verifyCaptcha(captchaData.captchaId, solution);
       setIsVerified(true);
       return true;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
       // Auto-refresh CAPTCHA on failure
       setTimeout(fetchCaptcha, 1500);
       return false;
@@ -74,7 +74,7 @@ export const useCaptcha = (): UseCaptchaReturn => {
 
   // Store imageUrl in ref to avoid dependency issues
   const imageUrlRef = useRef<string | null>(null);
-  
+
   useEffect(() => {
     if (captchaData?.imageUrl) {
       // Revoke old URL if it exists
@@ -108,4 +108,3 @@ export const useCaptcha = (): UseCaptchaReturn => {
     cleanup,
   };
 };
-

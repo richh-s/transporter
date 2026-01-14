@@ -17,7 +17,7 @@ export const captchaService = {
     try {
       const captchaUrl = `${API_URL}/auth/captcha`;
       console.log('Fetching CAPTCHA from:', captchaUrl);
-      
+
       const response = await fetch(captchaUrl, {
         method: 'GET',
         credentials: 'include',
@@ -29,10 +29,10 @@ export const captchaService = {
 
       // Try all header name variations
       const captchaId = response.headers.get('X-Captcha-Id') ||
-                       response.headers.get('x-captcha-id') ||
-                       response.headers.get('X-CAPTCHA-ID') ||
-                       response.headers.get('Captcha-Id') ||
-                       response.headers.get('captcha-id');
+        response.headers.get('x-captcha-id') ||
+        response.headers.get('X-CAPTCHA-ID') ||
+        response.headers.get('Captcha-Id') ||
+        response.headers.get('captcha-id');
 
       console.log('Extracted CAPTCHA ID:', captchaId);
 
@@ -41,7 +41,7 @@ export const captchaService = {
         console.error('Missing x-captcha-id header.');
         console.error('Response status:', response.status);
         console.error('Response statusText:', response.statusText);
-        
+
         // Log all headers
         const allHeaders: Record<string, string> = {};
         response.headers.forEach((value, key) => {
@@ -49,17 +49,17 @@ export const captchaService = {
           console.log(`Header: ${key} = ${value}`);
         });
         console.error('All response headers:', allHeaders);
-        
+
         // Check if CORS is blocking the header
         const exposedHeaders = response.headers.get('Access-Control-Expose-Headers');
         console.warn('CORS Exposed Headers:', exposedHeaders);
-        
+
         if (!exposedHeaders?.includes('X-Captcha-Id') && !exposedHeaders?.includes('x-captcha-id')) {
           throw new Error(
             'Unable to load security code. Please refresh the page or contact support if the problem persists.'
           );
         }
-        
+
         throw new Error('Unable to load security code. Please try again.');
       }
 
@@ -70,15 +70,15 @@ export const captchaService = {
         captchaId,
         imageUrl,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('CAPTCHA Fetch Error:', error);
-      const errorMsg = error.message || 'Unknown error';
-      
+      const errorMsg = (error as Error).message || 'Unknown error';
+
       // Make error messages user-friendly
       if (errorMsg.toLowerCase().includes('cors') || errorMsg.toLowerCase().includes('header')) {
         throw new Error('Unable to load security code. Please refresh the page and try again.');
       }
-      
+
       throw new Error('Unable to load security code. Please try again.');
     }
   },
@@ -105,23 +105,23 @@ export const captchaService = {
         throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+
       const data = await response.json();
       return data;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Network error during CAPTCHA verification';
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message || 'Network error during CAPTCHA verification';
       const lowerMsg = errorMessage.toLowerCase();
-      
+
       // Make error messages user-friendly
       if (lowerMsg.includes('invalid') || lowerMsg.includes('incorrect') || lowerMsg.includes('wrong')) {
         throw new Error('The security code you entered is incorrect. Please try again.');
       }
-      
+
       if (lowerMsg.includes('expired') || lowerMsg.includes('timeout')) {
         throw new Error('The security code has expired. Please get a new code and try again.');
       }
-      
+
       throw new Error('Unable to verify security code. Please try again.');
     }
   },
 };
-

@@ -124,7 +124,7 @@ export function DriverManagementView() {
           className="md:max-w-sm"
         />
 
-        <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+        <Select value={status} onValueChange={(v) => setStatus(v as "all" | "active" | "inactive")}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
