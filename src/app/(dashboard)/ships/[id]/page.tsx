@@ -17,6 +17,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { columns as shipItemColumns } from "./ship-items-columns";
+import { useShipPayment } from "@/app/modules/payments/server/hooks/use-ship-payment";
+import { useShipInvoice } from "@/app/modules/payments/server/hooks/use-ship-invoice";
 
 export default function ShipDetailsPage() {
     const params = useParams();
@@ -67,7 +69,20 @@ export default function ShipDetailsPage() {
     const [modalContainers, setModalContainers] = useState<Container[]>([]);
     const [selectedTrucks, setSelectedTrucks] = useState<Record<number, number | null>>({});
     const [selectedDrivers, setSelectedDrivers] = useState<Record<number, number | null>>({});
+    const {
+        data: payments = [],
+        isLoading: isPaymentLoading,
+        error: paymentError,
+      } = useShipPayment(Number(id));
 
+      const payment =
+  payments.find((p) => p.status === "unpaid") ?? payments[0];
+
+      
+      const {
+        mutate: downloadInvoice,
+        isPending: isInvoiceDownloading,
+      } = useShipInvoice();
     if (error) {
         return (
             <div className="p-10 text-center space-y-4">
@@ -142,33 +157,65 @@ export default function ShipDetailsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Payment Summary */}
+            
                 <Card className="md:col-span-full bg-brand-primary/5 border-brand-primary/20">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center gap-2 text-brand-primary">
-                            <CreditCard className="h-5 w-5" />
-                            Payment Summary
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Total Amount Due</p>
-                            <div className="text-3xl font-bold text-brand-primary">
-                                {isShipLoading ? (
-                                    <Skeleton className="h-9 w-32" />
-                                ) : (
-                                    `${ship?.ship_items?.[0]?.currency || "ETB"} ${ship?.ship_items?.reduce((acc, item) => acc + (item.computed_price || 0), 0).toLocaleString()}`
-                                )}
-                            </div>
-                        </div>
-                        <Button
-                            size="lg"
-                            className="bg-brand-primary hover:bg-brand-secondary text-white px-8"
-                            onClick={() => alert("Payment integration coming soon!")}
-                        >
-                            Pay Now
-                        </Button>
-                    </CardContent>
-                </Card>
+  <CardHeader className="pb-2">
+    <CardTitle className="text-lg flex items-center gap-2 text-brand-primary">
+      <CreditCard className="h-5 w-5" />
+      Payment Summary
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    {/* LEFT */}
+    <div className="space-y-1">
+      <p className="text-sm text-muted-foreground">Amount</p>
+
+      {isPaymentLoading ? (
+        <Skeleton className="h-9 w-32" />
+      ) : payment ? (
+        <div className="text-3xl font-bold text-brand-primary">
+        ETB {Number(payment.total).toLocaleString()}
+        </div>
+      ) : (
+        <div className="text-sm text-muted-foreground">
+          No unpaid payment available
+        </div>
+      )}
+
+      {payment && (
+        <Badge
+          variant={payment.status === "unpaid" ? "secondary" : "default"}
+          className="mt-2"
+        >
+          {payment.status}
+        </Badge>
+      )}
+    </div>
+
+    {/* RIGHT */}
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        disabled={!payment}
+        onClick={() => downloadInvoice(Number(id))}
+      >
+        Download Invoice
+      </Button>
+
+      <Button
+        size="lg"
+        className="bg-brand-primary hover:bg-brand-secondary text-white px-8"
+        disabled={!payment || payment.status !== "unpaid"}
+        onClick={() => alert("Payment flow coming next")}
+      >
+        Pay Now
+      </Button>
+    </div>
+  </CardContent>
+</Card>
+
+
 
                 {/* Pickup Facility */}
                 <Card>
