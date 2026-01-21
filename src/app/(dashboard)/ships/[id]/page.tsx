@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard } from "lucide-react";
 import Link from "next/link";
-import { useShip, useAssignTruck, useAssignDriver } from "@/hooks/use-ships";
+import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -17,6 +17,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { columns as shipItemColumns } from "./ship-items-columns";
+import { toast } from "sonner";
 
 export default function ShipDetailsPage() {
     const params = useParams();
@@ -25,8 +26,11 @@ export default function ShipDetailsPage() {
     const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
     const { data: trucksData, isLoading: isTrucksLoading } = useTrucksQuery({ per_page: 100 });
     const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
+    const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id);
+    const createPaymentOrder = useCreatePaymentOrder(id);
 
     console.log("🚛 Trucks Data Response:", trucksData);
+    console.log("💰 Payments Response:", payments);
 
     const assignTruck = useAssignTruck(id);
     const assignDriver = useAssignDriver(id);
@@ -35,6 +39,24 @@ export default function ShipDetailsPage() {
     const drivers = Array.isArray(driversData) ? driversData : (driversData as unknown as { items: Driver[] })?.items || [];
 
     const error = shipError ? (shipError as Error).message : null;
+    
+    // Find unpaid payment
+    const unpaidPayment = payments?.find(p => !p.paid);
+    const hasUnpaidPayment = !!unpaidPayment;
+    
+    const handlePayNow = () => {
+        if (!unpaidPayment) {
+            toast.error("No unpaid payments found for this ship");
+            return;
+        }
+
+        createPaymentOrder.mutate({
+            payment_id: unpaidPayment.id,
+            ship_id: Number(id),
+            title: `Payment`
+        });
+    };
+
     const handleViewShipItemContainers = (containers: Container[]) => {
         setModalContainers(containers);
         setShowContainersModal(true);
@@ -150,22 +172,37 @@ export default function ShipDetailsPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div className="space-y-1">
+                        <div className="space-y-1 flex-1">
                             <p className="text-sm text-muted-foreground">Total Amount Due</p>
                             <div className="text-3xl font-bold text-brand-primary">
-                                {isShipLoading ? (
+                                {isPaymentsLoading ? (
                                     <Skeleton className="h-9 w-32" />
+                                ) : unpaidPayment ? (
+                                    `${unpaidPayment.total_str} ETB`
                                 ) : (
-                                    `${ship?.ship_items?.[0]?.currency || "ETB"} ${ship?.ship_items?.reduce((acc, item) => acc + (item.computed_price || 0), 0).toLocaleString()}`
+                                    <span className="text-green-600 text-xl">✓ Fully Paid</span>
                                 )}
                             </div>
+                            {!isPaymentsLoading && unpaidPayment && (
+                                <div className="text-xs text-muted-foreground space-y-0.5">
+                                    <p>VAT: {unpaidPayment.vat_str} ETB</p>
+                                    <p>Payment Method: {unpaidPayment.payment_method.replace('_', ' ').toUpperCase()}</p>
+                                </div>
+                            )}
                         </div>
                         <Button
                             size="lg"
                             className="bg-brand-primary hover:bg-brand-secondary text-white px-8"
-                            onClick={() => alert("Payment integration coming soon!")}
+                            onClick={handlePayNow}
+                            disabled={!hasUnpaidPayment || isPaymentsLoading || createPaymentOrder.isPending}
                         >
-                            Pay Now
+                            {createPaymentOrder.isPending ? (
+                                "Processing..."
+                            ) : hasUnpaidPayment ? (
+                                "Pay Now"
+                            ) : (
+                                "No Payment Due"
+                            )}
                         </Button>
                     </CardContent>
                 </Card>

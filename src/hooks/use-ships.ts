@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { shipApi, GetShipsParams, AssignTruckRequest, AssignDriverRequest } from "@/lib/api/ships";
+import { CreateOrderRequest } from "@/types/ship";
 import { toast } from "sonner";
 
 export const shipKeys = {
@@ -12,7 +13,8 @@ export const shipKeys = {
         all: () => [...shipKeys.all, "items"] as const,
         lists: () => [...shipKeys.items.all(), "list"] as const,
         list: (params: Record<string, unknown>) => [...shipKeys.items.lists(), params] as const,
-    }
+    },
+    payments: (shipId: string | number) => [...shipKeys.all, "payments", shipId] as const,
 };
 
 export function useShips(params: GetShipsParams = {}) {
@@ -92,6 +94,65 @@ export function useAssignDriver(shipId: string | number) {
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to assign driver");
+        },
+    });
+}
+
+/**
+ * Hook to fetch payments for a ship
+ */
+export function useShipPayments(shipId: string | number) {
+    return useQuery({
+        queryKey: shipKeys.payments(shipId),
+        queryFn: async () => {
+            if (!shipId) return null;
+            const response = await shipApi.getPayments(shipId);
+            if (response.error) throw new Error(response.error);
+            return response.data;
+        },
+        enabled: !!shipId,
+    });
+}
+
+/**
+ * Hook to create a payment order
+ */
+export function useCreatePaymentOrder(shipId: string | number) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: CreateOrderRequest) => {
+            const response = await shipApi.createPaymentOrder(data);
+            if (response.error) {
+                throw new Error(response.error);
+            }
+            if (response.data && response.data.status === false) {
+                throw new Error(response.data.error_message || "Failed to create payment order");
+            }
+            return response.data;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
+            
+            // Open payment URL in new tab
+            if (data?.result?.payment_url) {
+                toast.success("Opening payment gateway in new tab...");
+                window.open(data.result.payment_url, '_blank');
+            } else {
+                toast.error("Payment URL not received from server");
+            }
+        },
+        onError: (error: Error) => {
+            const errorMsg = error.message;
+            if (errorMsg.includes("NO_UNPAID_PAYMENT") || errorMsg.includes("No unpaid payment")) {
+                toast.error("This payment has already been paid or does not exist");
+            } else if (errorMsg.includes("Telebirr")) {
+                toast.error("Payment gateway is temporarily unavailable. Please try again later.");
+            } else if (errorMsg.includes("Not authenticated")) {
+                toast.error("Please log in to continue");
+            } else {
+                toast.error(errorMsg || "Failed to create payment order");
+            }
         },
     });
 }
