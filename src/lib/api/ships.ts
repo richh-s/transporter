@@ -1,5 +1,5 @@
 import { request } from "../api-client";
-import { Ship, ShipDocument, ShipItem } from "@/types/ship";
+import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -160,5 +160,46 @@ export const shipApi = {
         // So window.open(`${API_URL}/ship/${shipId}/documents/${documentId}/download`) should work.
         const API_URL = process.env.NEXT_PUBLIC_API_URL;
         return `${API_URL}/ship/${shipId}/documents/${documentId}/download`;
-    }
+    },
+
+    /**
+     * Get list of payments for a ship
+     * GET /api/v1/ship/transporter/{ship_id}/payment
+     */
+    getPayments: async (shipId: number | string) => {
+        return request<PaymentResponse[]>(`/ship/transporter/${shipId}/payment`);
+    },
+
+    /**
+     * Create Telebirr payment order
+     * POST /api/v1/transporter/createOrder
+     */
+    createPaymentOrder: async (data: CreateOrderRequest) => {
+        return request<CreateOrderResponse>(`/transporter/createOrder`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Get invoice PDF for a ship
+     * GET /api/v1/transporter/ship/{ship_id}/invoice
+     * Returns a PDF blob
+     */
+    getInvoice: async (shipId: number | string): Promise<Blob> => {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const response = await fetch(`${API_URL}/transporter/ship/${shipId}/invoice`, {
+            method: "GET",
+            credentials: "include", // Include cookies for authentication
+            headers: {
+                "Accept": "application/pdf",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch invoice: ${response.statusText}`);
+        }
+
+        return response.blob();
+    },
 };

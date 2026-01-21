@@ -161,3 +161,32 @@ export interface ShipDocument {
     updated_at?: string;
 }
 
+// Payment Types
+export interface PaymentResponse {
+    id: number;
+    payment_id: string;          // UUID
+    payment_type: "commission";
+    total: string;               // Decimal as string
+    vat: string;                 // Decimal as string
+    payment_method: "tele_birr";
+    transaction_receipt: string | null;
+    paid: boolean;
+    total_str: string;           // Computed field
+    vat_str: string;             // Computed field
+}
+
+export interface CreateOrderRequest {
+    payment_id: number;
+    ship_id: number;
+    title: string;
+}
+
+export interface CreateOrderResponse {
+    status: boolean;
+    error_message?: string | null;
+    success_message?: string | null;
+    result?: {
+        payment_url: string;
+    };
+}
+
