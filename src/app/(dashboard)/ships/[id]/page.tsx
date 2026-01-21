@@ -7,7 +7,7 @@ import { Container, Truck, Driver } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard } from "lucide-react";
+import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download } from "lucide-react";
 import Link from "next/link";
 import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { columns as shipItemColumns } from "./ship-items-columns";
 import { toast } from "sonner";
+import { shipApi } from "@/lib/api/ships";
 
 export default function ShipDetailsPage() {
     const params = useParams();
@@ -28,6 +29,7 @@ export default function ShipDetailsPage() {
     const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
     const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id);
     const createPaymentOrder = useCreatePaymentOrder(id);
+    const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
     console.log("🚛 Trucks Data Response:", trucksData);
     console.log("💰 Payments Response:", payments);
@@ -55,6 +57,37 @@ export default function ShipDetailsPage() {
             ship_id: Number(id),
             title: `Payment`
         });
+    };
+
+    const handleDownloadInvoice = async () => {
+        try {
+            setIsDownloadingInvoice(true);
+            toast.loading("Downloading invoice...");
+            
+            const blob = await shipApi.getInvoice(id);
+            
+            // Create a URL for the blob
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `invoice-ship-${id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.dismiss();
+            toast.success("Invoice downloaded successfully");
+        } catch (error: any) {
+            toast.dismiss();
+            toast.error(error.message || "Failed to download invoice");
+        } finally {
+            setIsDownloadingInvoice(false);
+        }
     };
 
     const handleViewShipItemContainers = (containers: Container[]) => {
@@ -190,20 +223,32 @@ export default function ShipDetailsPage() {
                                 </div>
                             )}
                         </div>
-                        <Button
-                            size="lg"
-                            className="bg-brand-primary hover:bg-brand-secondary text-white px-8"
-                            onClick={handlePayNow}
-                            disabled={!hasUnpaidPayment || isPaymentsLoading || createPaymentOrder.isPending}
-                        >
-                            {createPaymentOrder.isPending ? (
-                                "Processing..."
-                            ) : hasUnpaidPayment ? (
-                                "Pay Now"
-                            ) : (
-                                "No Payment Due"
-                            )}
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="px-6"
+                                onClick={handleDownloadInvoice}
+                                disabled={isDownloadingInvoice}
+                            >
+                                <Download className="mr-2 h-4 w-4" />
+                                {isDownloadingInvoice ? "Downloading..." : "Invoice"}
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="bg-brand-primary hover:bg-brand-secondary text-white px-8"
+                                onClick={handlePayNow}
+                                disabled={!hasUnpaidPayment || isPaymentsLoading || createPaymentOrder.isPending}
+                            >
+                                {createPaymentOrder.isPending ? (
+                                    "Processing..."
+                                ) : hasUnpaidPayment ? (
+                                    "Pay Now"
+                                ) : (
+                                    "No Payment Due"
+                                )}
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
 
