@@ -17,25 +17,26 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // Assuming we have this, or use Input
 import { ShipItem, ShipItemDocumentTypeEnum } from "@/types/ship";
-import { Upload, X, File as FileIcon, Loader2 } from "lucide-react";
+import { Upload, File as FileIcon, Loader2 } from "lucide-react";
 import { shipApi } from "@/lib/api/ships";
-import { toast } from "sonner"; // Assuming sonner is used, or generic toast
+import { toast } from "sonner";
 
 interface PodUploadModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     shipItem: ShipItem;
     onUploadSuccess: () => void;
+    selectedContainerIds?: string[];
 }
 
-export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }: PodUploadModalProps) {
+export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, selectedContainerIds = [] }: PodUploadModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [documentType, setDocumentType] = useState<ShipItemDocumentTypeEnum>(ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
-    const [containerId, setContainerId] = useState<string>("all");
+    const [manualContainerId, setManualContainerId] = useState<string>("all");
     const [isUploading, setIsUploading] = useState(false);
-    const [notes, setNotes] = useState("");
+
+    const isBatch = selectedContainerIds.length > 0;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -56,38 +57,37 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }
             return;
         }
 
-        if (documentType === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT && containerId === "all") {
-            // Requirement says: "Ship Item Level: One return receipt for all containers (if all returning to same location)"
-            // So "all" IS allowed, but maybe we should validate if containers are returning. 
-            // For now, let's allow it if user selects it, API will validate.
-            // Actually, UI recommendations said: "Container Level: Must specify container_id".
-            // If user selects "Ship Item Level" (containerId === "all"), it applies to all.
-        }
-
         setIsUploading(true);
         try {
-            const formData = new FormData();
-            formData.append("document_type", documentType);
-            formData.append("file", file);
-            if (containerId !== "all") {
-                formData.append("container_id", containerId);
+            if (isBatch) {
+                // Batch upload for selected containers
+                for (const id of selectedContainerIds) {
+                    const formData = new FormData();
+                    formData.append("document_type", documentType);
+                    formData.append("file", file);
+                    formData.append("container_id", id);
+                    await shipApi.uploadShipItemDocument(shipItem.id, formData);
+                }
+                toast.success(`Document uploaded for ${selectedContainerIds.length} containers`);
+            } else {
+                // Single upload
+                const formData = new FormData();
+                formData.append("document_type", documentType);
+                formData.append("file", file);
+                if (manualContainerId !== "all") {
+                    formData.append("container_id", manualContainerId);
+                }
+                await shipApi.uploadShipItemDocument(shipItem.id, formData);
+                toast.success("Document uploaded successfully");
             }
-            // If we want to support notes, backend needs it. The plan/API didn't explicitly mention 'notes' field in body, 
-            // but UI mocks showed it. I'll omit appending it if API doesn't support it, or append if I suspect it does.
-            // Requirements `POD_DOCUMENT_API_ENDPOINTS.md` Request Body table does NOT show `notes`. 
-            // So I will NOT send notes to avoid 422.
 
-            await shipApi.uploadShipItemDocument(shipItem.id, formData);
-
-            toast.success("Document uploaded successfully");
             onUploadSuccess();
             onOpenChange(false);
 
             // Reset form
             setFile(null);
             setDocumentType(ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
-            setContainerId("all");
-            setNotes("");
+            setManualContainerId("all");
 
         } catch (error: any) {
             console.error("Upload error:", error);
@@ -97,11 +97,6 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }
         }
     };
 
-    // Filter containers for Return Receipt if needed
-    // UI Recommendations: "Container Level: Only shows containers marked as returning"
-    // But `Container` type has `is_returning`? 
-    // Let's look at `ShipItem` -> `containers`.
-    // If `documentType` is return receipt, we might want to filter, but let's just show all for simplicity unless strict.
     const containers = shipItem.containers || (shipItem.container ? [shipItem.container] : []);
 
     return (
@@ -110,7 +105,10 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }
                 <DialogHeader>
                     <DialogTitle>Upload Document</DialogTitle>
                     <DialogDescription>
-                        Upload Proof of Delivery or Container Return Receipt for Ship Item #{shipItem.ship_id}
+                        {isBatch
+                            ? `Uploading for ${selectedContainerIds.length} selected containers`
+                            : `Upload Proof of Delivery or Container Return Receipt for Ship Item #{shipItem.ship_id}`
+                        }
                     </DialogDescription>
                 </DialogHeader>
 
@@ -131,28 +129,30 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }
                         </Select>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="upload-level">Container (Optional)</Label>
-                        <Select
-                            value={containerId}
-                            onValueChange={setContainerId}
-                        >
-                            <SelectTrigger id="upload-level">
-                                <SelectValue placeholder="Select container" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Check if this applies to the whole shipment</SelectItem>
-                                {containers.map(c => (
-                                    <SelectItem key={c.id} value={c.id.toString()}>
-                                        {c.container_number} ({c.container_size || 'Unknown Size'})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                            Select "Whole Shipment" for a single document covering all containers.
-                        </p>
-                    </div>
+                    {!isBatch && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="upload-level">Container (Optional)</Label>
+                            <Select
+                                value={manualContainerId}
+                                onValueChange={setManualContainerId}
+                            >
+                                <SelectTrigger id="upload-level">
+                                    <SelectValue placeholder="Select container" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Check if this applies to the whole shipment</SelectItem>
+                                    {containers.map(c => (
+                                        <SelectItem key={c.id} value={c.id.toString()}>
+                                            {c.container_number} ({c.container_size || 'Unknown Size'})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                Select "Whole Shipment" for a single document covering all containers.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="grid gap-2">
                         <Label>File</Label>
@@ -203,7 +203,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess }
                     </Button>
                     <Button onClick={handleUpload} disabled={!file || isUploading}>
                         {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Upload
+                        Upload {isBatch ? `(${selectedContainerIds.length})` : ""}
                     </Button>
                 </DialogFooter>
             </DialogContent>

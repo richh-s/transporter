@@ -30,6 +30,7 @@ export default function PodDocumentsPage() {
                         if (ship.ship_items) {
                             const enrichedItems = ship.ship_items.map(item => ({
                                 ...item,
+                                ship_id: ship.id, // Ensure ship_id is present
                                 origin: ship.origin,
                                 destination: ship.destination,
                                 pickup_date: ship.pickup_date

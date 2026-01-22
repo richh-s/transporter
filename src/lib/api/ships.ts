@@ -213,8 +213,8 @@ export const shipApi = {
         }
         const queryString = queryParams.toString();
         const endpoint = queryString
-            ? `/ship-items/${shipItemId}/documents/?${queryString}`
-            : `/ship-items/${shipItemId}/documents/`;
+            ? `/ship-item/${shipItemId}/documents/?${queryString}`
+            : `/ship-item/${shipItemId}/documents/`;
 
         // Note: The API returns Array<ShipItemDocument> directly based on the docs, simpler than paginated response
         // Docs say: Response (200 OK) is [ { ... }, ... ]
@@ -240,7 +240,7 @@ export const shipApi = {
 
         const API_URL = process.env.NEXT_PUBLIC_API_URL;
         // Using direct fetch to ensure correct FormData handling without 'application/json' header
-        const response = await fetch(`${API_URL}/ship-items/${shipItemId}/documents/`, {
+        const response = await fetch(`${API_URL}/ship-item/${shipItemId}/documents/`, {
             method: "POST",
             credentials: "include",
             body: formData,
@@ -248,8 +248,17 @@ export const shipApi = {
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || errorData.detail || `Upload failed: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error("Upload failed. Status:", response.status, "Response:", errorText);
+
+            let errorData: any = {};
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                // Not JSON
+            }
+
+            throw new Error(errorData.error || errorData.message || errorData.detail || `Upload failed: ${response.status} ${response.statusText}`);
         }
         return response.json();
     },
@@ -258,8 +267,12 @@ export const shipApi = {
      * Delete a ship item document
      */
     deleteShipItemDocument: async (shipItemId: number | string, documentId: number | string) => {
-        return request<void>(`/ship-items/${shipItemId}/documents/${documentId}`, {
+        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}`, {
             method: "DELETE",
         });
+    },
+
+    getShipItemDetail: async (shipItemId: number | string) => {
+        return request<any>(`/ship/transporter/${shipItemId}`);
     },
 };

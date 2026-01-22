@@ -3,13 +3,13 @@ import { ShipItem, ShipItemDocument } from "@/types/ship";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { MapPin, Truck, User, Calendar, FileText, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { DocumentList } from "./DocumentList";
 import { PodUploadModal } from "./PodUploadModal";
 import { shipApi } from "@/lib/api/ships";
-import { toast } from "sonner"; // Assuming global toast is available, or use a hook
+import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ExtendedShipItem extends ShipItem {
     origin?: string;
@@ -26,21 +26,15 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
     const [documents, setDocuments] = useState<ShipItemDocument[]>([]);
     const [loadingDocs, setLoadingDocs] = useState(false);
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [selectedContainers, setSelectedContainers] = useState<string[]>([]);
+    const [fullShipItem, setFullShipItem] = useState<ExtendedShipItem>(shipItem);
 
     const fetchDocuments = async () => {
         setLoadingDocs(true);
         try {
             const response = await shipApi.getShipItemDocuments(shipItem.id);
-            // Assuming response is the array directly based on my implementation plan for api-client
-            // or check if response.data exists. 
-            // My implementation of getShipItemDocuments returns `request<any[]>` which returns `{ data: any[], ... }`.
-            // Wait, my `uploadShipItemDocument` used fetch and returned json.
-            // `getShipItemDocuments` used `request`.
-            // So I need to handle `ApiResponse`.
             if (response.data) {
                 setDocuments(response.data);
-            } else {
-                // Some fallback if structure dictates
             }
         } catch (error) {
             console.error("Failed to fetch documents", error);
@@ -49,8 +43,41 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         }
     };
 
+    const fetchDetails = async () => {
+        try {
+            const response = await shipApi.getShipItemDetail(shipItem.ship_id);
+            if (response.data) {
+                // The response is the parent Ship object containing ship_items
+                const parentShip = response.data;
+                const detailedItem = parentShip.ship_items?.find((item: any) => item.id == shipItem.id);
+
+                if (detailedItem) {
+                    setFullShipItem(prev => ({
+                        ...prev,
+                        ...detailedItem,
+                        // Ensure containers are updated
+                        containers: detailedItem.containers || [],
+                        // Map specific fields from JSON structure if they differ (e.g. truck vs assigned_truck)
+                        assigned_truck: detailedItem.truck,
+                        assigned_driver: detailedItem.driver,
+                        // If origin/destination came from Ship object (response.data), we should keep them or update them?
+                        // The user said "using the shipitem id use this endpoint to fetch detais about those consiters".
+                        // response.data (Ship) has origin/destination. detailedItem does NOT (it's inside ship_items).
+                        // So we should maybe also update origin/dest from parentShip.
+                        origin: parentShip.origin || prev.origin,
+                        destination: parentShip.destination || prev.destination,
+                        pickup_date: parentShip.pickup_date || prev.pickup_date
+                    }));
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch ship item details", e);
+        }
+    };
+
     useEffect(() => {
         fetchDocuments();
+        fetchDetails();
     }, [shipItem.id]);
 
     const handleDeleteDocument = async (docId: number) => {
@@ -65,6 +92,14 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         }
     };
 
+    const toggleContainer = (containerId: string) => {
+        setSelectedContainers(prev =>
+            prev.includes(containerId)
+                ? prev.filter(id => id !== containerId)
+                : [...prev, containerId]
+        );
+    };
+
     const podCount = documents.filter(d => d.document_type === "proof_of_delivery").length;
     const returnCount = documents.filter(d => d.document_type === "container_return_receipt").length;
 
@@ -74,28 +109,27 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="text-lg font-bold">
-                            Shipment #{shipItem.ship_id} - Item #{shipItem.id}
+                            Shipment #{fullShipItem.ship_id} - Item #{fullShipItem.id}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Status: <Badge variant="outline" className="capitalize">{shipItem.status.replace(/_/g, " ")}</Badge>
+                            Status: <Badge variant="outline" className="capitalize">{fullShipItem.status.replace(/_/g, " ")}</Badge>
                         </p>
                     </div>
                     <div className="text-right">
                         <Badge variant={podCount > 0 ? "default" : "secondary"}>
                             {podCount} POD
                         </Badge>
-                        {/* Show return count if relevant (container return) */}
                         <Badge variant={returnCount > 0 ? "default" : "secondary"} className="ml-2">
                             {returnCount} Returns
                         </Badge>
                     </div>
                 </div>
-                {(shipItem.origin || shipItem.destination) && (
+                {(fullShipItem.origin || fullShipItem.destination) && (
                     <div className="mt-2 text-sm font-medium flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        {shipItem.origin || 'Unknown'}
+                        {fullShipItem.origin || 'Unknown'}
                         <span className="text-muted-foreground/60">→</span>
-                        {shipItem.destination || 'Unknown'}
+                        {fullShipItem.destination || 'Unknown'}
                     </div>
                 )}
             </CardHeader>
@@ -107,9 +141,9 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             <Truck className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Truck:</span>
                             <span>
-                                {shipItem.assigned_truck ?
-                                    `${shipItem.assigned_truck.plate_number} (${shipItem.assigned_truck.model || 'Unknown'})` :
-                                    shipItem.truck_id ? `Assigned (ID: ${shipItem.truck_id})` :
+                                {fullShipItem.assigned_truck ?
+                                    `${fullShipItem.assigned_truck.plate_number} (${fullShipItem.assigned_truck.model || 'Unknown'})` :
+                                    fullShipItem.truck_id ? `Assigned (ID: ${fullShipItem.truck_id})` :
                                         'Not Assigned'}
                             </span>
                         </div>
@@ -117,29 +151,65 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Driver:</span>
                             <span>
-                                {shipItem.assigned_driver ?
-                                    `${shipItem.assigned_driver.first_name} ${shipItem.assigned_driver.last_name}` :
-                                    shipItem.driver_id ? `Assigned (ID: ${shipItem.driver_id})` :
+                                {fullShipItem.assigned_driver ?
+                                    `${fullShipItem.assigned_driver.first_name} ${fullShipItem.assigned_driver.last_name}` :
+                                    fullShipItem.driver_id ? `Assigned (ID: ${fullShipItem.driver_id})` :
                                         'Not Assigned'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">Containers:</span>
-                            <span>
-                                {shipItem.containers && shipItem.containers.length > 0
-                                    ? shipItem.containers.map(c => c.container_number).filter(Boolean).join(", ")
-                                    : shipItem.container?.container_number
-                                    || "No container info"}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Date:</span>
-                            <span>{shipItem.created_at ? format(new Date(shipItem.created_at), "yyyy-MM-dd") : "N/A"}</span>
+                            <span>{fullShipItem.created_at ? format(new Date(fullShipItem.created_at), "yyyy-MM-dd") : "N/A"}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 mb-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">Containers:</span>
+                        </div>
+
+                        {fullShipItem.containers && fullShipItem.containers.length > 0 ? (
+                            <div className="border rounded-md overflow-hidden">
+                                <div className="bg-muted/50 px-3 py-2 text-xs font-medium grid grid-cols-[30px_1fr_1fr_1fr] md:grid-cols-[30px_1fr_1fr_1fr_1fr] gap-2 items-center">
+                                    <div>Select</div>
+                                    <div>Container #</div>
+                                    <div>Type</div>
+                                    <div>Status</div>
+                                    <div className="hidden md:block">Info</div>
+                                </div>
+                                <div className="divide-y">
+                                    {fullShipItem.containers.map(c => (
+                                        <div key={c.id} className="px-3 py-2 text-sm grid grid-cols-[30px_1fr_1fr_1fr] md:grid-cols-[30px_1fr_1fr_1fr_1fr] gap-2 items-center hover:bg-muted/20">
+                                            <div className="flex items-center justify-center">
+                                                <Checkbox
+                                                    checked={selectedContainers.includes(c.id.toString())}
+                                                    onCheckedChange={() => toggleContainer(c.id.toString())}
+                                                />
+                                            </div>
+                                            <div className="font-medium">{c.container_number}</div>
+                                            <div className="text-muted-foreground text-xs">{c.container_size || '-'}</div>
+                                            <div><Badge variant="outline" className="text-[10px] h-5">{c.status || 'Unknown'}</Badge></div>
+                                            <div className="hidden md:block text-xs text-muted-foreground truncate">{c.is_returning ? "Returning" : "-"}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-sm text-muted-foreground italic">
+                                {fullShipItem.container?.container_number || "No container detailed info available"}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end mt-2">
+                            <Button
+                                size="sm"
+                                variant={selectedContainers.length > 0 ? "default" : "outline"}
+                                onClick={() => setUploadModalOpen(true)}
+                            >
+                                {selectedContainers.length > 0 ? `Upload for Selected (${selectedContainers.length})` : "Upload Document"}
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -190,9 +260,16 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
 
             <PodUploadModal
                 open={uploadModalOpen}
-                onOpenChange={setUploadModalOpen}
-                shipItem={shipItem}
-                onUploadSuccess={fetchDocuments}
+                onOpenChange={(open) => {
+                    setUploadModalOpen(open);
+                    if (!open) setSelectedContainers([]);
+                }}
+                shipItem={fullShipItem}
+                onUploadSuccess={() => {
+                    fetchDocuments();
+                    setSelectedContainers([]);
+                }}
+                selectedContainerIds={selectedContainers}
             />
         </Card>
     );
