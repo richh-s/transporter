@@ -6,11 +6,9 @@ import { format } from "date-fns";
 
 interface DocumentListProps {
     documents: ShipItemDocument[];
-    onDelete: (documentId: number) => void;
-    canDelete?: boolean;
 }
 
-export function DocumentList({ documents, onDelete, canDelete = true }: DocumentListProps) {
+export function DocumentList({ documents }: DocumentListProps) {
     if (documents.length === 0) {
         return (
             <div className="text-center py-6 bg-muted/20 rounded-lg border border-dashed">
@@ -45,23 +43,12 @@ export function DocumentList({ documents, onDelete, canDelete = true }: Document
                     size="icon"
                     className="h-8 w-8"
                     asChild
-                    title="View/Download"
+                    title="View Document"
                 >
                     <a href={doc.presigned_url} target="_blank" rel="noopener noreferrer">
-                        <Download className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                     </a>
                 </Button>
-                {canDelete && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => onDelete(doc.id)}
-                        title="Delete"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                )}
             </div>
         </div>
     );

@@ -80,17 +80,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         fetchDetails();
     }, [shipItem.id]);
 
-    const handleDeleteDocument = async (docId: number) => {
-        if (!confirm("Are you sure you want to delete this document?")) return;
-        try {
-            await shipApi.deleteShipItemDocument(shipItem.id, docId);
-            toast.success("Document deleted");
-            fetchDocuments();
-        } catch (error) {
-            console.error("Delete failed", error);
-            toast.error("Failed to delete document");
-        }
-    };
+
 
     const toggleContainer = (containerId: string) => {
         setSelectedContainers(prev =>
@@ -190,8 +180,11 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                                             </div>
                                             <div className="font-medium">{c.container_number}</div>
                                             <div className="text-muted-foreground text-xs">{c.container_size || '-'}</div>
-                                            <div><Badge variant="outline" className="text-[10px] h-5">{c.status || 'Unknown'}</Badge></div>
-                                            <div className="hidden md:block text-xs text-muted-foreground truncate">{c.is_returning ? "Returning" : "-"}</div>
+                                            <div className="flex items-center gap-1">
+                                                <Badge variant="outline" className="text-[10px] h-5">{c.status || 'Unknown'}</Badge>
+                                                {c.is_returning && <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">Returns</Badge>}
+                                            </div>
+                                            <div className="hidden md:block text-xs text-muted-foreground truncate opacity-0 md:opacity-100">{/* Spacer */}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -232,7 +225,6 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                         ) : (
                             <DocumentList
                                 documents={documents}
-                                onDelete={handleDeleteDocument}
                             />
                         )}
                     </div>

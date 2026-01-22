@@ -99,6 +99,23 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
 
     const containers = shipItem.containers || (shipItem.container ? [shipItem.container] : []);
 
+    // Filter containers that are returning
+    const returningContainers = containers.filter(c => c.is_returning);
+
+    // Check if we can allow return receipt upload
+    // If batch: all selected must be returning
+    // If not batch: only allow if at least one container is returning (or we shouldn't show the option?)
+    const allSelectedAreReturning = isBatch
+        ? selectedContainerIds.every(id => containers.find(c => c.id.toString() === id)?.is_returning)
+        : returningContainers.length > 0;
+
+    const showReturnReceiptOption = isBatch ? allSelectedAreReturning : returningContainers.length > 0;
+
+    // Filter available containers based on document type
+    const availableContainers = documentType === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT
+        ? returningContainers
+        : containers;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
@@ -107,7 +124,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                     <DialogDescription>
                         {isBatch
                             ? `Uploading for ${selectedContainerIds.length} selected containers`
-                            : `Upload Proof of Delivery or Container Return Receipt for Ship Item #{shipItem.ship_id}`
+                            : `Upload Proof of Delivery or Container Return Receipt for Ship Item #${shipItem.ship_id}`
                         }
                     </DialogDescription>
                 </DialogHeader>
@@ -117,14 +134,23 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                         <Label htmlFor="doc-type">Document Type</Label>
                         <Select
                             value={documentType}
-                            onValueChange={(val) => setDocumentType(val as ShipItemDocumentTypeEnum)}
+                            onValueChange={(val) => {
+                                setDocumentType(val as ShipItemDocumentTypeEnum);
+                                // Reset container selection if invalid for new type
+                                if (val === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT && manualContainerId !== "all") {
+                                    const isCurrentValid = returningContainers.find(c => c.id.toString() === manualContainerId);
+                                    if (!isCurrentValid) setManualContainerId("all");
+                                }
+                            }}
                         >
                             <SelectTrigger id="doc-type">
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY}>Proof of Delivery (POD)</SelectItem>
-                                <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT}>Container Return Receipt</SelectItem>
+                                {showReturnReceiptOption && (
+                                    <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT}>Container Return Receipt</SelectItem>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
@@ -141,7 +167,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Check if this applies to the whole shipment</SelectItem>
-                                    {containers.map(c => (
+                                    {availableContainers.map(c => (
                                         <SelectItem key={c.id} value={c.id.toString()}>
                                             {c.container_number} ({c.container_size || 'Unknown Size'})
                                         </SelectItem>
