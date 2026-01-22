@@ -39,6 +39,25 @@ export enum ShipDocumentTypeEnum {
     INSURANCE_CERTIFICATE = "Insurance Certificate",
 }
 
+export enum ShipItemDocumentTypeEnum {
+    PROOF_OF_DELIVERY = "proof_of_delivery",
+    CONTAINER_RETURN_RECEIPT = "container_return_receipt",
+}
+
+export interface ShipItemDocument {
+    id: number;
+    ship_id: number;
+    ship_item_id: number;
+    container_id?: number | null;
+    document_type: ShipItemDocumentTypeEnum;
+    file_path: string;
+    file_ext: string;
+    presigned_url: string;
+    created_at: string;
+    updated_at: string;
+    file_name?: string; // Optional helper
+}
+
 export enum DocumentStatusEnum {
     PENDING = "Pending",
     APPROVED = "Approved",
@@ -59,7 +78,12 @@ export interface Container {
     volume?: number;
     recommended_truck_type?: string;
     is_returning?: boolean;
-    return_location_info?: any | null;
+    return_location_info?: {
+        city?: string;
+        port?: string;
+        address?: string;
+        country?: string;
+    } | null;
     container_details?: {
         commodity?: string[];
         instruction?: string;
@@ -149,6 +173,9 @@ export interface ShipItem {
     assigned_truck: Truck | null;
     driver?: Driver | null;
     truck?: Truck | null;
+    origin?: string;
+    destination?: string;
+    pickup_date?: string;
 }
 
 export interface ShipDocument {
