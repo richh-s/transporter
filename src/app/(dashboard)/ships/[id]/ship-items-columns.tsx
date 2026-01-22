@@ -80,7 +80,8 @@ export const columns: ColumnDef<ShipItem>[] = [
             // Merge available trucks with assigned truck, filtering out taken ones AND those assigned to other shipments in the API
             const dropdownTrucks = availableTrucks.filter(t => {
                 const isActive = t.status === 'active';
-                const assignedVal = (t as any).assigned || (t as any).assigend || (t as any).is_assigned;
+                const tExt = t as Truck & { assigned?: boolean | string; assigend?: boolean | string; is_assigned?: boolean | string };
+                const assignedVal = tExt.assigned || tExt.assigend || tExt.is_assigned;
                 const isAssigned = !!assignedVal && String(assignedVal) !== "false";
 
                 // Allow if:
@@ -162,7 +163,8 @@ export const columns: ColumnDef<ShipItem>[] = [
             // Merge available drivers with assigned driver, filtering out taken ones AND those assigned to other shipments in the API
             const dropdownDrivers = availableDrivers.filter(d => {
                 const isActive = d.status === 'active';
-                const assignedVal = (d as any).assigned || (d as any).assigend || (d as any).is_assigned;
+                const dExt = d as Driver & { assigned?: boolean | string; assigend?: boolean | string; is_assigned?: boolean | string };
+                const assignedVal = dExt.assigned || dExt.assigend || dExt.is_assigned;
                 const isAssigned = !!assignedVal && String(assignedVal) !== "false";
 
                 // Allow if:

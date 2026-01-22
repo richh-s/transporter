@@ -121,7 +121,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
                                         <div className="md:col-span-2 lg:col-span-3">
                                             <p className="text-sm text-muted-foreground">Instructions</p>
                                             <p className="text-sm italic text-muted-foreground mt-1 bg-muted/50 p-2 rounded border border-dashed">
-                                                "{container.container_details.instruction}"
+                                                &quot;{container.container_details.instruction}&quot;
                                             </p>
                                         </div>
                                     )}

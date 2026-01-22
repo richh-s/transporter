@@ -25,8 +25,8 @@ export default function ShipDetailsPage() {
     const id = params.id as string;
 
     const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
-    const { data: trucksData, isLoading: isTrucksLoading } = useTrucksQuery({ per_page: 100 });
-    const { data: driversData, isLoading: isDriversLoading } = useDrivers({ per_page: 100 });
+    const { data: trucksData } = useTrucksQuery({ per_page: 100 });
+    const { data: driversData } = useDrivers({ per_page: 100 });
     const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id);
     const createPaymentOrder = useCreatePaymentOrder(id);
     const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
@@ -41,11 +41,11 @@ export default function ShipDetailsPage() {
     const drivers = Array.isArray(driversData) ? driversData : (driversData as unknown as { items: Driver[] })?.items || [];
 
     const error = shipError ? (shipError as Error).message : null;
-    
+
     // Find unpaid payment
     const unpaidPayment = payments?.find(p => !p.paid);
     const hasUnpaidPayment = !!unpaidPayment;
-    
+
     const handlePayNow = () => {
         if (!unpaidPayment) {
             toast.error("No unpaid payments found for this ship");
@@ -63,28 +63,29 @@ export default function ShipDetailsPage() {
         try {
             setIsDownloadingInvoice(true);
             toast.loading("Downloading invoice...");
-            
+
             const blob = await shipApi.getInvoice(id);
-            
+
             // Create a URL for the blob
             const url = window.URL.createObjectURL(blob);
-            
+
             // Create a temporary link and trigger download
             const link = document.createElement('a');
             link.href = url;
             link.download = `invoice-ship-${id}.pdf`;
             document.body.appendChild(link);
             link.click();
-            
+
             // Cleanup
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            
+
             toast.dismiss();
             toast.success("Invoice downloaded successfully");
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.dismiss();
-            toast.error(error.message || "Failed to download invoice");
+            const errorMessage = error instanceof Error ? error.message : "Failed to download invoice";
+            toast.error(errorMessage);
         } finally {
             setIsDownloadingInvoice(false);
         }

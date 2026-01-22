@@ -1,8 +1,9 @@
 import React from "react";
 import { ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Trash2, Eye } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface DocumentListProps {
     documents: ShipItemDocument[];
@@ -42,12 +43,17 @@ export function DocumentList({ documents }: DocumentListProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    asChild
-                    title="View Document"
+                    title={doc.presigned_url ? "View Document" : "No URL available"}
+                    disabled={!doc.presigned_url}
+                    onClick={() => {
+                        if (doc.presigned_url) {
+                            window.open(doc.presigned_url, "_blank", "noopener,noreferrer");
+                        } else {
+                            toast.error("Document URL not available");
+                        }
+                    }}
                 >
-                    <a href={doc.presigned_url} target="_blank" rel="noopener noreferrer">
-                        <Eye className="h-4 w-4" />
-                    </a>
+                    <Eye className="h-4 w-4" />
                 </Button>
             </div>
         </div>

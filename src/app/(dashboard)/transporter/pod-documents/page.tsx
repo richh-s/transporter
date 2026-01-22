@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShipItem, ShipStatusEnum } from "@/types/ship";
+import { ShipItem } from "@/types/ship";
 import { shipApi } from "@/lib/api/ships";
 import { ShipItemPodCard } from "@/components/pod/ShipItemPodCard";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PodDocumentsPage() {
     const [loading, setLoading] = useState(true);
-    const [shipItems, setShipItems] = useState<any[]>([]);
+    const [shipItems, setShipItems] = useState<ShipItem[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -24,7 +24,7 @@ export default function PodDocumentsPage() {
                 const response = await shipApi.getShips({ per_page: 100 });
 
                 if (response.data && response.data.items) {
-                    const allItems: any[] = [];
+                    const allItems: ShipItem[] = [];
 
                     response.data.items.forEach(ship => {
                         if (ship.ship_items) {
@@ -55,8 +55,9 @@ export default function PodDocumentsPage() {
                     });
                     setShipItems(filtered);
                 }
-            } catch (err: any) {
-                setError(err.message || "Failed to load shipments");
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : "Failed to load shipments";
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }

@@ -89,9 +89,10 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
             setDocumentType(ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
             setManualContainerId("all");
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Upload error:", error);
-            toast.error(error.message || "Failed to upload document");
+            const errorMessage = error instanceof Error ? error.message : "Failed to upload document";
+            toast.error(errorMessage);
         } finally {
             setIsUploading(false);
         }
@@ -175,7 +176,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                                Select "Whole Shipment" for a single document covering all containers.
+                                Select &quot;Whole Shipment&quot; for a single document covering all containers.
                             </p>
                         </div>
                     )}

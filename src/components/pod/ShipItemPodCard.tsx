@@ -8,8 +8,8 @@ import { format } from "date-fns";
 import { DocumentList } from "./DocumentList";
 import { PodUploadModal } from "./PodUploadModal";
 import { shipApi } from "@/lib/api/ships";
-import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCallback } from "react";
 
 interface ExtendedShipItem extends ShipItem {
     origin?: string;
@@ -29,7 +29,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
     const [selectedContainers, setSelectedContainers] = useState<string[]>([]);
     const [fullShipItem, setFullShipItem] = useState<ExtendedShipItem>(shipItem);
 
-    const fetchDocuments = async () => {
+    const fetchDocuments = useCallback(async () => {
         setLoadingDocs(true);
         try {
             const response = await shipApi.getShipItemDocuments(shipItem.id);
@@ -41,15 +41,15 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         } finally {
             setLoadingDocs(false);
         }
-    };
+    }, [shipItem.id]);
 
-    const fetchDetails = async () => {
+    const fetchDetails = useCallback(async () => {
         try {
             const response = await shipApi.getShipItemDetail(shipItem.ship_id);
             if (response.data) {
                 // The response is the parent Ship object containing ship_items
                 const parentShip = response.data;
-                const detailedItem = parentShip.ship_items?.find((item: any) => item.id == shipItem.id);
+                const detailedItem = parentShip.ship_items?.find((item: ShipItem) => item.id == shipItem.id);
 
                 if (detailedItem) {
                     setFullShipItem(prev => ({
@@ -58,10 +58,9 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                         // Ensure containers are updated
                         containers: detailedItem.containers || [],
                         // Map specific fields from JSON structure if they differ (e.g. truck vs assigned_truck)
-                        assigned_truck: detailedItem.truck,
-                        assigned_driver: detailedItem.driver,
+                        assigned_truck: detailedItem.truck ?? null,
+                        assigned_driver: detailedItem.driver ?? null,
                         // If origin/destination came from Ship object (response.data), we should keep them or update them?
-                        // The user said "using the shipitem id use this endpoint to fetch detais about those consiters".
                         // response.data (Ship) has origin/destination. detailedItem does NOT (it's inside ship_items).
                         // So we should maybe also update origin/dest from parentShip.
                         origin: parentShip.origin || prev.origin,
@@ -73,12 +72,12 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         } catch (e) {
             console.error("Failed to fetch ship item details", e);
         }
-    };
+    }, [shipItem.id, shipItem.ship_id]);
 
     useEffect(() => {
         fetchDocuments();
         fetchDetails();
-    }, [shipItem.id]);
+    }, [fetchDocuments, fetchDetails]);
 
 
 

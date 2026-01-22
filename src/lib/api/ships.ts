@@ -1,5 +1,5 @@
 import { request } from "../api-client";
-import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse } from "@/types/ship";
+import { Ship, ShipDocument, ShipItem, ShipItemDocument, PaymentResponse, CreateOrderRequest, CreateOrderResponse } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -220,7 +220,7 @@ export const shipApi = {
         // Docs say: Response (200 OK) is [ { ... }, ... ]
         // So we might need to adjust return type if request<T> expects a wrapped response or if the API actually returns a list.
         // The API docs show a JSON array.
-        return request<any[]>(endpoint);
+        return request<ShipItemDocument[]>(endpoint);
     },
 
     /**
@@ -251,10 +251,10 @@ export const shipApi = {
             const errorText = await response.text();
             console.error("Upload failed. Status:", response.status, "Response:", errorText);
 
-            let errorData: any = {};
+            let errorData: { error?: string; message?: string; detail?: string } = {};
             try {
                 errorData = JSON.parse(errorText);
-            } catch (e) {
+            } catch {
                 // Not JSON
             }
 
@@ -273,6 +273,6 @@ export const shipApi = {
     },
 
     getShipItemDetail: async (shipItemId: number | string) => {
-        return request<any>(`/ship/transporter/${shipItemId}`);
+        return request<Ship>(`/ship/transporter/${shipItemId}`);
     },
 };

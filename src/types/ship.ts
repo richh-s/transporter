@@ -78,7 +78,12 @@ export interface Container {
     volume?: number;
     recommended_truck_type?: string;
     is_returning?: boolean;
-    return_location_info?: any | null;
+    return_location_info?: {
+        city?: string;
+        port?: string;
+        address?: string;
+        country?: string;
+    } | null;
     container_details?: {
         commodity?: string[];
         instruction?: string;
@@ -168,6 +173,9 @@ export interface ShipItem {
     assigned_truck: Truck | null;
     driver?: Driver | null;
     truck?: Truck | null;
+    origin?: string;
+    destination?: string;
+    pickup_date?: string;
 }
 
 export interface ShipDocument {
