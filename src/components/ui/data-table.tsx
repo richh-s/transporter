@@ -397,7 +397,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full h-full flex flex-col space-y-3 sm:space-y-3 overflow-hidden">
       {/* Search and Filters - Fixed, no scroll */}
-      <div className="space-y-3 shrink-0 overflow-x-hidden overscroll-none touch-none md:touch-auto">
+      <div className="space-y-3 shrink-0 overflow-x-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex flex-col md:flex-row flex-1 items-stretch md:items-center gap-2 w-full sm:w-auto">
             {searchKey && (
@@ -428,7 +428,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={mobileScrollRef}
         onScroll={handleScroll}
-        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain overscroll-x-none touch-pan-y overscroll-behavior-contain scrollbar-hide"
+        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="grid grid-cols-2 gap-2 p-1 pb-2">
@@ -732,6 +732,6 @@ export function DataTable<TData, TValue>({
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }
