@@ -99,7 +99,7 @@ export const shipApi = {
      * Get ship details for transporter
      */
     getShip: async (id: number | string) => {
-        return request<Ship>(`/ship/transporter/${id}/`);
+        return request<Ship>(`/ship/transporter/${id}/?per_page=100`);
     },
 
     /**
@@ -272,7 +272,7 @@ export const shipApi = {
         });
     },
 
-    getShipItemDetail: async (shipItemId: number | string) => {
-        return request<Ship>(`/ship/transporter/${shipItemId}`);
+    getShipItemDetail: async (shipId: number | string) => {
+        return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
     },
 };
