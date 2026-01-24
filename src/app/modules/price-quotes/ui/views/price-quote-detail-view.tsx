@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Trash2, Edit, MapPin, Truck, Scale, Move, CreditCard, Calendar, ArrowRight, User } from "lucide-react";
+import { ArrowLeft, Trash2, Edit, MapPin, Truck, Scale, Move, CreditCard, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePriceQuote, useDeletePriceQuote } from "@/app/modules/price-quotes/server/hooks";
 import { PriceQuoteStatusEnum } from "@/types/price-quote";
-import { formatLocation, formatTruckType, formatContainerSize, formatAxleType, formatStatus } from "@/lib/price-quote-utils";
+import { formatLocation, formatTruckType, formatContainerSize, formatAxleType } from "@/lib/price-quote-utils";
 import { DeleteQuoteDialog } from "@/app/modules/price-quotes/ui/components";
 import { cn } from "@/lib/utils";
 

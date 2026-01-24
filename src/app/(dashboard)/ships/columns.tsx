@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Ship } from "@/types/ship";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, MoreHorizontal, Eye, ArrowRight } from "lucide-react";
 import {
@@ -19,7 +18,7 @@ import { cn } from "@/lib/utils";
 export const columns: ColumnDef<Ship>[] = [
     {
         accessorKey: "id",
-        header: ({ column }) => (
+        header: () => (
             <div className="pl-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">ID</div>
         ),
         cell: ({ row }) => (
@@ -56,7 +55,7 @@ export const columns: ColumnDef<Ship>[] = [
     },
     {
         accessorKey: "pickup_facility",
-        header: ({ column }) => (
+        header: () => (
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Facilities</div>
         ),
         cell: ({ row }) => {
@@ -78,7 +77,7 @@ export const columns: ColumnDef<Ship>[] = [
     },
     {
         accessorKey: "pickup_date",
-        header: ({ column }) => (
+        header: () => (
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timeline</div>
         ),
         cell: ({ row }) => {
@@ -106,7 +105,7 @@ export const columns: ColumnDef<Ship>[] = [
     },
     {
         accessorKey: "status",
-        header: ({ column }) => (
+        header: () => (
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Status</div>
         ),
         cell: ({ row }) => {

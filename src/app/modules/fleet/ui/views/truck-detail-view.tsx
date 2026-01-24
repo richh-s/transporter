@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";

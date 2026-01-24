@@ -112,7 +112,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
                                             <div className="flex items-center gap-1.5">
                                                 <Scale className="h-3.5 w-3.5 text-primary/60" />
                                                 <span className="text-sm font-bold text-foreground">
-                                                    {container.gross_weight || container.weight ? `${(container.gross_weight || container.weight).toLocaleString()}` : "-"}
+                                                    {(container.gross_weight ?? container.weight)?.toLocaleString() ?? "-"}
                                                     <span className="text-[10px] text-muted-foreground ml-1">kg</span>
                                                 </span>
                                             </div>
@@ -122,7 +122,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
                                             <div className="flex items-center gap-1.5">
                                                 <Move className="h-3.5 w-3.5 text-blue-500/60" />
                                                 <span className="text-sm font-bold text-foreground">
-                                                    {container.volume ? `${container.volume.toLocaleString()}` : "-"}
+                                                    {container.volume?.toLocaleString() ?? "-"}
                                                     <span className="text-[10px] text-muted-foreground ml-1">m³</span>
                                                 </span>
                                             </div>
