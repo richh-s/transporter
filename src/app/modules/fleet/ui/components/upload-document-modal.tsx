@@ -65,7 +65,6 @@ export function UploadDocumentModal({
     setError(null);
     try {
       await onUpload(selectedFile, documentType.trim());
-      // Reset form on success
       setSelectedFile(null);
       setDocumentType("");
       if (fileInputRef.current) {
@@ -99,11 +98,18 @@ export function UploadDocumentModal({
           <DialogDescription>
             Select a document type and file to upload.
           </DialogDescription>
+          {/*  Added explanation */}
+          <p className="text-xs text-muted-foreground mt-1">
+            Fields marked with <span className="text-red-500">*</span> are required.
+          </p>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="document-type">Document Type</Label>
+            {/*  Required field marker */}
+            <Label htmlFor="document-type">
+              Document Type <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={documentType}
               onValueChange={(value) => {
@@ -123,7 +129,10 @@ export function UploadDocumentModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">File</Label>
+            {/* ✅ Required field marker */}
+            <Label htmlFor="file">
+              File <span className="text-red-500">*</span>
+            </Label>
             <input
               ref={fileInputRef}
               id="file"
@@ -155,7 +164,8 @@ export function UploadDocumentModal({
             </div>
             {selectedFile && (
               <p className="text-xs text-muted-foreground">
-                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                Selected: {selectedFile.name} (
+                {(selectedFile.size / 1024).toFixed(2)} KB)
               </p>
             )}
           </div>
@@ -196,4 +206,3 @@ export function UploadDocumentModal({
     </Dialog>
   );
 }
-

@@ -1,19 +1,17 @@
 "use client";
-
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import { driverApi } from "@/app/modules/drivers/server/api/driver.api";
 import { driverKeys } from "@/app/modules/drivers/server/query-keys";
 import { useDriverDocuments } from "@/app/modules/drivers/server/hooks/use-driver-documents";
 import { useUploadDriverDocument } from "@/app/modules/drivers/server/hooks/use-upload-driver-document";
 import { useDeleteDriverDocument } from "@/app/modules/drivers/server/hooks/use-delete-driver-document";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -53,8 +51,14 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
+/* ---------------- Types ---------------- */
 const DOCUMENT_TYPES = ["trade_licence", "id", "other"] as const;
 type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+type UploadErrors = {
+  documentType?: string;
+  file?: string;
+};
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
   const queryClient = useQueryClient();
@@ -67,10 +71,29 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [documentType, setDocumentType] = useState<DocumentType | "">("");
   const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
 
+  const [errors, setErrors] = useState<UploadErrors>({});
+
   // DELETE MODAL STATE
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
+  /* ---------------- Validation ---------------- */
+  const validateUpload = (): boolean => {
+    const newErrors: UploadErrors = {};
+
+    if (!documentType) {
+      newErrors.documentType = "Document type is required";
+    }
+
+    if (!file) {
+      newErrors.file = "File is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /* ---------------- Handlers ---------------- */
   const handleView = async (documentId: number) => {
     const res = await queryClient.fetchQuery({
       queryKey: driverKeys.document(driverId, documentId),
@@ -83,12 +106,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   };
 
   const handleUpload = () => {
-    if (!file || !documentType) return;
+    if (!validateUpload()) return;
 
     uploadMutation.mutate(
       {
-        document_type: documentType,
-        file,
+        document_type: documentType as DocumentType,
+        file: file!,
         replace_document_id: replaceDocId ?? undefined,
       },
       {
@@ -96,29 +119,42 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           setFile(null);
           setDocumentType("");
           setReplaceDocId(null);
+          setErrors({});
         },
       }
     );
   };
 
+  const backendError = uploadMutation.error
+    ? (uploadMutation.error as Error).message
+    : null;
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Driver Documents</h2>
 
-      {/* Upload / Replace */}
+      {/* ================= Upload / Replace ================= */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">
           {replaceDocId ? "Replace Document" : "Upload New Document"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label>Document Type</Label>
+          {/* Document Type */}
+          <div className="space-y-1">
+            <Label>
+              Document Type <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={documentType}
-              onValueChange={(v) => setDocumentType(v as DocumentType)}
+              onValueChange={(v) => {
+                setDocumentType(v as DocumentType);
+                setErrors((e) => ({ ...e, documentType: undefined }));
+              }}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={errors.documentType ? "border-red-500" : ""}
+              >
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -129,21 +165,37 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 ))}
               </SelectContent>
             </Select>
+            {errors.documentType && (
+              <p className="text-sm text-red-500">
+                {errors.documentType}
+              </p>
+            )}
           </div>
 
-          <div>
-            <Label>File</Label>
+          {/* File */}
+          <div className="space-y-1">
+            <Label>
+              File <span className="text-red-500">*</span>
+            </Label>
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null);
+                setErrors((e) => ({ ...e, file: undefined }));
+              }}
+              className={errors.file ? "border-red-500" : ""}
             />
+            {errors.file && (
+              <p className="text-sm text-red-500">{errors.file}</p>
+            )}
           </div>
 
+          {/* Upload Button */}
           <div className="flex items-end">
             <Button
               onClick={handleUpload}
-              disabled={uploadMutation.isPending || !file || !documentType}
+              disabled={uploadMutation.isPending}
               className="w-full"
             >
               {uploadMutation.isPending ? (
@@ -160,9 +212,16 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             </Button>
           </div>
         </div>
+
+        {/* Backend error */}
+        {backendError && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>{backendError}</AlertDescription>
+          </Alert>
+        )}
       </Card>
 
-      {/* Documents Table */}
+      {/* ================= Documents Table ================= */}
       <Card className="p-6">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground">
@@ -211,7 +270,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
                         <DropdownMenuItem
                           onClick={() => {
-                            setDocumentType(doc.document_type as DocumentType);
+                            setDocumentType(
+                              doc.document_type as DocumentType
+                            );
                             setReplaceDocId(doc.id);
                           }}
                         >
@@ -239,7 +300,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         )}
       </Card>
 
-      {/* DELETE CONFIRM MODAL */}
+      {/* ================= DELETE CONFIRM ================= */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -272,12 +333,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               disabled={!docToDelete || deleteMutation.isPending}
               onClick={() => {
                 if (!docToDelete) return;
-
-
                 setDeleteOpen(false);
-                setDocToDelete(null);
-
-
                 deleteMutation.mutate({
                   driverId,
                   documentId: docToDelete,

@@ -18,14 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useConfirmPasswordReset } from "../../server/hooks/use-confirm-password-reset";
 
-
+/* ---------------- Schema ---------------- */
 const passwordSchema = z
   .object({
     code: z.string().min(1, "Reset code is required"),
     new_password: z
       .string()
       .min(8, "Password must be at least 8 characters"),
-    confirm_password: z.string(),
+    confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords do not match",
@@ -49,9 +49,16 @@ export function ResetPasswordForm() {
       new_password: "",
       confirm_password: "",
     },
+    mode: "onSubmit",
   });
 
-  const { errors } = form.formState;
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = form;
+
   const onSubmit = async (data: FormData) => {
     await mutation.mutateAsync({
       code: data.code,
@@ -59,6 +66,7 @@ export function ResetPasswordForm() {
     });
   };
 
+  /* ---------------- Redirect on success ---------------- */
   useEffect(() => {
     if (mutation.isSuccess) {
       const timer = setTimeout(() => {
@@ -68,7 +76,7 @@ export function ResetPasswordForm() {
     }
   }, [mutation.isSuccess, router]);
 
-  /* ------------------ Success UI ------------------ */
+  /* ---------------- Success UI ---------------- */
   if (mutation.isSuccess) {
     return (
       <Alert className="bg-green-50 border-green-200">
@@ -80,33 +88,29 @@ export function ResetPasswordForm() {
     );
   }
 
-  /* ------------------ Error UI ------------------ */
   const apiError = mutation.error
     ? (mutation.error as Error).message
     : null;
 
-  /* ------------------ Render ------------------ */
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="space-y-4"
-    >
-      {/* ---------------- OTP STEP ---------------- */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* ================= OTP STEP ================= */}
       {step === "otp" && (
         <>
           <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Reset Code (OTP)
+            <label className="text-sm font-medium">
+              Reset Code <span className="text-red-500">*</span>
             </label>
             <Input
               placeholder="Enter the code sent to your email"
-              {...form.register("code")}
+              {...register("code")}
+              className={errors.code ? "border-red-500" : ""}
             />
             <p className="text-xs text-muted-foreground">
               Check your inbox and spam folder.
             </p>
             {errors.code && (
-              <p className="text-xs text-red-600">
+              <p className="text-sm text-red-500">
                 {errors.code.message}
               </p>
             )}
@@ -115,8 +119,10 @@ export function ResetPasswordForm() {
           <Button
             type="button"
             className="w-full"
-            onClick={() => setStep("password")}
-            disabled={!form.watch("code")}
+            onClick={async () => {
+              const valid = await trigger("code");
+              if (valid) setStep("password");
+            }}
           >
             <KeyRound className="mr-2 h-4 w-4" />
             Verify Code
@@ -124,59 +130,70 @@ export function ResetPasswordForm() {
         </>
       )}
 
-
+      {/* ================= PASSWORD STEP ================= */}
       {step === "password" && (
         <>
-   
-          <div className="relative">
-            <Input
-              type={showNew ? "text" : "password"}
-              placeholder="New password"
-              {...form.register("new_password")}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNew(!showNew)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              tabIndex={-1}
-            >
-              {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+          {/* New Password */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">
+              New Password <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Input
+                type={showNew ? "text" : "password"}
+                placeholder="Enter new password"
+                {...register("new_password")}
+                className={`pr-10 ${
+                  errors.new_password ? "border-red-500" : ""
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                tabIndex={-1}
+              >
+                {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.new_password && (
+              <p className="text-sm text-red-500">
+                {errors.new_password.message}
+              </p>
+            )}
           </div>
-          {errors.new_password && (
-            <p className="text-xs text-red-600">
-              {errors.new_password.message}
-            </p>
-          )}
 
-          {/* Confirm password */}
-          <div className="relative">
-            <Input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm password"
-              {...form.register("confirm_password")}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              tabIndex={-1}
-            >
-              {showConfirm ? (
-                <EyeOff size={16} />
-              ) : (
-                <Eye size={16} />
-              )}
-            </button>
+          {/* Confirm Password */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">
+              Confirm Password <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm password"
+                {...register("confirm_password")}
+                className={`pr-10 ${
+                  errors.confirm_password ? "border-red-500" : ""
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                tabIndex={-1}
+              >
+                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.confirm_password && (
+              <p className="text-sm text-red-500">
+                {errors.confirm_password.message}
+              </p>
+            )}
           </div>
-          {errors.confirm_password && (
-            <p className="text-xs text-red-600">
-              {errors.confirm_password.message}
-            </p>
-          )}
 
+          {/* Backend error */}
           {apiError && (
             <Alert variant="destructive">
               <AlertDescription>{apiError}</AlertDescription>
