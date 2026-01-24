@@ -126,7 +126,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                 </div>
                 {(fullShipItem.origin || fullShipItem.destination) && (
                     <div className="mt-2 text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
+                        <MapPin className="h-3 w-3 text-red-500" />
                         {fullShipItem.origin || 'Unknown'}
                         <span className="text-muted-foreground/60">→</span>
                         {fullShipItem.destination || 'Unknown'}
@@ -172,7 +172,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
 
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 mb-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <MapPin className="h-4 w-4 text-red-500" />
                             <span className="font-bold text-primary">Containers:</span>
                         </div>
 
