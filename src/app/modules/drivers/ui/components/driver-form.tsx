@@ -77,7 +77,7 @@ export function DriverForm({
 
       {/* Driver License Number */}
       <div className="space-y-1">
-        e<Label>Driver License Number</Label>
+        <Label>Driver License Number</Label>
         <Input
           {...register("driver_license_number")}
           className={
@@ -92,20 +92,29 @@ export function DriverForm({
       </div>
 
       {/* Phone Number */}
-      <div className="space-y-1">
-        <Label>
-          Phone Number <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          {...register("phone_number")}
-          className={errors.phone_number ? "border-red-500" : ""}
-        />
-        {errors.phone_number && (
-          <p className="text-sm text-destructive">
-            {errors.phone_number.message}
-          </p>
-        )}
-      </div>
+   {/* Phone Number */}
+<div className="space-y-1">
+  <Label>
+    Phone Number <span className="text-red-500">*</span>
+  </Label>
+
+  <Input
+    {...register("phone_number")}
+    placeholder="+2519XXXXXXXX"
+    className={errors.phone_number ? "border-red-500" : ""}
+  />
+
+  <p className="text-xs text-muted-foreground">
+    Include country code (e.g. <strong>+251</strong>)
+  </p>
+
+  {errors.phone_number && (
+    <p className="text-sm text-destructive">
+      {errors.phone_number.message}
+    </p>
+  )}
+</div>
+
 
       {/* Email */}
       <div className="space-y-1">
