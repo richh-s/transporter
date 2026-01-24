@@ -77,9 +77,7 @@ export function DriverForm({
 
       {/* Driver License Number */}
       <div className="space-y-1">
-        <Label>
-          Driver License Number <span className="text-red-500">*</span>
-        </Label>
+        e<Label>Driver License Number</Label>
         <Input
           {...register("driver_license_number")}
           className={
