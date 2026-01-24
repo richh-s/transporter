@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Open Sans", sans-serif;
+  --font-mono: "Open Sans", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -51,17 +51,17 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.15 0.02 260);
+  --foreground: oklch(0.21 0.02 253);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 260);
+  --card-foreground: oklch(0.21 0.02 253);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
+  --popover-foreground: oklch(0.21 0.02 253);
   --primary: oklch(0.61 0.16 145);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.01 145);
-  --secondary-foreground: oklch(0.25 0.05 145);
-  --muted: oklch(0.96 0.01 145);
-  --muted-foreground: oklch(0.45 0.03 145);
+  --secondary: oklch(0.51 0.02 253);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.96 0.005 253);
+  --muted-foreground: oklch(0.51 0.02 253);
   --accent: oklch(0.61 0.16 145);
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.55 0.18 25);
@@ -75,14 +75,14 @@
   --chart-3: oklch(0.45 0.03 145);
   --chart-4: oklch(0.65 0.1 145);
   --chart-5: oklch(0.85 0.05 145);
-  /* Deep Forest Sidebar */
-  --sidebar: oklch(0.12 0.02 145);
-  --sidebar-foreground: oklch(0.98 0.01 145);
+  /* Sidebar - Off-white (slightly darker than background) */
+  --sidebar: oklch(0.97 0.005 145);
+  --sidebar-foreground: oklch(0.21 0.02 253);
   --sidebar-primary: oklch(0.61 0.16 145);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.18 0.03 145);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.18 0.03 145);
+  --sidebar-accent: oklch(0.93 0.01 145);
+  --sidebar-accent-foreground: oklch(0.21 0.02 253);
+  --sidebar-border: oklch(0.90 0.01 145);
   --sidebar-ring: oklch(0.61 0.16 145);
 }
 
@@ -128,6 +128,10 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Open Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
   }
 }
 

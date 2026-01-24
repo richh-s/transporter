@@ -74,15 +74,12 @@ export function Sidebar({
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
         <div className="flex items-center gap-2">
           <Image
-            src="/images/welogo.png"
+            src="https://www.wetruck.ai/images/logo.png"
             alt="WeTruck Logo"
-            width={32}
+            width={120}
             height={32}
-            className="h-8 w-8 object-contain brightness-0 invert"
+            className="h-8 object-contain"
           />
-          <span className="text-xl font-bold text-primary tracking-tight">
-            WeTruck
-          </span>
         </div>
       </div>
       <nav className="flex-1 space-y-2 px-4 py-4">
@@ -181,9 +178,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center flex-1 min-w-0">
-              <h1 className="text-sm sm:text-lg font-bold md:text-xl text-primary truncate uppercase tracking-tight">
-                <span className="">WeTruck</span>
-              </h1>
+              <Image
+                src="https://www.wetruck.ai/images/logo.png"
+                alt="WeTruck Logo"
+                width={100}
+                height={28}
+                className="h-7 object-contain"
+              />
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <ThemeToggle />
