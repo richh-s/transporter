@@ -32,7 +32,7 @@ export function DriverForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* First Name */}
       <div className="space-y-1">
-        <Label>First Name</Label>
+        <Label required>First Name</Label>
         <Input
           {...register("first_name", { required: "First name is required" })}
         />
@@ -45,7 +45,7 @@ export function DriverForm({
 
       {/* Last Name */}
       <div className="space-y-1">
-        <Label>Last Name</Label>
+        <Label required>Last Name</Label>
         <Input
           {...register("last_name", { required: "Last name is required" })}
         />
@@ -58,7 +58,7 @@ export function DriverForm({
 
       {/* License Number */}
       <div className="space-y-1">
-        <Label>Driver License Number</Label>
+        <Label required>Driver License Number</Label>
         <Input
           {...register("driver_license_number", {
             required: "License number is required",
@@ -73,7 +73,7 @@ export function DriverForm({
 
       {/* Phone */}
       <div className="space-y-1">
-        <Label>Phone Number</Label>
+        <Label required>Phone Number</Label>
         <Input
           {...register("phone_number", {
             required: "Phone number is required",
@@ -88,7 +88,7 @@ export function DriverForm({
 
       {/* Email */}
       <div className="space-y-1">
-        <Label>Email</Label>
+        <Label required>Email</Label>
         <Input
           type="email"
           {...register("email", {

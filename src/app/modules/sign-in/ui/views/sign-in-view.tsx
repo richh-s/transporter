@@ -245,7 +245,7 @@ export const SignInView = () => {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                             Work Email
                           </FormLabel>
                           <FormControl>
@@ -271,7 +271,7 @@ export const SignInView = () => {
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between">
-                            <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                               Password
                             </FormLabel>
                             <a
