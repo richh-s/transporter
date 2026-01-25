@@ -45,6 +45,25 @@ export enum DocumentStatusEnum {
     REJECTED = "Rejected",
 }
 
+export enum ShipItemDocumentTypeEnum {
+    PROOF_OF_DELIVERY = "proof_of_delivery",
+    CONTAINER_RETURN_RECEIPT = "container_return_receipt",
+}
+
+export interface ShipItemDocument {
+    id: number;
+    ship_id: number;
+    ship_item_id: number;
+    container_id?: number | null;
+    document_type: ShipItemDocumentTypeEnum;
+    file_path: string;
+    file_ext: string;
+    presigned_url: string;
+    created_at: string;
+    updated_at: string;
+    file_name?: string; // Optional helper
+}
+
 
 export interface Container {
     id: number;

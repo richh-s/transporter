@@ -1,5 +1,5 @@
 import { request } from "../api-client";
-import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse } from "@/types/ship";
+import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -201,5 +201,65 @@ export const shipApi = {
         }
 
         return response.blob();
+    },
+
+    /**
+     * Get documents for a specific ship item
+     */
+    getShipItemDocuments: async (shipItemId: number | string, params?: { container_id?: number }) => {
+        const queryParams = new URLSearchParams();
+        if (params?.container_id) {
+            queryParams.append("container_id", params.container_id.toString());
+        }
+        const queryString = queryParams.toString();
+        const endpoint = queryString
+            ? `/ship-item/${shipItemId}/documents/?${queryString}`
+            : `/ship-item/${shipItemId}/documents/`;
+
+        return request<ShipItemDocument[]>(endpoint);
+    },
+
+    /**
+     * Upload a document for a ship item
+     */
+    uploadShipItemDocument: async (
+        shipItemId: number | string,
+        formData: FormData
+    ) => {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        // Using direct fetch to ensure correct FormData handling without 'application/json' header
+        const response = await fetch(`${API_URL}/ship-item/${shipItemId}/documents/`, {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Upload failed. Status:", response.status, "Response:", errorText);
+
+            let errorData: { error?: string; message?: string; detail?: string } = {};
+            try {
+                errorData = JSON.parse(errorText);
+            } catch {
+                // Not JSON
+            }
+
+            throw new Error(errorData.error || errorData.message || errorData.detail || `Upload failed: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+    },
+
+    /**
+     * Delete a ship item document
+     */
+    deleteShipItemDocument: async (shipItemId: number | string, documentId: number | string) => {
+        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}`, {
+            method: "DELETE",
+        });
+    },
+
+    getShipItemDetail: async (shipId: number | string) => {
+        return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
     },
 };
