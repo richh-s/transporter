@@ -52,6 +52,7 @@ const navigation = [
   { name: "Active Orders", href: "/orders", icon: ClipboardList },
   { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
   { name: "Payments", href: "/payments", icon: CreditCard },
+  { name: "POD Documents", href: "/transporter/pod-documents", icon: FileText },
 ];
 
 export function Sidebar({
