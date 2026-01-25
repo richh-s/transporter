@@ -213,8 +213,8 @@ export const shipApi = {
         }
         const queryString = queryParams.toString();
         const endpoint = queryString
-            ? `/ship-item/${shipItemId}/documents/?${queryString}`
-            : `/ship-item/${shipItemId}/documents/`;
+            ? `/ship-item/${shipItemId}/documents?${queryString}`
+            : `/ship-item/${shipItemId}/documents`;
 
         // Note: The API returns Array<ShipItemDocument> directly based on the docs, simpler than paginated response
         // Docs say: Response (200 OK) is [ { ... }, ... ]

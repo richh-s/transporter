@@ -154,7 +154,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                                     <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT}>Container Return Receipt</SelectItem>
                                 )}
                                 <SelectItem
-                                    value={ShipItemDocumentTypeEnum.POD_DOCUMENT}
+                                    value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT}
                                     disabled={!isDelivered}
                                 >
                                     Proof of Delivery of Document {!isDelivered && "(Only for Delivered)"}

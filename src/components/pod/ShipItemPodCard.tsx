@@ -101,7 +101,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
     };
 
     const podCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY).length;
-    const podDocCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.POD_DOCUMENT).length;
+    const podDocCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT).length;
     const returnCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT).length;
 
     return (

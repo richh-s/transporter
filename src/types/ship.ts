@@ -41,8 +41,9 @@ export enum ShipDocumentTypeEnum {
 
 export enum ShipItemDocumentTypeEnum {
     PROOF_OF_DELIVERY = "proof_of_delivery",
-    CONTAINER_RETURN_RECEIPT = "container_return_receipt",
+    CONTAINER_RETURN_RECEIPT = "container_interchange_document",
     POD_DOCUMENT = "pod_document",
+    PROOF_OF_DELIVERY_OF_DOCUMENT = "proof_of_delivery_of_document",
 }
 
 export interface ShipItemDocument {

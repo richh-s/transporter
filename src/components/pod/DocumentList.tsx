@@ -20,7 +20,7 @@ export function DocumentList({ documents }: DocumentListProps) {
 
     // Group documents by type
     const podDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
-    const podDocumentDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.POD_DOCUMENT);
+    const podDocumentDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT);
     const returnDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT);
 
     const renderDocItem = (doc: ShipItemDocument) => (
