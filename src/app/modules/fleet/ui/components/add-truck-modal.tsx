@@ -50,24 +50,52 @@ import { useCreateTruck } from "@/app/modules/fleet/server/hooks";
 const truckFormSchema = z.object({
   vin: z
     .string()
-    .min(1, "VIN is required")
+    .min(11, "VIN must be at least 11 characters")
     .max(17, "VIN cannot exceed 17 characters"),
+
   plate_number: z
     .string()
-    .min(1, "Plate number is required")
+    .min(3, "Plate number must be at least 3 characters")
     .max(20, "Plate number cannot exceed 20 characters"),
+
   registration_date: z.string().min(1, "Registration date is required"),
-  truck_type: z.enum(["flatbed", "trailer"]),
-  status: z.enum(["active", "inactive", "maintenance", "out_of_service"]),
-  capacity_quintal: z.number().min(1, "Capacity is required"),
+
+  truck_type: z
+  .enum(["flatbed", "trailer"])
+  .refine((v) => v !== undefined, {
+    message: "Truck type is required",
+  }),
+
+  status: z
+  .enum(["active", "inactive", "maintenance", "out_of_service"])
+  .refine((v) => v !== undefined, {
+    message: "Status is required",
+  }),
+
+  capacity_quintal: z
+    .number()
+    .min(1, "Capacity must be greater than 0"),
+
+  year: z
+    .number()
+    .min(1900, "Year is invalid")
+    .max(2100, "Year is invalid")
+    .nullable()
+    .optional(),
+
+  gps_device_id: z
+    .number()
+    .min(1, "GPS Device ID must be positive")
+    .nullable()
+    .optional(),
+
   make: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
-  year: z.number().nullable().optional(),
   color: z.string().nullable().optional(),
   gov_id: z.string().nullable().optional(),
   libre_key: z.string().nullable().optional(),
-  gps_device_id: z.number().nullable().optional(),
 });
+
 
 type TruckFormValues = z.infer<typeof truckFormSchema>;
 
@@ -266,25 +294,34 @@ export function AddTruckModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {step === 1 && (
                   <>
-                    <FormField
-                      control={form.control}
-                      name="vin"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            VIN <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Vehicle Identification Number"
-                              {...field}
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                   <FormField
+  control={form.control}
+  name="vin"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        VIN <span className="text-red-500">*</span>
+      </FormLabel>
+      <FormControl>
+        <Input
+          placeholder="e.g. JTDBR32E720123456"
+          maxLength={17}
+          {...field}
+          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+          className="h-11"
+        />
+      </FormControl>
+
+      {/* 👇 Visible restriction */}
+      <p className="text-xs text-muted-foreground">
+        Must be 11–17 characters (letters & numbers).
+      </p>
+
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                     <FormField
                       control={form.control}
                       name="plate_number"
@@ -446,30 +483,39 @@ export function AddTruckModal({
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="capacity_quintal"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Capacity (Quintal) <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
-                              {...field}
-                              value={field.value === 0 ? "" : field.value}
-                              onChange={(e) =>
-                                field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
-                              }
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+<FormField
+  control={form.control}
+  name="capacity_quintal"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        Capacity (Quintal) <span className="text-red-500">*</span>
+      </FormLabel>
+      <FormControl>
+        <Input
+          type="number"
+          min={1}
+          step={1}
+          {...field}
+          value={field.value === 0 ? "" : field.value}
+          onChange={(e) =>
+            field.onChange(
+              e.target.value === "" ? 0 : Number(e.target.value)
+            )
+          }
+          className="h-11"
+        />
+      </FormControl>
+
+      <p className="text-xs text-muted-foreground">
+        Must be greater than 0.
+      </p>
+
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                   </>
                 )}
 
