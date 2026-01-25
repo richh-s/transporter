@@ -96,31 +96,7 @@ export const FleetView = () => {
     setTimeout(() => setSuccess(null), 3000);
   };
 
-  // Prevent body scrolling on mobile to fix scroll chaining issue
-  useEffect(() => {
-    const handleResize = () => {
-      // Only prevent scrolling on mobile
-      if (window.innerWidth < 768) {
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden";
-      } else {
-        document.body.style.overflow = "";
-        document.documentElement.style.overflow = "";
-      }
-    };
 
-    // Set initial state
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
 
   // Reset scroll state when page or filters change
   useEffect(() => {
@@ -128,9 +104,9 @@ export const FleetView = () => {
   }, [page, filters]);
 
   return (
-    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
+    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 touch-none md:touch-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
             Fleet Management
@@ -143,11 +119,10 @@ export const FleetView = () => {
 
       {/* Stats Cards - Will be updated when data loads - Hide on mobile when scrolled or on last page */}
       <div
-        className={`shrink-0 touch-none md:touch-auto transition-all duration-300 md:block ${
-          isScrolled || (pageCount > 0 && page === pageCount)
+        className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount)
             ? "hidden md:block"
             : "block"
-        }`}
+          }`}
       >
         <FleetStatsCardsWrapper
           page={page}
@@ -158,11 +133,10 @@ export const FleetView = () => {
 
       {/* Add Truck Button - Mobile only - Hide when scrolled or on last page */}
       <div
-        className={`block sm:hidden shrink-0 transition-all duration-300 ${
-          isScrolled || (pageCount > 0 && page === pageCount)
+        className={`block sm:hidden shrink-0 transition-all duration-300 ${isScrolled || (pageCount > 0 && page === pageCount)
             ? "hidden"
             : "block"
-        }`}
+          }`}
       >
         <AddTruckModal onSuccess={handleSuccess} />
       </div>
@@ -171,22 +145,22 @@ export const FleetView = () => {
       {((createTruckMutation.error as Error | null) ||
         (updateTruckMutation.error as Error | null) ||
         (deleteTruckMutation.error as Error | null)) && (
-        <Alert
-          variant="destructive"
-          className="bg-red-50 border-red-100 shrink-0"
-        >
-          <XCircle className="h-4 w-4" />
-          <AlertDescription>
-            {createTruckMutation.error instanceof Error
-              ? createTruckMutation.error.message
-              : updateTruckMutation.error instanceof Error
-              ? updateTruckMutation.error.message
-              : deleteTruckMutation.error instanceof Error
-              ? deleteTruckMutation.error.message
-              : "An error occurred"}
-          </AlertDescription>
-        </Alert>
-      )}
+          <Alert
+            variant="destructive"
+            className="bg-red-50 border-red-100 shrink-0"
+          >
+            <XCircle className="h-4 w-4" />
+            <AlertDescription>
+              {createTruckMutation.error instanceof Error
+                ? createTruckMutation.error.message
+                : updateTruckMutation.error instanceof Error
+                  ? updateTruckMutation.error.message
+                  : deleteTruckMutation.error instanceof Error
+                    ? deleteTruckMutation.error.message
+                    : "An error occurred"}
+            </AlertDescription>
+          </Alert>
+        )}
       {success && (
         <Alert className="bg-green-50 border-green-100 text-green-700 shrink-0">
           <CheckCircle2 className="h-4 w-4 text-green-600" />

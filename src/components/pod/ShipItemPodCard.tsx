@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShipItem, ShipItemDocument } from "@/types/ship";
+import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,14 @@ import { PodUploadModal } from "./PodUploadModal";
 import { shipApi } from "@/lib/api/ships";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCallback } from "react";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 interface ExtendedShipItem extends ShipItem {
     origin?: string;
@@ -46,23 +54,26 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
     const fetchDetails = useCallback(async () => {
         try {
             const response = await shipApi.getShipItemDetail(shipItem.ship_id);
+            console.log(`Card #${shipItem.id} - Full Ship Detail Response:`, response.data);
             if (response.data) {
                 // The response is the parent Ship object containing ship_items
                 const parentShip = response.data;
                 const detailedItem = parentShip.ship_items?.find((item: ShipItem) => item.id == shipItem.id);
 
+                console.log(`Card #${shipItem.id} - Found Detailed Item:`, detailedItem);
+
                 if (detailedItem) {
                     setFullShipItem(prev => ({
                         ...prev,
                         ...detailedItem,
-                        // Ensure containers are updated
-                        containers: detailedItem.containers || [],
-                        // Map specific fields from JSON structure if they differ (e.g. truck vs assigned_truck)
-                        assigned_truck: detailedItem.truck ?? null,
-                        assigned_driver: detailedItem.driver ?? null,
-                        // If origin/destination came from Ship object (response.data), we should keep them or update them?
-                        // response.data (Ship) has origin/destination. detailedItem does NOT (it's inside ship_items).
-                        // So we should maybe also update origin/dest from parentShip.
+                        // Priority to assigned_truck/driver, then truck/driver keys, then previous state
+                        assigned_truck: detailedItem.assigned_truck || detailedItem.truck || prev.assigned_truck,
+                        assigned_driver: detailedItem.assigned_driver || detailedItem.driver || prev.assigned_driver,
+                        // Ensure container is preserved
+                        container: detailedItem.container || prev.container,
+                        // Ensure containers array is updated correctly
+                        containers: detailedItem.containers || (detailedItem.container ? [detailedItem.container] : prev.containers) || [],
+                        // Explicitly update origin/dest from parentShip if available
                         origin: parentShip.origin || prev.origin,
                         destination: parentShip.destination || prev.destination,
                         pickup_date: parentShip.pickup_date || prev.pickup_date
@@ -89,8 +100,9 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         );
     };
 
-    const podCount = documents.filter(d => d.document_type === "proof_of_delivery").length;
-    const returnCount = documents.filter(d => d.document_type === "container_return_receipt").length;
+    const podCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY).length;
+    const podDocCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT).length;
+    const returnCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT).length;
 
     return (
         <Card className="w-full">
@@ -104,18 +116,25 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             Status: <Badge variant="outline" className="capitalize">{fullShipItem.status.replace(/_/g, " ")}</Badge>
                         </p>
                     </div>
-                    <div className="text-right">
-                        <Badge variant={podCount > 0 ? "default" : "secondary"}>
-                            {podCount} POD
-                        </Badge>
-                        <Badge variant={returnCount > 0 ? "default" : "secondary"} className="ml-2">
-                            {returnCount} Returns
-                        </Badge>
+                    <div className="text-right flex flex-col gap-1 items-end">
+                        <div className="flex gap-2">
+                            <Badge variant={podCount > 0 ? "default" : "secondary"}>
+                                {podCount} POD
+                            </Badge>
+                            <Badge variant={returnCount > 0 ? "default" : "secondary"}>
+                                {returnCount} Returns
+                            </Badge>
+                        </div>
+                        {podDocCount > 0 && (
+                            <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                {podDocCount} POD Document
+                            </Badge>
+                        )}
                     </div>
                 </div>
                 {(fullShipItem.origin || fullShipItem.destination) && (
                     <div className="mt-2 text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
+                        <MapPin className="h-3 w-3 text-red-500" />
                         {fullShipItem.origin || 'Unknown'}
                         <span className="text-muted-foreground/60">→</span>
                         {fullShipItem.destination || 'Unknown'}
@@ -129,17 +148,23 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                         <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Truck:</span>
-                            <span>
-                                {fullShipItem.assigned_truck ?
-                                    `${fullShipItem.assigned_truck.plate_number} (${fullShipItem.assigned_truck.model || 'Unknown'})` :
-                                    fullShipItem.truck_id ? `Assigned (ID: ${fullShipItem.truck_id})` :
-                                        'Not Assigned'}
+                            <span className="font-bold">
+                                {fullShipItem.assigned_truck ? (
+                                    <>
+                                        {fullShipItem.assigned_truck.plate_number}{" "}
+                                        <span className="text-muted-foreground font-normal">
+                                            ({fullShipItem.assigned_truck.make || ''} {fullShipItem.assigned_truck.model || ''})
+                                        </span>
+                                    </>
+                                ) : (
+                                    fullShipItem.truck_id ? `Assigned (ID: ${fullShipItem.truck_id})` : 'Not Assigned'
+                                )}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Driver:</span>
-                            <span>
+                            <span className="font-bold">
                                 {fullShipItem.assigned_driver ?
                                     `${fullShipItem.assigned_driver.first_name} ${fullShipItem.assigned_driver.last_name}` :
                                     fullShipItem.driver_id ? `Assigned (ID: ${fullShipItem.driver_id})` :
@@ -155,38 +180,49 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
 
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 mb-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">Containers:</span>
+                            <MapPin className="h-4 w-4 text-red-500" />
+                            <span className="font-bold text-primary">Containers:</span>
                         </div>
 
                         {fullShipItem.containers && fullShipItem.containers.length > 0 ? (
-                            <div className="border rounded-md overflow-hidden">
-                                <div className="bg-muted/50 px-3 py-2 text-xs font-medium grid grid-cols-[30px_1fr_1fr_1fr] md:grid-cols-[30px_1fr_1fr_1fr_1fr] gap-2 items-center">
-                                    <div>Select</div>
-                                    <div>Container #</div>
-                                    <div>Type</div>
-                                    <div>Status</div>
-                                    <div className="hidden md:block">Info</div>
-                                </div>
-                                <div className="divide-y">
-                                    {fullShipItem.containers.map(c => (
-                                        <div key={c.id} className="px-3 py-2 text-sm grid grid-cols-[30px_1fr_1fr_1fr] md:grid-cols-[30px_1fr_1fr_1fr_1fr] gap-2 items-center hover:bg-muted/20">
-                                            <div className="flex items-center justify-center">
-                                                <Checkbox
-                                                    checked={selectedContainers.includes(c.id.toString())}
-                                                    onCheckedChange={() => toggleContainer(c.id.toString())}
-                                                />
-                                            </div>
-                                            <div className="font-medium">{c.container_number}</div>
-                                            <div className="text-muted-foreground text-xs">{c.container_size || '-'}</div>
-                                            <div className="flex items-center gap-1">
-                                                <Badge variant="outline" className="text-[10px] h-5">{c.status || 'Unknown'}</Badge>
-                                                {c.is_returning && <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">Returns</Badge>}
-                                            </div>
-                                            <div className="hidden md:block text-xs text-muted-foreground truncate opacity-0 md:opacity-100">{/* Spacer */}</div>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="border rounded-md overflow-hidden bg-card">
+                                <Table>
+                                    <TableHeader className="bg-muted/50">
+                                        <TableRow>
+                                            <TableHead className="w-[40px] text-center">#</TableHead>
+                                            <TableHead>Number</TableHead>
+                                            <TableHead>Size</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead className="text-right">Return</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {fullShipItem.containers.map((c) => (
+                                            <TableRow key={c.id} className="cursor-default">
+                                                <TableCell className="text-center">
+                                                    <Checkbox
+                                                        checked={selectedContainers.includes(c.id.toString())}
+                                                        onCheckedChange={() => toggleContainer(c.id.toString())}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="font-bold">{c.container_number}</TableCell>
+                                                <TableCell className="text-muted-foreground text-xs capitalize">
+                                                    {(c.container_size || '-').replace(/_/g, " ")}
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-xs capitalize">
+                                                    {c.container_type || 'dry'}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {c.is_returning ? (
+                                                        <Badge variant="outline" className="text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-200 uppercase">Returns</Badge>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground/40 italic">One-way</span>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
                         ) : (
                             <div className="text-sm text-muted-foreground italic">
