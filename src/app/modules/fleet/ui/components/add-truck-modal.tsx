@@ -156,7 +156,8 @@ export function AddTruckModal({
       form.reset(defaultValues);
       createTruckMutation.reset();
     }
-  }, [isOpen, form, createTruckMutation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && scrollableRef.current) {
