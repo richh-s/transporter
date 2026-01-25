@@ -187,7 +187,6 @@ export function UploadDocumentModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
