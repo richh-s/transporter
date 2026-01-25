@@ -17,7 +17,7 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ShipItem, ShipItemDocumentTypeEnum } from "@/types/ship";
+import { ShipItem, ShipItemDocumentTypeEnum, ShipItemStatusEnum } from "@/types/ship";
 import { Upload, File as FileIcon, Loader2 } from "lucide-react";
 import { shipApi } from "@/lib/api/ships";
 import { toast } from "sonner";
@@ -111,6 +111,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
         : returningContainers.length > 0;
 
     const showReturnReceiptOption = isBatch ? allSelectedAreReturning : returningContainers.length > 0;
+    const isDelivered = shipItem.status.toLowerCase() === ShipItemStatusEnum.DELIVERED.toLowerCase();
 
     // Filter available containers based on document type
     const availableContainers = documentType === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT
@@ -152,6 +153,12 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                                 {showReturnReceiptOption && (
                                     <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT}>Container Return Receipt</SelectItem>
                                 )}
+                                <SelectItem
+                                    value={ShipItemDocumentTypeEnum.POD_DOCUMENT}
+                                    disabled={!isDelivered}
+                                >
+                                    Proof of Delivery of Document {!isDelivered && "(Only for Delivered)"}
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

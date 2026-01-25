@@ -20,6 +20,7 @@ export function DocumentList({ documents }: DocumentListProps) {
 
     // Group documents by type
     const podDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
+    const podDocumentDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.POD_DOCUMENT);
     const returnDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT);
 
     const renderDocItem = (doc: ShipItemDocument) => (
@@ -72,6 +73,13 @@ export function DocumentList({ documents }: DocumentListProps) {
                 <div>
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Return Receipts</h4>
                     {returnDocs.map(renderDocItem)}
+                </div>
+            )}
+
+            {podDocumentDocs.length > 0 && (
+                <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Proof of Delivery of Document</h4>
+                    {podDocumentDocs.map(renderDocItem)}
                 </div>
             )}
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShipItem, ShipItemDocument } from "@/types/ship";
+import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,8 +100,9 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         );
     };
 
-    const podCount = documents.filter(d => d.document_type === "proof_of_delivery").length;
-    const returnCount = documents.filter(d => d.document_type === "container_return_receipt").length;
+    const podCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY).length;
+    const podDocCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.POD_DOCUMENT).length;
+    const returnCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT).length;
 
     return (
         <Card className="w-full">
@@ -115,13 +116,20 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             Status: <Badge variant="outline" className="capitalize">{fullShipItem.status.replace(/_/g, " ")}</Badge>
                         </p>
                     </div>
-                    <div className="text-right">
-                        <Badge variant={podCount > 0 ? "default" : "secondary"}>
-                            {podCount} POD
-                        </Badge>
-                        <Badge variant={returnCount > 0 ? "default" : "secondary"} className="ml-2">
-                            {returnCount} Returns
-                        </Badge>
+                    <div className="text-right flex flex-col gap-1 items-end">
+                        <div className="flex gap-2">
+                            <Badge variant={podCount > 0 ? "default" : "secondary"}>
+                                {podCount} POD
+                            </Badge>
+                            <Badge variant={returnCount > 0 ? "default" : "secondary"}>
+                                {returnCount} Returns
+                            </Badge>
+                        </div>
+                        {podDocCount > 0 && (
+                            <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                {podDocCount} POD Document
+                            </Badge>
+                        )}
                     </div>
                 </div>
                 {(fullShipItem.origin || fullShipItem.destination) && (
