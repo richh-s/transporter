@@ -293,69 +293,76 @@ export function AddTruckModal({
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {step === 1 && (
-                  <>
-                   <FormField
-  control={form.control}
-  name="vin"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>
-        VIN <span className="text-red-500">*</span>
-      </FormLabel>
-      <FormControl>
-        <Input
-          placeholder="e.g. JTDBR32E720123456"
-          maxLength={17}
-          {...field}
-          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-          className="h-11"
-        />
-      </FormControl>
+              {step === 1 && (
+  <>
+    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      {/* VIN field with adjusted structure */}
+      <FormField
+        control={form.control}
+        name="vin"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              VIN <span className="text-red-500">*</span>
+            </FormLabel>
+            <FormControl>
+              <Input
+                placeholder="e.g. JTDBR32E720123456"
+                maxLength={17}
+                {...field}
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                className="h-11"
+              />
+            </FormControl>
+            <div className="min-h-[20px]">
+              <p className="text-xs text-muted-foreground mt-1">
+                Must be 11–17 characters (letters & numbers).
+              </p>
+              <FormMessage />
+            </div>
+          </FormItem>
+        )}
+      />
 
-      {/* 👇 Visible restriction */}
-      <p className="text-xs text-muted-foreground">
-        Must be 11–17 characters (letters & numbers).
-      </p>
+      {/* Plate Number field with matching structure */}
+      <FormField
+        control={form.control}
+        name="plate_number"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              Plate Number <span className="text-red-500">*</span>
+            </FormLabel>
+            <FormControl>
+              <Input placeholder="ET-A12345" {...field} className="h-11" />
+            </FormControl>
+            <div className="min-h-[20px]">
+              {/* Empty space to match VIN field's layout */}
+              <div className="h-[16px]"></div>
+              <FormMessage />
+            </div>
+          </FormItem>
+        )}
+      />
+    </div>
 
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-                    <FormField
-                      control={form.control}
-                      name="plate_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Plate Number <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="ET-A12345" {...field} className="h-11" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="registration_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Registration Date <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} className="h-11" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-
+    <FormField
+      control={form.control}
+      name="registration_date"
+      render={({ field }) => (
+        <FormItem className="sm:col-span-2">
+          <FormLabel>
+            Registration Date <span className="text-red-500">*</span>
+          </FormLabel>
+          <FormControl>
+            <Input type="date" {...field} className="h-11" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </>
+)}
                 {step === 2 && (
                   <>
                     <FormField
