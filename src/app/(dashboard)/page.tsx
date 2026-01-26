@@ -1,7 +1,7 @@
-import { 
-  Truck, 
-  ClipboardList, 
-  Tag, 
+import {
+  Truck,
+  ClipboardList,
+  Tag,
   TrendingUp,
   MapPin,
   Clock,
@@ -54,7 +54,7 @@ export default function Dashboard() {
         <div className="bg-card border border-border rounded-xl overflow-hidden min-h-[400px] flex flex-col shadow-none sm:shadow-sm">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
+              <MapPin className="h-4 w-4 text-red-500" />
               Live Fleet Location
             </h3>
             <span className="text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded-full animate-pulse">
@@ -67,7 +67,7 @@ export default function Dashboard() {
                 <Truck className="h-8 w-8 text-primary opacity-50" />
               </div>
               <p className="text-sm text-muted-foreground">
-                GPS Tracking Map Integration<br/>
+                GPS Tracking Map Integration<br />
                 (Phase 3 Deployment)
               </p>
             </div>

@@ -231,8 +231,8 @@ export const SignInView = () => {
                   className="space-y-5 sm:space-y-6"
                 >
                   <div className="space-y-2">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-brand-primary text-center md:text-left">
-                      <span className="text-brand-accent">WeTruck</span> Sign In
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary text-center md:text-left">
+                      WeTruck Sign In
                     </h1>
                     <p className="text-muted-foreground text-sm text-center md:text-left">
                       Enter your credentials to manage freight operations.
@@ -276,7 +276,7 @@ export const SignInView = () => {
                             </FormLabel>
                             <a
                               href="#"
-                              className="text-xs text-brand-accent hover:text-brand-accent/80 hover:underline"
+                              className="text-xs text-primary hover:text-primary/80 hover:underline"
                             >
                               Forgot?
                             </a>
@@ -340,7 +340,7 @@ export const SignInView = () => {
 
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-brand-primary hover:bg-brand-secondary text-white transition-all shadow-md active:scale-[0.98]"
+                    className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
                     disabled={
                       pending ||
                       !captchaId ||
@@ -364,14 +364,14 @@ export const SignInView = () => {
                   </div>
 
                   {/* Mock Credentials Hint */}
-                  <div className="rounded-lg border border-dashed border-brand-accent/50 bg-brand-accent/5 p-3 text-center">
+                  <div className="rounded-lg border border-dashed border-primary/50 bg-primary/5 p-3 text-center">
                     <div className="flex items-center justify-center gap-2 mb-1">
-                      <ShieldCheck className="h-3 w-3 text-brand-primary" />
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-brand-primary/60">
+                      <ShieldCheck className="h-3 w-3 text-primary" />
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-primary/60">
                         Dev Access
                       </p>
                     </div>
-                    <p className="text-xs text-brand-primary/80">
+                    <p className="text-xs text-primary/80">
                       <span className="font-semibold">Email:</span>{" "}
                       transporter@wetruck.ai <br />
                       <span className="font-semibold">Password:</span>{" "}
@@ -383,7 +383,7 @@ export const SignInView = () => {
             </div>
 
             {/* Right Side: Visual/Brand */}
-            <div className="relative hidden md:flex flex-col items-center justify-center p-12 overflow-hidden bg-slate-900">
+            <div className="relative hidden md:flex flex-col items-center justify-center p-12 overflow-hidden bg-primary">
               {/* Truck Image Background with Overlay */}
               <div className="absolute inset-0">
                 <Image
@@ -392,24 +392,24 @@ export const SignInView = () => {
                   fill
                   className="object-cover opacity-60 brightness-75 grayscale"
                 />
-                <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 via-slate-900/40 to-slate-900/60" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/40 to-primary/60" />
               </div>
 
               {/* Background Decorative Shapes */}
-              <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-brand-accent/5 rounded-full blur-3xl animate-pulse delay-700" />
+              <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse delay-700" />
 
               <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-8 w-full h-full">
                 <div className="group relative">
-                  <div className="absolute -inset-1 bg-linear-to-r from-brand-accent/30 to-blue-500/10 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="absolute -inset-1 bg-linear-to-r from-white/30 to-white/10 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                 </div>
 
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
                     Move Forward, <br />
-                    <span className="text-brand-accent">Go Wide!</span>
+                    <span>Go Wide!</span>
                   </h2>
-                  <div className="h-1 w-20 bg-brand-accent mx-auto rounded-full" />
+                  <div className="h-1 w-20 bg-white mx-auto rounded-full" />
                 </div>
 
                 <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-medium italic">
@@ -442,18 +442,18 @@ export const SignInView = () => {
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
           &copy; {new Date().getFullYear()}{" "}
-          <span className="text-brand-accent font-medium">WeTruck</span>{" "}
+          <span className="text-primary font-medium">WeTruck</span>{" "}
           TechEnable Solutions PLC.
           <a
             href="#"
-            className="ml-2 text-brand-accent hover:text-brand-accent/80 underline underline-offset-4 transition-colors"
+            className="ml-2 text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
           >
             Terms
           </a>
-          <span className="mx-2 text-brand-accent">•</span>
+          <span className="mx-2 text-primary">•</span>
           <a
             href="#"
-            className="text-brand-accent hover:text-brand-accent/80 underline underline-offset-4 transition-colors"
+            className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
           >
             Privacy
           </a>

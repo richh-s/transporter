@@ -99,7 +99,7 @@ export const shipApi = {
      * Get ship details for transporter
      */
     getShip: async (id: number | string) => {
-        return request<Ship>(`/ship/transporter/${id}/`);
+        return request<Ship>(`/ship/transporter/${id}/?per_page=100`);
     },
 
     /**
@@ -213,8 +213,8 @@ export const shipApi = {
         }
         const queryString = queryParams.toString();
         const endpoint = queryString
-            ? `/ship-item/${shipItemId}/documents/?${queryString}`
-            : `/ship-item/${shipItemId}/documents/`;
+            ? `/ship-item/${shipItemId}/documents?${queryString}`
+            : `/ship-item/${shipItemId}/documents`;
 
         // Note: The API returns Array<ShipItemDocument> directly based on the docs, simpler than paginated response
         // Docs say: Response (200 OK) is [ { ... }, ... ]
@@ -272,7 +272,7 @@ export const shipApi = {
         });
     },
 
-    getShipItemDetail: async (shipItemId: number | string) => {
-        return request<Ship>(`/ship/transporter/${shipItemId}`);
+    getShipItemDetail: async (shipId: number | string) => {
+        return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
     },
 };
