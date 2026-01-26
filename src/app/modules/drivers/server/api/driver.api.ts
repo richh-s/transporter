@@ -48,9 +48,10 @@ export const driverApi = {
 
   // list
   getDriverDocuments: (driverId: number) =>
-    apiRequest<ApiResult<DriverDocument[]>>(
+    apiRequest<DriverDocument[]>(
       `/driver/${driverId}/documents`
     ),
+  
 
   // get single
   getDriverDocument: (driverId: number, documentId: number) =>
