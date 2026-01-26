@@ -51,6 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -269,7 +270,10 @@ export function DataTable<TData, TValue>({
     };
 
     return (
-      <div className="bg-card border rounded-lg p-3 space-y-2 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+      <div className="bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden">
+        {/* Brand Tint Overlay */}
+        <div className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.05] pointer-events-none" />
+
         {/* Card Header - Primary Info (Plate Number) */}
         <div className="flex items-start justify-between pb-2 border-b border-border/50">
           <div className="flex-1 min-w-0 pr-2">
@@ -397,7 +401,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full h-full flex flex-col space-y-3 sm:space-y-3 overflow-hidden">
       {/* Search and Filters - Fixed, no scroll */}
-      <div className="space-y-3 shrink-0 overflow-x-hidden overscroll-none touch-none md:touch-auto">
+      <div className="space-y-3 shrink-0 overflow-x-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex flex-col md:flex-row flex-1 items-stretch md:items-center gap-2 w-full sm:w-auto">
             {searchKey && (
@@ -428,7 +432,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={mobileScrollRef}
         onScroll={handleScroll}
-        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain overscroll-x-none touch-pan-y overscroll-behavior-contain scrollbar-hide"
+        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="grid grid-cols-2 gap-2 p-1 pb-2">
@@ -447,24 +451,24 @@ export function DataTable<TData, TValue>({
 
               {/* Pagination Buttons - After cards */}
               {(page > 1 || hasMore) && (
-                <div className="col-span-2 mt-3 mb-2 flex items-center justify-center gap-3 sticky bottom-0 bg-background/95 backdrop-blur-sm py-2 z-10">
+                <div className="col-span-2 mt-3 mb-2 flex items-center justify-center gap-3 sticky bottom-4 py-2 z-10">
                   {/* Previous Button */}
                   <Button
                     onClick={handleSeePrevious}
                     variant="outline"
                     disabled={page <= 1}
-                    className="h-10 w-10 p-0 border-border hover:bg-muted/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    className="h-10 w-10 p-0 bg-background/80 backdrop-blur-md shadow-lg border-border hover:bg-primary/5 hover:text-primary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 rounded-xl"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
 
                   {/* Page Indicator */}
-                  <div className="flex items-center gap-1 px-3 py-2 bg-muted/30 border border-border rounded-md shrink-0">
-                    <span className="text-sm font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 px-4 py-2 bg-background/80 dark:bg-card/80 backdrop-blur-md shadow-lg border border-border/50 rounded-xl shrink-0">
+                    <span className="text-sm font-bold text-foreground">
                       {page}
                     </span>
-                    <span className="text-sm text-muted-foreground">/</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground/60 font-medium italic">of</span>
+                    <span className="text-sm font-bold text-muted-foreground">
                       {pageCount || 1}
                     </span>
                   </div>
@@ -474,9 +478,9 @@ export function DataTable<TData, TValue>({
                     onClick={handleSeeMore}
                     variant="outline"
                     disabled={!hasMore}
-                    className="h-10 w-10 p-0 border-brand-primary/20 hover:bg-brand-primary/10 hover:border-brand-primary/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    className="h-10 w-10 p-0 bg-background/80 dark:bg-card/80 backdrop-blur-md shadow-lg border-primary/20 dark:border-primary/40 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 rounded-xl"
                   >
-                    <ChevronRight className="h-4 w-4 text-brand-primary" />
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               )}
@@ -490,14 +494,14 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Table View - Hidden on mobile, visible on tablet and desktop (>= 768px) */}
-      <div className="hidden md:flex rounded-md border w-full flex-col h-[200px] sm:h-[380px] overflow-hidden">
+      <div className="hidden md:flex bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(75,169,77,0.05)] w-full flex-col h-[200px] sm:h-[450px] overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_40px_rgba(75,169,77,0.1)]">
         {/* Table Container - Single scrollable container for header and body */}
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto scrollbar-hide">
           <div className="min-w-full">
             <Table className="min-w-full w-full">
-              <TableHeader className="bg-background sticky top-0 z-20">
+              <TableHeader className="bg-muted/30 sticky top-0 z-20">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="border-b">
+                  <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
                     {headerGroup.headers.map((header, index) => {
                       const isSticky = (
                         header.column.columnDef.meta as { sticky?: boolean }
@@ -506,12 +510,12 @@ export function DataTable<TData, TValue>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            "bg-background",
+                            "bg-transparent h-12",
                             isSticky &&
-                            "sticky left-0 z-30 bg-background border-r",
+                            "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
                             index === 0
-                              ? "pl-0 sm:pl-1 pr-1 sm:pr-2"
-                              : "pl-1 sm:pl-2 pr-1 sm:pr-2",
+                              ? "pl-4 pr-2"
+                              : "px-2",
                             "align-middle"
                           )}
                         >
@@ -531,26 +535,25 @@ export function DataTable<TData, TValue>({
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          Loading...
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  [...Array(5)].map((_, i) => (
+                    <TableRow key={i}>
+                      {columns.map((column, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-6 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
                 ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       onClick={() => onRowClick?.(row.original)}
-                      className={cn(onRowClick && "cursor-pointer hover:bg-muted/50 transition-colors")}
+                      className={cn(
+                        "group border-b border-border/30 last:border-0 transition-all duration-300",
+                        onRowClick && "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]"
+                      )}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const isSticky = (
@@ -732,6 +735,6 @@ export function DataTable<TData, TValue>({
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }

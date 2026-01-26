@@ -138,40 +138,22 @@ export function DriverManagementView() {
 
       {/* Table Card */}
       <Card className="p-0 overflow-hidden">
-        {/* Loading */}
-        {isLoading && (
-          <div className="p-12 text-center text-muted-foreground">
-            Loading drivers…
-          </div>
-        )}
-
-        {/* Empty */}
-        {!isLoading && drivers.length === 0 && (
-          <div className="p-12 text-center">
-            <p className="text-lg font-semibold">No drivers found</p>
-            <p className="text-muted-foreground mt-1">
-              Try adjusting your search or add a new driver.
-            </p>
-          </div>
-        )}
-
         {/* Table */}
-        {!isLoading && drivers.length > 0 && (
-          <DataTable
-            columns={driverColumns({
-              onView: (driver) => router.push(`/drivers/${driver.id}`),
-              onEdit: (driver) => {
-                setSelectedDriver(driver);
-                setOpen(true);
-              },
-              onDelete: (driver) => {
-                setDriverToDelete(driver);
-                setDeleteOpen(true);
-              },
-            })}
-            data={drivers}
-          />
-        )}
+        <DataTable
+          columns={driverColumns({
+            onView: (driver) => router.push(`/drivers/${driver.id}`),
+            onEdit: (driver) => {
+              setSelectedDriver(driver);
+              setOpen(true);
+            },
+            onDelete: (driver) => {
+              setDriverToDelete(driver);
+              setDeleteOpen(true);
+            },
+          })}
+          data={drivers}
+          isLoading={isLoading}
+        />
       </Card>
 
       {/* Create / Edit Dialog */}

@@ -263,143 +263,150 @@ export default function GPSDevicesPage() {
           <CardTitle className="text-lg sm:text-xl">GPS Devices</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-6">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : devices.length === 0 ? (
-            <div className="text-center py-12 p-6">
-              <p className="text-muted-foreground">
-                No GPS devices found. Create your first device.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-                <div className="min-w-[800px] px-2 sm:px-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="whitespace-nowrap">ID</TableHead>
-                        <TableHead className="whitespace-nowrap">External Device ID</TableHead>
-                        <TableHead className="whitespace-nowrap">IMEI Number</TableHead>
-                        <TableHead className="whitespace-nowrap">Device Name</TableHead>
-                        <TableHead className="whitespace-nowrap">Device Model</TableHead>
-                        <TableHead className="whitespace-nowrap">Truck</TableHead>
-                        <TableHead className="whitespace-nowrap">Status</TableHead>
-                        <TableHead className="whitespace-nowrap">Expire Date</TableHead>
-                        <TableHead className="whitespace-nowrap">Last Synced</TableHead>
-                        <TableHead className="whitespace-nowrap">Actions</TableHead>
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <div className="min-w-[800px] px-2 sm:px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">ID</TableHead>
+                    <TableHead className="whitespace-nowrap">External Device ID</TableHead>
+                    <TableHead className="whitespace-nowrap">IMEI Number</TableHead>
+                    <TableHead className="whitespace-nowrap">Device Name</TableHead>
+                    <TableHead className="whitespace-nowrap">Device Model</TableHead>
+                    <TableHead className="whitespace-nowrap">Truck</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Expire Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Last Synced</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    [...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {devices.map((device) => (
-                        <TableRow
-                          key={device.id}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            router.push(`/gps-devices/${device.id}`)
-                          }
-                        >
-                          <TableCell className="font-medium whitespace-nowrap text-xs sm:text-sm">
-                            {device.id}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.external_device_id}</TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.imei_number}</TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                            {device.device_name || (
-                              <span className="text-muted-foreground">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                            {device.device_model || (
-                              <span className="text-muted-foreground">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
-                            {gpsDeviceToTruckMap[device.id] ? (
-                              <span className="font-medium text-green-600">
-                                Assigned
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">
-                                Unassigned
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <Switch
-                                checked={device.status}
-                                onCheckedChange={(checked) =>
-                                  handleStatusChange(device, checked)
-                                }
-                                disabled={updateMutation.isPending}
-                                className="scale-75 sm:scale-100"
-                              />
-                              <Badge
-                                variant={device.status ? "default" : "secondary"}
-                                className={
-                                  device.status
-                                    ? "bg-green-500 hover:bg-green-600 text-[10px] sm:text-xs"
-                                    : "bg-gray-500 hover:bg-gray-600 text-[10px] sm:text-xs"
+                    ))
+                  ) : devices.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="h-24 text-center">
+                        No GPS devices found. Create your first device.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    devices.map((device) => (
+                      <TableRow
+                        key={device.id}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          router.push(`/gps-devices/${device.id}`)
+                        }
+                      >
+                        <TableCell className="font-medium whitespace-nowrap text-xs sm:text-sm">
+                          {device.id}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.external_device_id}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.imei_number}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                          {device.device_name || (
+                            <span className="text-muted-foreground">
+                              N/A
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                          {device.device_model || (
+                            <span className="text-muted-foreground">
+                              N/A
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
+                          {gpsDeviceToTruckMap[device.id] ? (
+                            <span className="font-medium text-green-600">
+                              Assigned
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Unassigned
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Switch
+                              checked={device.status}
+                              onCheckedChange={(checked) =>
+                                handleStatusChange(device, checked)
+                              }
+                              disabled={updateMutation.isPending}
+                              className="scale-75 sm:scale-100"
+                            />
+                            <Badge
+                              variant={device.status ? "default" : "secondary"}
+                              className={
+                                device.status
+                                  ? "bg-green-500 hover:bg-green-600 text-[10px] sm:text-xs"
+                                  : "bg-gray-500 hover:bg-gray-600 text-[10px] sm:text-xs"
+                              }
+                            >
+                              {device.status ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{formatDate(device.expire_date)}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                          {formatDateTime(device.last_synced_at)}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(`/gps-devices/${device.id}`)
                                 }
                               >
-                                {device.status ? "Active" : "Inactive"}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">{formatDate(device.expire_date)}</TableCell>
-                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                            {formatDateTime(device.last_synced_at)}
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(`/gps-devices/${device.id}/edit`)
+                                }
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                              {device.status && (
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/gps-devices/${device.id}`)
-                                  }
+                                  className="text-red-600"
+                                  onClick={() => handleDeactivate(device.id)}
                                 >
-                                  View
+                                  Deactivate
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/gps-devices/${device.id}/edit`)
-                                  }
-                                >
-                                  Edit
-                                </DropdownMenuItem>
-                                {device.status && (
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => handleDeactivate(device.id)}
-                                  >
-                                    Deactivate
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </>
-          )}
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </CardContent>
         {!isLoading && devices.length > 0 && (
           <CardContent className="pt-4 sm:pt-6">

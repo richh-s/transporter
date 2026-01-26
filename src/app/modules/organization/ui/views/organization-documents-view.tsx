@@ -64,7 +64,7 @@ export function OrganizationDocumentsView() {
   ) => {
     // Close modal optimistically
     setIsUploadModalOpen(false);
-    
+
     uploadDocumentMutation.mutate(
       {
         file,
@@ -90,7 +90,7 @@ export function OrganizationDocumentsView() {
     // Close modal optimistically
     setIsEditModalOpen(false);
     setSelectedDocumentId(null);
-    
+
     updateDocumentMutation.mutate(
       { id, data },
       {
@@ -115,7 +115,7 @@ export function OrganizationDocumentsView() {
     // Close modal optimistically
     setIsDeleteModalOpen(false);
     setDocumentToDelete(null);
-    
+
     deleteDocumentMutation.mutate(documentId, {
       onSuccess: () => {
         toast.success("Document deleted successfully");
@@ -132,7 +132,7 @@ export function OrganizationDocumentsView() {
     try {
       // Always fetch a fresh presigned URL (bypass cache since URLs expire)
       const response = await organizationApi.getDocument(id);
-      
+
       if (!response.data) {
         throw new Error(response.error || "Failed to fetch document");
       }
@@ -161,7 +161,7 @@ export function OrganizationDocumentsView() {
 
   const handleEntityClick = (entityType: string, entityId: number | null) => {
     if (!entityId) return;
-    
+
     if (entityType === "truck") {
       router.push(`/fleet/${entityId}`);
     } else if (entityType === "driver") {
@@ -223,9 +223,9 @@ export function OrganizationDocumentsView() {
   }, [filters, page]);
 
   return (
-    <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
+    <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="space-y-3 pb-2 border-b shrink-0 touch-none md:touch-auto">
+      <div className="space-y-3 pb-2 border-b shrink-0">
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
@@ -240,11 +240,10 @@ export function OrganizationDocumentsView() {
 
       {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
       <div
-        className={`shrink-0 touch-none md:touch-auto transition-all duration-300 md:block ${
-          isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
+        className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
             ? "hidden md:block"
             : "block"
-        }`}
+          }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />
       </div>

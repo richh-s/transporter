@@ -7,7 +7,7 @@ import { Container, Truck, Driver } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download } from "lucide-react";
+import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download, User } from "lucide-react";
 import Link from "next/link";
 import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
@@ -161,35 +161,35 @@ export default function ShipDetailsPage() {
                             </Badge>
                         )}
                     </h1>
-                    <p className="text-muted-foreground mt-1">
+                    <div className="text-muted-foreground mt-1">
                         {isShipLoading ? (
                             <Skeleton className="h-5 w-64" />
                         ) : (
                             `${ship?.origin} → ${ship?.destination}`
                         )}
-                    </p>
+                    </div>
                 </div>
                 <div className="flex gap-4 text-sm text-right">
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Pickup Date</span>
-                        <span className="font-medium">
+                        <div className="font-medium">
                             {isShipLoading ? (
                                 <Skeleton className="h-5 w-24 mt-1" />
                             ) : (
                                 ship?.pickup_date ? format(new Date(ship.pickup_date), "PPP") : "N/A"
                             )}
-                        </span>
+                        </div>
                     </div>
                     <Separator orientation="vertical" className="h-10" />
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Delivery Date</span>
-                        <span className="font-medium">
+                        <div className="font-medium">
                             {isShipLoading ? (
                                 <Skeleton className="h-5 w-24 mt-1" />
                             ) : (
                                 ship?.delivery_date ? format(new Date(ship.delivery_date), "PPP") : "N/A"
                             )}
-                        </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -254,40 +254,59 @@ export default function ShipDetailsPage() {
                 </Card>
 
                 {/* Pickup Facility */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5" />
+                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary/5 via-background to-background shadow-lg shadow-primary/5 hover:shadow-xl transition-all duration-500 group">
+                    <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/5 blur-3xl group-hover:bg-primary/10 transition-colors" />
+                    <CardHeader className="relative z-10 pb-2">
+                        <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                            <div className="p-2 rounded-xl bg-red-500/10 text-red-500">
+                                <MapPin className="h-4 w-4" />
+                            </div>
                             Pickup Facility
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4 relative z-10 pt-2">
                         {isShipLoading ? (
                             <div className="space-y-3">
                                 <Skeleton className="h-10 w-full" />
                                 <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-20 w-full" />
                             </div>
                         ) : (
                             <>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Name</p>
-                                    <p className="font-medium">{ship?.pickup_facility?.name || "-"}</p>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Facility Name</p>
+                                    <p className="font-bold text-foreground text-lg">{ship?.pickup_facility?.name || "-"}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Address</p>
-                                    <p className="text-sm">{ship?.pickup_facility?.address || "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Region</p>
-                                    <p className="text-sm">{ship?.pickup_facility?.region || "-"}, {ship?.pickup_facility?.country || "-"}</p>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Contact</p>
-                                    <p className="text-sm font-medium">{ship?.pickup_facility?.contact_name || "-"}</p>
-                                    <p className="text-xs text-muted-foreground">{ship?.pickup_facility?.contact_phone_number || "-"}</p>
-                                    <p className="text-xs text-muted-foreground">{ship?.pickup_facility?.contact_email || "-"}</p>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-2">
+                                        <div className="mt-1 p-1 rounded-md bg-muted/50">
+                                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Location</span>
+                                            <p className="text-sm font-medium leading-relaxed max-w-[200px]">{ship?.pickup_facility?.address || "-"}</p>
+                                            <p className="text-xs text-secondary font-bold mt-0.5">{ship?.pickup_facility?.region || "-"}, {ship?.pickup_facility?.country || "-"}</p>
+                                        </div>
+                                    </div>
+                                    <Separator className="bg-border/40" />
+                                    <div className="flex items-start gap-2 pt-1">
+                                        <div className="mt-1 p-1 rounded-md bg-muted/50">
+                                            <User className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact Person</span>
+                                            <p className="text-sm font-bold text-foreground">{ship?.pickup_facility?.contact_name || "-"}</p>
+                                            <div className="flex flex-col mt-1 gap-1">
+                                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer">
+                                                    <span className="h-1 w-1 rounded-full bg-primary" />
+                                                    {ship?.pickup_facility?.contact_phone_number || "-"}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer truncate max-w-[200px]">
+                                                    <span className="h-1 w-1 rounded-full bg-primary" />
+                                                    {ship?.pickup_facility?.contact_email || "-"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -295,40 +314,59 @@ export default function ShipDetailsPage() {
                 </Card>
 
                 {/* Delivery Facility */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5" />
+                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-secondary/5 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
+                    <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-secondary/5 blur-3xl group-hover:bg-secondary/10 transition-colors" />
+                    <CardHeader className="relative z-10 pb-2">
+                        <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                                <Building2 className="h-4 w-4" />
+                            </div>
                             Delivery Facility
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4 relative z-10 pt-2">
                         {isShipLoading ? (
                             <div className="space-y-3">
                                 <Skeleton className="h-10 w-full" />
                                 <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-20 w-full" />
                             </div>
                         ) : (
                             <>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Name</p>
-                                    <p className="font-medium">{ship?.delivery_facility?.name || "-"}</p>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Facility Name</p>
+                                    <p className="font-bold text-foreground text-lg">{ship?.delivery_facility?.name || "-"}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Address</p>
-                                    <p className="text-sm">{ship?.delivery_facility?.address || "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Region</p>
-                                    <p className="text-sm">{ship?.delivery_facility?.region || "-"}, {ship?.delivery_facility?.country || "-"}</p>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Contact</p>
-                                    <p className="text-sm font-medium">{ship?.delivery_facility?.contact_name || "-"}</p>
-                                    <p className="text-xs text-muted-foreground">{ship?.delivery_facility?.contact_phone_number || "-"}</p>
-                                    <p className="text-xs text-muted-foreground">{ship?.delivery_facility?.contact_email || "-"}</p>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-2">
+                                        <div className="mt-1 p-1 rounded-md bg-muted/50">
+                                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Location</span>
+                                            <p className="text-sm font-medium leading-relaxed max-w-[200px]">{ship?.delivery_facility?.address || "-"}</p>
+                                            <p className="text-xs text-secondary font-bold mt-0.5">{ship?.delivery_facility?.region || "-"}, {ship?.delivery_facility?.country || "-"}</p>
+                                        </div>
+                                    </div>
+                                    <Separator className="bg-border/40" />
+                                    <div className="flex items-start gap-2 pt-1">
+                                        <div className="mt-1 p-1 rounded-md bg-muted/50">
+                                            <User className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Contact Person</span>
+                                            <p className="text-sm font-bold text-foreground">{ship?.delivery_facility?.contact_name || "-"}</p>
+                                            <div className="flex flex-col mt-1 gap-1">
+                                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer">
+                                                    <span className="h-1 w-1 rounded-full bg-primary" />
+                                                    {ship?.delivery_facility?.contact_phone_number || "-"}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer truncate max-w-[200px]">
+                                                    <span className="h-1 w-1 rounded-full bg-primary" />
+                                                    {ship?.delivery_facility?.contact_email || "-"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -336,33 +374,41 @@ export default function ShipDetailsPage() {
                 </Card>
 
                 {/* Shipment Details */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Shipment Details
+                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-muted/20 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
+                    <CardHeader className="relative z-10 pb-2">
+                        <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600">
+                                <FileText className="h-4 w-4" />
+                            </div>
+                            Shipment Metrics
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-5 relative z-10 pt-2">
                         {isShipLoading ? (
                             <div className="space-y-3">
-                                <Skeleton className="h-10 w-full" />
                                 <Skeleton className="h-10 w-full" />
                                 <Skeleton className="h-10 w-full" />
                             </div>
                         ) : (
                             <>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Bill of Lading Number</p>
-                                    <p className="font-medium">{ship?.shipment_details?.bill_of_lading_number || "-"}</p>
+                                <div className="space-y-4">
+                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Bill of Lading</p>
+                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.bill_of_lading_number || "-"}</p>
+                                    </div>
+                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Pickup Number</p>
+                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.pickup_number || "-"}</p>
+                                    </div>
+                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Delivery Number</p>
+                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.delivery_number || "-"}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Pickup Number</p>
-                                    <p className="font-medium">{ship?.shipment_details?.pickup_number || "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Delivery Number</p>
-                                    <p className="font-medium">{ship?.shipment_details?.delivery_number || "-"}</p>
+                                <div className="pt-2">
+                                    <Button variant="outline" className="w-full text-xs font-bold uppercase tracking-widest border-border/50 hover:bg-orange-500/5 hover:text-orange-600 hover:border-orange-500/30 transition-all rounded-xl h-9">
+                                        View All Details
+                                    </Button>
                                 </div>
                             </>
                         )}

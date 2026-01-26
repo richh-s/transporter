@@ -72,15 +72,17 @@ export function Sidebar({
       )}
     >
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
-        <Image
-          src="/images/welogo.png"
-          alt="WeTruck Logo"
-          width={120}
-          height={32}
-          className="h-8 w-auto object-contain filter-[sepia(1)_saturate(5)_hue-rotate(5deg)_brightness(1.1)]"
-        />
+        <div className="flex items-center gap-2">
+          <Image
+            src="https://www.wetruck.ai/images/logo.png"
+            alt="WeTruck Logo"
+            width={120}
+            height={32}
+            className="h-8 object-contain"
+          />
+        </div>
       </div>
-      <nav className="flex-1 space-y-1 px-4 py-4">
+      <nav className="flex-1 space-y-2 px-4 py-4">
         {navigation.map((item) => {
           // Check if pathname matches the href or starts with it (for nested routes)
           const isActive =
@@ -91,10 +93,10 @@ export function Sidebar({
               href={item.href}
               onClick={onClose}
               className={cn(
-                "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "group flex items-center rounded-md px-3 py-2 text-sm font-bold transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
               )}
             >
               <item.icon
@@ -102,7 +104,7 @@ export function Sidebar({
                   "mr-3 h-5 w-5 shrink-0 transition-colors",
                   isActive
                     ? "text-sidebar-primary"
-                    : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                 )}
                 aria-hidden="true"
               />
@@ -176,9 +178,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center flex-1 min-w-0">
-              <h1 className="text-sm sm:text-lg font-bold md:text-xl text-brand-primary truncate uppercase tracking-tight">
-                <span className="">WeTruck</span>
-              </h1>
+              <Image
+                src="https://www.wetruck.ai/images/logo.png"
+                alt="WeTruck Logo"
+                width={100}
+                height={28}
+                className="h-7 object-contain"
+              />
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <ThemeToggle />
@@ -189,8 +195,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-x-2 text-sm font-medium hover:text-brand-primary transition-colors outline-none cursor-pointer">
-                    <div className="h-8 w-8 rounded-full bg-brand-primary flex items-center justify-center text-white font-bold uppercase text-xs">
+                  <button className="flex items-center gap-x-2 text-sm font-medium hover:text-primary transition-colors outline-none cursor-pointer">
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold uppercase text-xs">
                       {user?.name?.[0] || "T"}
                     </div>
                     <span className="hidden lg:inline">Profile</span>

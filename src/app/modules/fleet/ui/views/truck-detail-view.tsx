@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -140,36 +140,12 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     window.open(url, "_blank");
   };
 
-  // Prevent body scrolling on mobile to fix scroll chaining issue
-  useEffect(() => {
-    const handleResize = () => {
-      // Only prevent scrolling on mobile
-      if (window.innerWidth < 768) {
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden";
-      } else {
-        document.body.style.overflow = "";
-        document.documentElement.style.overflow = "";
-      }
-    };
 
-    // Set initial state
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
 
   return (
-    <div className="flex flex-col h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
+    <div className="flex flex-col h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="space-y-3 pb-2 border-b shrink-0 touch-none md:touch-auto">
+      <div className="space-y-3 pb-2 border-b shrink-0">
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
@@ -260,10 +236,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                     >
                       {truck.status
                         ? truck.status
-                            .replace(/_/g, " ")
-                            .charAt(0)
-                            .toUpperCase() +
-                          truck.status.replace(/_/g, " ").slice(1)
+                          .replace(/_/g, " ")
+                          .charAt(0)
+                          .toUpperCase() +
+                        truck.status.replace(/_/g, " ").slice(1)
                         : "Unknown"}
                     </Badge>
                   </div>
