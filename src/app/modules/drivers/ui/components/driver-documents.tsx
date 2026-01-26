@@ -53,8 +53,14 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
-const DOCUMENT_TYPES = ["trade_licence", "id", "other"] as const;
-type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+const DRIVER_DOCUMENT_TYPES = [
+  "driver_id",
+  "driver_license",
+  "other",
+] as const;
+
+type DriverDocumentType = (typeof DRIVER_DOCUMENT_TYPES)[number];
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
   const queryClient = useQueryClient();
@@ -64,12 +70,14 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const deleteMutation = useDeleteDriverDocument();
 
   const [file, setFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<DocumentType | "">("");
+  const [documentType, setDocumentType] = useState<DriverDocumentType | "">("");
   const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
 
-  // DELETE MODAL STATE
+  // Delete modal state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
+
+
 
   const handleView = async (documentId: number) => {
     const res = await queryClient.fetchQuery({
@@ -81,6 +89,8 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       window.location.href = res.presigned_url;
     }
   };
+
+
 
   const handleUpload = () => {
     if (!file || !documentType) return;
@@ -112,38 +122,49 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Document Type */}
           <div>
             <Label>Document Type</Label>
             <Select
               value={documentType}
-              onValueChange={(v) => setDocumentType(v as DocumentType)}
+              onValueChange={(v) =>
+                setDocumentType(v as DriverDocumentType)
+              }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                {DOCUMENT_TYPES.map((type) => (
+                {DRIVER_DOCUMENT_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type.replace("_", " ").toUpperCase()}
+                    {type
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
+          {/* File */}
           <div>
             <Label>File</Label>
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) =>
+                setFile(e.target.files?.[0] ?? null)
+              }
             />
           </div>
 
+          {/* Upload button */}
           <div className="flex items-end">
             <Button
               onClick={handleUpload}
-              disabled={uploadMutation.isPending || !file || !documentType}
+              disabled={
+                uploadMutation.isPending || !file || !documentType
+              }
               className="w-full"
             >
               {uploadMutation.isPending ? (
@@ -187,7 +208,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 <TableRow key={doc.id}>
                   <TableCell>
                     <Badge variant="outline">
-                      {doc.document_type.replace("_", " ").toUpperCase()}
+                      {doc.document_type
+                        .replace(/_/g, " ")
+                        .toUpperCase()}
                     </Badge>
                   </TableCell>
 
@@ -204,14 +227,18 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                       </DropdownMenuTrigger>
 
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(doc.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handleView(doc.id)}
+                        >
                           <Eye className="mr-2 h-4 w-4" />
                           View
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
                           onClick={() => {
-                            setDocumentType(doc.document_type as DocumentType);
+                            setDocumentType(
+                              doc.document_type as DriverDocumentType
+                            );
                             setReplaceDocId(doc.id);
                           }}
                         >
@@ -239,7 +266,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         )}
       </Card>
 
-      {/* DELETE CONFIRM MODAL */}
+      {/* Delete confirm modal */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -251,8 +278,8 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this document? This action cannot
-              be undone.
+              Are you sure you want to delete this document? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -273,15 +300,13 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               onClick={() => {
                 if (!docToDelete) return;
 
-
-                setDeleteOpen(false);
-                setDocToDelete(null);
-
-
                 deleteMutation.mutate({
                   driverId,
                   documentId: docToDelete,
                 });
+
+                setDeleteOpen(false);
+                setDocToDelete(null);
               }}
             >
               Delete

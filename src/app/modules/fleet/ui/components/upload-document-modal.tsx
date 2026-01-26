@@ -57,25 +57,27 @@ export function UploadDocumentModal({
       return;
     }
 
-    if (!documentType.trim()) {
+    if (!documentType) {
       setError("Please select a document type");
       return;
     }
 
     setError(null);
     try {
-      await onUpload(selectedFile, documentType.trim());
-      // Reset form on success
+      await onUpload(selectedFile, documentType);
+
+      // Reset on success
       setSelectedFile(null);
       setDocumentType("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+
       onOpenChange(false);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to upload document";
-      setError(errorMessage);
+      setError(
+        error instanceof Error ? error.message : "Failed to upload document"
+      );
     }
   };
 
@@ -102,6 +104,7 @@ export function UploadDocumentModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Document Type */}
           <div className="space-y-2">
             <Label htmlFor="document-type">Document Type</Label>
             <Select
@@ -116,12 +119,23 @@ export function UploadDocumentModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
+
+                <SelectItem value="authorised_contact_person_company_id">
+                  Authorised Contact Person Company ID
+                </SelectItem>
+
+                <SelectItem value="libre">Libre</SelectItem>
+
+                <SelectItem value="driver_id">Driver ID</SelectItem>
+
+                <SelectItem value="driver_license">Driver License</SelectItem>
+
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* File */}
           <div className="space-y-2">
             <Label htmlFor="file">File</Label>
             <input
@@ -132,34 +146,35 @@ export function UploadDocumentModal({
               onChange={handleFileChange}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             />
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleFileSelect}
-                disabled={isUploading}
-                className="flex-1"
-              >
-                {selectedFile ? (
-                  <>
-                    <X className="h-4 w-4 mr-2" />
-                    {selectedFile.name}
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select File
-                  </>
-                )}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleFileSelect}
+              disabled={isUploading}
+              className="w-full"
+            >
+              {selectedFile ? (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  {selectedFile.name}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Select File
+                </>
+              )}
+            </Button>
+
             {selectedFile && (
               <p className="text-xs text-muted-foreground">
-                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                Selected: {selectedFile.name} (
+                {(selectedFile.size / 1024).toFixed(2)} KB)
               </p>
             )}
           </div>
 
+          {/* Error */}
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -196,4 +211,3 @@ export function UploadDocumentModal({
     </Dialog>
   );
 }
-

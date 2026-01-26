@@ -29,12 +29,12 @@ interface UpdateDocumentModalProps {
   onUpdate: (documentType: string, file?: File) => Promise<void>;
   isUpdating: boolean;
 }
-
 const DOCUMENT_TYPES = [
-  "registration_certificate",
-  "insurance",
-  "license",
-  "inspection_report",
+  "trade_licence",
+  "authorised_contact_person_company_id",
+  "libre",
+  "driver_id",
+  "driver_license",
   "other",
 ];
 
@@ -70,6 +70,7 @@ export function UpdateDocumentModal({
     if (!documentType) return;
 
     await onUpdate(documentType, file || undefined);
+
     if (!isUpdating) {
       onOpenChange(false);
       setFile(null);
@@ -88,8 +89,10 @@ export function UpdateDocumentModal({
             Update the document type or upload a new file.
           </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            {/* Document Type */}
             <div className="space-y-2">
               <Label htmlFor="document-type">Document Type</Label>
               <Select
@@ -103,12 +106,16 @@ export function UpdateDocumentModal({
                 <SelectContent>
                   {DOCUMENT_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {type
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* File */}
             <div className="space-y-2">
               <Label htmlFor="file">File (Optional)</Label>
               <Input
@@ -129,6 +136,7 @@ export function UpdateDocumentModal({
               )}
             </div>
           </div>
+
           <DialogFooter>
             <Button
               type="button"
@@ -150,5 +158,3 @@ export function UpdateDocumentModal({
     </Dialog>
   );
 }
-
-
