@@ -1,20 +1,18 @@
 "use client";
-
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import { driverApi } from "@/app/modules/drivers/server/api/driver.api";
 import { driverKeys } from "@/app/modules/drivers/server/query-keys";
 import { useDriverDocuments } from "@/app/modules/drivers/server/hooks/use-driver-documents";
 import { useUploadDriverDocument } from "@/app/modules/drivers/server/hooks/use-upload-driver-document";
 import { useUpdateDriverDocument } from "@/app/modules/drivers/server/hooks/use-update-driver-document";
 import { useDeleteDriverDocument } from "@/app/modules/drivers/server/hooks/use-delete-driver-document";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -80,6 +78,23 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
+  /* ---------------- Validation ---------------- */
+  const validateUpload = (): boolean => {
+    const newErrors: UploadErrors = {};
+
+    if (!documentType) {
+      newErrors.documentType = "Document type is required";
+    }
+
+    if (!file) {
+      newErrors.file = "File is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /* ---------------- Handlers ---------------- */
   const handleView = async (documentId: number) => {
     const res = await qc.fetchQuery({
       queryKey: driverKeys.document(driverId, documentId),
@@ -119,6 +134,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
     setEditDocId(null);
   };
 
+  const backendError = uploadMutation.error
+    ? (uploadMutation.error as Error).message
+    : null;
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Driver Documents</h2>
@@ -130,8 +149,11 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label>Document Type</Label>
+          {/* Document Type */}
+          <div className="space-y-1">
+            <Label>
+              Document Type <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={documentType}
               onValueChange={(v) =>
@@ -149,17 +171,33 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 ))}
               </SelectContent>
             </Select>
+            {errors.documentType && (
+              <p className="text-sm text-red-500">
+                {errors.documentType}
+              </p>
+            )}
           </div>
 
-          <div>
-            <Label>File</Label>
+          {/* File */}
+          <div className="space-y-1">
+            <Label>
+              File <span className="text-red-500">*</span>
+            </Label>
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null);
+                setErrors((e) => ({ ...e, file: undefined }));
+              }}
+              className={errors.file ? "border-red-500" : ""}
             />
+            {errors.file && (
+              <p className="text-sm text-red-500">{errors.file}</p>
+            )}
           </div>
 
+          {/* Upload Button */}
           <div className="flex items-end">
             <Button
               onClick={handleSubmit}
@@ -180,6 +218,13 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             </Button>
           </div>
         </div>
+
+        {/* Backend error */}
+        {backendError && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>{backendError}</AlertDescription>
+          </Alert>
+        )}
       </Card>
 
       {/* Table */}
