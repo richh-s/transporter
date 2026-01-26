@@ -39,7 +39,6 @@ export function FleetStatsCardsWrapper({
       
       const data = response.data;
       
-      // Handle paginated response
       if (
         data &&
         typeof data === "object" &&
