@@ -7,6 +7,7 @@ import { driverApi } from "@/app/modules/drivers/server/api/driver.api";
 import { driverKeys } from "@/app/modules/drivers/server/query-keys";
 import { useDriverDocuments } from "@/app/modules/drivers/server/hooks/use-driver-documents";
 import { useUploadDriverDocument } from "@/app/modules/drivers/server/hooks/use-upload-driver-document";
+import { useUpdateDriverDocument } from "@/app/modules/drivers/server/hooks/use-update-driver-document";
 import { useDeleteDriverDocument } from "@/app/modules/drivers/server/hooks/use-delete-driver-document";
 
 import { Button } from "@/components/ui/button";
@@ -53,76 +54,82 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
-
 const DRIVER_DOCUMENT_TYPES = [
   "driver_id",
   "driver_license",
+  "trade_licence",
+  "libre",
   "other",
 ] as const;
+
 
 type DriverDocumentType = (typeof DRIVER_DOCUMENT_TYPES)[number];
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
   const { data: documents = [], isLoading } = useDriverDocuments(driverId);
   const uploadMutation = useUploadDriverDocument(driverId);
+  const updateMutation = useUpdateDriverDocument(driverId);
   const deleteMutation = useDeleteDriverDocument();
 
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DriverDocumentType | "">("");
-  const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
+  const [editDocId, setEditDocId] = useState<number | null>(null);
 
-  // Delete modal state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
-
-
   const handleView = async (documentId: number) => {
-    const res = await queryClient.fetchQuery({
+    const res = await qc.fetchQuery({
       queryKey: driverKeys.document(driverId, documentId),
       queryFn: () => driverApi.getDriverDocument(driverId, documentId),
     });
 
     if (res.presigned_url) {
-      window.location.href = res.presigned_url;
+      window.open(res.presigned_url, "_blank");
     }
   };
 
+  const handleSubmit = () => {
+    if (!file && !documentType) return;
 
-
-  const handleUpload = () => {
-    if (!file || !documentType) return;
-
-    uploadMutation.mutate(
-      {
-        document_type: documentType,
-        file,
-        replace_document_id: replaceDocId ?? undefined,
-      },
-      {
-        onSuccess: () => {
-          setFile(null);
-          setDocumentType("");
-          setReplaceDocId(null);
+    if (editDocId) {
+      updateMutation.mutate(
+        {
+          documentId: editDocId,
+          document_type: documentType || undefined,
+          file: file || undefined,
         },
-      }
-    );
+        {
+          onSuccess: () => resetForm(),
+        }
+      );
+    } else {
+      uploadMutation.mutate(
+        { document_type: documentType, file: file! },
+        { onSuccess: () => resetForm() }
+      );
+    }
+  };
+
+  const resetForm = () => {
+    setFile(null);
+    setDocumentType("");
+    setEditDocId(null);
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Driver Documents</h2>
 
-      {/* Upload / Replace */}
+      {/* Upload / Edit */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">
-          {replaceDocId ? "Replace Document" : "Upload New Document"}
+          {editDocId ? "Edit Document" : "Upload New Document"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Document Type */}
           <div>
             <Label>Document Type</Label>
             <Select
@@ -137,45 +144,37 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               <SelectContent>
                 {DRIVER_DOCUMENT_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    {type.replace(/_/g, " ").toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* File */}
           <div>
             <Label>File</Label>
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) =>
-                setFile(e.target.files?.[0] ?? null)
-              }
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </div>
 
-          {/* Upload button */}
           <div className="flex items-end">
             <Button
-              onClick={handleUpload}
-              disabled={
-                uploadMutation.isPending || !file || !documentType
-              }
+              onClick={handleSubmit}
+              disabled={uploadMutation.isPending || updateMutation.isPending}
               className="w-full"
             >
-              {uploadMutation.isPending ? (
+              {uploadMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  {replaceDocId ? "Replace" : "Upload"}
+                  {editDocId ? "Save Changes" : "Upload"}
                 </>
               )}
             </Button>
@@ -183,16 +182,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         </div>
       </Card>
 
-      {/* Documents Table */}
+      {/* Table */}
       <Card className="p-6">
         {isLoading ? (
-          <div className="py-8 text-center text-muted-foreground">
-            Loading documents...
-          </div>
+          <div className="text-center py-8">Loading documents...</div>
         ) : documents.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            No documents uploaded yet.
-          </div>
+          <div className="text-center py-8">No documents uploaded yet.</div>
         ) : (
           <Table>
             <TableHeader>
@@ -208,9 +203,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 <TableRow key={doc.id}>
                   <TableCell>
                     <Badge variant="outline">
-                      {doc.document_type
-                        .replace(/_/g, " ")
-                        .toUpperCase()}
+                      {doc.document_type.toUpperCase()}
                     </Badge>
                   </TableCell>
 
@@ -227,23 +220,19 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                       </DropdownMenuTrigger>
 
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleView(doc.id)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
+                        <DropdownMenuItem onClick={() => handleView(doc.id)}>
+                          <Eye className="mr-2 h-4 w-4" /> View
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
                           onClick={() => {
+                            setEditDocId(doc.id);
                             setDocumentType(
                               doc.document_type as DriverDocumentType
                             );
-                            setReplaceDocId(doc.id);
                           }}
                         >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Replace
+                          <Pencil className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -253,8 +242,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                             setDeleteOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -266,47 +254,28 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         )}
       </Card>
 
-      {/* Delete confirm modal */}
-      <Dialog
-        open={deleteOpen}
-        onOpenChange={(val) => {
-          setDeleteOpen(val);
-          if (!val) setDocToDelete(null);
-        }}
-      >
+      {/* Delete Dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this document? This action
-              cannot be undone.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteOpen(false);
-                setDocToDelete(null);
-              }}
-            >
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-
             <Button
               variant="destructive"
-              disabled={!docToDelete || deleteMutation.isPending}
               onClick={() => {
-                if (!docToDelete) return;
-
                 deleteMutation.mutate({
                   driverId,
-                  documentId: docToDelete,
+                  documentId: docToDelete!,
                 });
-
                 setDeleteOpen(false);
-                setDocToDelete(null);
               }}
             >
               Delete

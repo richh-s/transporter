@@ -1,10 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
+import { driverDocumentSchema } from "@/lib/zod/driver";
 import type { DriverDocument } from "../types";
 
+const listSchema = z.array(driverDocumentSchema);
+
 export function useDriverDocuments(driverId?: number) {
-  return useQuery<DriverDocument[]>({
+  return useQuery({
     queryKey: driverId
       ? driverKeys.documents(driverId)
       : ["drivers", "documents", "missing"],
@@ -12,8 +16,9 @@ export function useDriverDocuments(driverId?: number) {
     enabled: !!driverId,
     staleTime: 0,
 
-    queryFn: async () => {
-      return await driverApi.getDriverDocuments(driverId!);
+    queryFn: async (): Promise<DriverDocument[]> => {
+      const data = await driverApi.getDriverDocuments(driverId!);
+      return listSchema.parse(data);
     },
   });
 }
