@@ -78,7 +78,6 @@ function TrucksTableContent({
 
       const data = response.data;
 
-      // Handle paginated response
       if (
         data &&
         typeof data === "object" &&
@@ -102,7 +101,6 @@ function TrucksTableContent({
         };
       }
 
-      // Handle array response (fallback)
       if (Array.isArray(data)) {
         const trucksArray = data as Truck[];
         return {
@@ -129,7 +127,6 @@ function TrucksTableContent({
   const total = trucksData?.total || 0;
   const totalPages = trucksData?.pages || 0;
 
-  // Notify parent of page count changes
   useEffect(() => {
     if (onPageCountChange) {
       onPageCountChange(totalPages);
