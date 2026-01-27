@@ -33,12 +33,11 @@ export function DeleteTruckModal({
 
     try {
       await deleteTruckMutation.mutateAsync(truck.id);
-      // Only close modal and show success on actual success
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
       console.error("Failed to delete truck:", err);
-      // Modal stays open to show error message
+    
     }
   };
 
