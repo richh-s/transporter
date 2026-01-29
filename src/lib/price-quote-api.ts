@@ -23,7 +23,7 @@ export class PriceQuoteService {
     static async createQuote(
         quoteData: CreatePriceQuoteRequest
     ): Promise<PriceQuote> {
-        const { data, error } = await request<PriceQuoteCreateResponse>(
+        const response = await request<PriceQuoteCreateResponse>(
             `${this.BASE_ENDPOINT}/`,
             {
                 method: "POST",
@@ -31,8 +31,15 @@ export class PriceQuoteService {
             }
         );
 
+        const { data, error, status, errorCode } = response;
+
         if (error) {
-            throw new Error(error);
+            // Create an error object that includes the error code if available
+            const errorObj = new Error(error);
+            // Attach status and error code for better error handling
+            (errorObj as any).status = status;
+            (errorObj as any).code = errorCode;
+            throw errorObj;
         }
 
         if (!data?.result) {
