@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
-import { driverDocumentSchema } from "@/lib/zod/driver";
 import { driverKeys } from "../query-keys";
+import { driverDocumentSchema } from "@/lib/zod/driver";
+import type { DriverDocument } from "../types";
 
 export function useDriverDocument(
   driverId?: number,
@@ -16,7 +17,7 @@ export function useDriverDocument(
     enabled: !!driverId && !!documentId,
     staleTime: 0,
 
-    queryFn: async () => {
+    queryFn: async (): Promise<DriverDocument> => {
       const data = await driverApi.getDriverDocument(
         driverId!,
         documentId!

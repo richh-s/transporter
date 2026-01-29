@@ -26,7 +26,10 @@ interface EditDocumentModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   document: OrganizationDocument | null;
-  onUpdate: (id: string | number, data: { document_type?: string; file?: File }) => Promise<void>;
+  onUpdate: (
+    id: string | number,
+    data: { document_type?: string; file?: File }
+  ) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -42,7 +45,30 @@ export function EditDocumentModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize form when document changes
+  /* ------------------ File Validation ------------------ */
+  const validateFile = (file: File) => {
+    const validTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      return "Invalid file type. Upload PDF, DOC, DOCX, JPG, or PNG.";
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return "File size exceeds 10MB limit.";
+    }
+
+    return null;
+  };
+
+  /* ------------------ Init ------------------ */
   useEffect(() => {
     if (document) {
       setDocumentType(document.document_type || "");
@@ -54,16 +80,23 @@ export function EditDocumentModal({
     }
   }, [document]);
 
+  /* ------------------ Handlers ------------------ */
   const handleFileSelect = () => {
     fileInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setError(null);
+    if (!file) return;
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
     }
+
+    setSelectedFile(file);
+    setError(null);
   };
 
   const handleUpdate = async () => {
@@ -75,14 +108,15 @@ export function EditDocumentModal({
     }
 
     setError(null);
-    // Reset form optimistically
+
+    // Optimistic reset (existing behavior preserved)
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    // Close modal optimistically - parent will handle success/error
+
     onOpenChange(false);
-    // Call onUpdate (it now handles the mutation and closes modal)
+
     onUpdate(document.id, {
       document_type: documentType.trim(),
       file: selectedFile || undefined,
@@ -102,6 +136,7 @@ export function EditDocumentModal({
 
   if (!document) return null;
 
+  /* ------------------ Render ------------------ */
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -113,8 +148,11 @@ export function EditDocumentModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Document Type */}
           <div className="space-y-2">
-            <Label htmlFor="edit-document-type">Document Type</Label>
+            <Label htmlFor="edit-document-type">
+              Document Type <span className="text-destructive">*</span>
+            </Label>
             <Select
               value={documentType}
               onValueChange={(value) => {
@@ -133,6 +171,7 @@ export function EditDocumentModal({
             </Select>
           </div>
 
+          {/* Replace File */}
           <div className="space-y-2">
             <Label htmlFor="edit-file">Replace File (Optional)</Label>
             <input
@@ -143,35 +182,37 @@ export function EditDocumentModal({
               onChange={handleFileChange}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             />
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleFileSelect}
-                disabled={isUpdating}
-                className="flex-1"
-              >
-                {selectedFile ? (
-                  <>
-                    <X className="h-4 w-4 mr-2" />
-                    {selectedFile.name}
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select New File (Optional)
-                  </>
-                )}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleFileSelect}
+              disabled={isUpdating}
+              className="w-full"
+            >
+              {selectedFile ? (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  {selectedFile.name}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Select New File (Optional)
+                </>
+              )}
+            </Button>
+
             {selectedFile && (
               <p className="text-xs text-muted-foreground">
-                New file: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                New file: {selectedFile.name} (
+                {(selectedFile.size / 1024).toFixed(2)} KB)
               </p>
             )}
+
             {!selectedFile && document.file_path && (
               <p className="text-xs text-muted-foreground">
-                Current file: {document.file_path.split('/').pop() || document.file_path}
+                Current file:{" "}
+                {document.file_path.split("/").pop() || document.file_path}
               </p>
             )}
           </div>
@@ -209,4 +250,3 @@ export function EditDocumentModal({
     </Dialog>
   );
 }
-
