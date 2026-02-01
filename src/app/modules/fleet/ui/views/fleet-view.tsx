@@ -104,7 +104,7 @@ export const FleetView = () => {
   }, [page, filters]);
 
   return (
-    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
+    <div className="flex flex-col min-h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden pb-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
@@ -120,8 +120,8 @@ export const FleetView = () => {
       {/* Stats Cards - Will be updated when data loads - Hide on mobile when scrolled or on last page */}
       <div
         className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount)
-            ? "hidden md:block"
-            : "block"
+          ? "hidden md:block"
+          : "block"
           }`}
       >
         <FleetStatsCardsWrapper
@@ -134,8 +134,8 @@ export const FleetView = () => {
       {/* Add Truck Button - Mobile only - Hide when scrolled or on last page */}
       <div
         className={`block sm:hidden shrink-0 transition-all duration-300 ${isScrolled || (pageCount > 0 && page === pageCount)
-            ? "hidden"
-            : "block"
+          ? "hidden"
+          : "block"
           }`}
       >
         <AddTruckModal onSuccess={handleSuccess} />
@@ -169,7 +169,7 @@ export const FleetView = () => {
       )}
 
       {/* Main Content - Table with Suspense - Takes remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden shrink-0">
+      <div className="flex-1 min-h-0 shrink-0">
         <TrucksTable
           page={page}
           perPage={perPage}

@@ -170,7 +170,7 @@ export function EditTruckModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-w-[95vw] h-[500px] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] h-auto max-h-[85vh] sm:h-[500px] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-4 sm:p-6 pb-2">
           <DialogTitle className="text-lg sm:text-xl">Edit Truck</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
@@ -190,7 +190,7 @@ export function EditTruckModal({
             }}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2" style={{ WebkitOverflowScrolling: "touch" }}>
               {updateTruckMutation.error && (
                 <Alert
                   variant="destructive"

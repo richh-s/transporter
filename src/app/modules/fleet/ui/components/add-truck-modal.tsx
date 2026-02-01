@@ -225,12 +225,12 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
           "sm:max-w-[600px] max-w-[95vw] flex flex-col p-0 overflow-hidden",
           "top-[5%] sm:top-[50%] translate-y-0 sm:translate-y-[-50%]",
           step === 1
-            ? "h-auto max-h-[70vh] sm:max-h-[400px]"
+            ? "h-auto max-h-[85vh] sm:max-h-[400px]"
             : step === 2
-              ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+              ? "h-auto max-h-[85vh] sm:h-[500px] sm:max-h-[500px]"
               : step === 3
-                ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
-                : "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+                ? "h-auto max-h-[85vh] sm:h-[500px] sm:max-h-[500px]"
+                : "h-auto max-h-[85vh] sm:h-[500px] sm:max-h-[500px]"
         )}
       >
         <DialogHeader className="p-4 sm:p-6 pb-2 shrink-0">
