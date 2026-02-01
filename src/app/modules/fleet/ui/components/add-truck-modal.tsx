@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { useCreateTruck } from "@/app/modules/fleet/server/hooks";
+import { useCreateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
 
 const truckFormSchema = z.object({
   vin: z
@@ -179,11 +179,28 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      // Error is already handled by the mutation's onError
-      // Just ensure it doesn't break the app - the error will be displayed in the Alert
+      if (err instanceof ApiError && err.fields) {
+        // Map backend field errors to React Hook Form
+        Object.entries(err.fields).forEach(([field, message]) => {
+          form.setError(field as keyof TruckFormValues, {
+            type: "manual",
+            message: message as string,
+          });
+
+          // Determine which step the error belongs to and navigate there
+          if (["vin", "plate_number"].includes(field)) setStep(1);
+          else if (["truck_type", "status", "capacity_quintal"].includes(field))
+            setStep(2);
+          else if (["make", "model", "year", "color"].includes(field))
+            setStep(3);
+          else if (
+            ["gov_id", "libre_key", "gps_device_id"].includes(field)
+          )
+            setStep(4);
+        });
+      }
+
       console.error("Failed to create truck:", err);
-      // Modal stays open to show error message
-      // Don't re-throw to prevent app crash
     }
   };
 
@@ -210,10 +227,10 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
           step === 1
             ? "h-auto max-h-[70vh] sm:max-h-[400px]"
             : step === 2
-            ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
-            : step === 3
-            ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
-            : "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+              ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+              : step === 3
+                ? "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
+                : "h-auto max-h-[70vh] sm:h-[500px] sm:max-h-[500px]"
         )}
       >
         <DialogHeader className="p-4 sm:p-6 pb-2 shrink-0">
@@ -225,10 +242,10 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
             {step === 1
               ? "Identification"
               : step === 2
-              ? "Configuration"
-              : step === 3
-              ? "Vehicle Details"
-              : "Compliance & Tracking"}
+                ? "Configuration"
+                : step === 3
+                  ? "Vehicle Details"
+                  : "Compliance & Tracking"}
           </DialogDescription>
           <div className="w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden">
             <div
@@ -250,10 +267,10 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
             }}
             className="flex-1 flex flex-col overflow-hidden min-h-0"
           >
-            <div 
+            <div
               ref={scrollableRef}
-              className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 min-h-0 pb-2 touch-pan-y" 
-              style={{ 
+              className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 min-h-0 pb-2 touch-pan-y"
+              style={{
                 WebkitOverflowScrolling: "touch",
                 overscrollBehavior: "contain",
                 touchAction: "pan-y"
@@ -348,8 +365,8 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                                 >
                                   {field.value
                                     ? TRUCK_TYPES.find(
-                                        (type) => type.value === field.value
-                                      )?.label
+                                      (type) => type.value === field.value
+                                    )?.label
                                     : "Select type..."}
                                   <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -422,9 +439,9 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                                 >
                                   {field.value
                                     ? TRUCK_STATUSES.find(
-                                        (status) =>
-                                          status.value === field.value
-                                      )?.label
+                                      (status) =>
+                                        status.value === field.value
+                                    )?.label
                                     : "Select status..."}
                                   <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>

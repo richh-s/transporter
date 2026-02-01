@@ -8,6 +8,8 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 export type ApiResponse<T> = {
   data?: T;
   error?: string;
+  code?: string;
+  fields?: Record<string, string>;
   status: number;
 };
 
@@ -65,9 +67,12 @@ export async function request<T>(
   isRetry = false
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   try {
     const url = `${API_URL}${endpoint}`;
@@ -115,6 +120,8 @@ export async function request<T>(
     if (!response.ok) {
       return {
         error: result?.error || result?.detail || result?.message || "Something went wrong",
+        code: result?.code || result?.status_code?.toString(),
+        fields: result?.fields,
         status,
       };
     }

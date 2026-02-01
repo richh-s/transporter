@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
+import { ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -73,9 +74,14 @@ export function UploadDocumentModal({
       }
       onOpenChange(false);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to upload document";
-      setError(errorMessage);
+      if (error instanceof ApiError && error.fields) {
+        const fieldErrors = Object.entries(error.fields)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(", ");
+        setError(fieldErrors || error.message);
+      } else {
+        setError(error instanceof Error ? error.message : "Failed to upload document");
+      }
     }
   };
 
@@ -115,8 +121,7 @@ export function UploadDocumentModal({
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
+                <SelectItem value="libre">Libre</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>

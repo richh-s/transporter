@@ -39,7 +39,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { Truck } from "@/lib/api/trucks";
-import { useUpdateTruck } from "@/app/modules/fleet/server/hooks";
+import { useUpdateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-update-truck";
 
 const truckFormSchema = z.object({
   vin: z
@@ -153,8 +153,16 @@ export function EditTruckModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
+      if (err instanceof ApiError && err.fields) {
+        // Map backend field errors to React Hook Form
+        Object.entries(err.fields).forEach(([field, message]) => {
+          form.setError(field as keyof TruckFormValues, {
+            type: "manual",
+            message: message as string,
+          });
+        });
+      }
       console.error("Failed to update truck:", err);
-      // Modal stays open to show error message
     }
   };
 
