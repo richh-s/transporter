@@ -1,113 +1,97 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { UseFormReturn } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import type { CreateDriverInput } from "@/lib/zod/driver/create-driver.schema";
 
-export type DriverFormValues = {
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  driver_license_number: string;
-};
+interface DriverFormProps {
+  form: UseFormReturn<CreateDriverInput>;
+  onSubmit: (values: CreateDriverInput) => void;
+}
 
-export function DriverForm({
-  defaultValues,
-  onSubmit,
-}: {
-  defaultValues?: Partial<DriverFormValues>;
-  onSubmit: (data: DriverFormValues) => void;
-}) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<DriverFormValues>({
-    defaultValues,
-  });
-
+export function DriverForm({ form, onSubmit }: DriverFormProps) {
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* First Name */}
-      <div className="space-y-1">
-        <Label>First Name</Label>
-        <Input
-          {...register("first_name", { required: "First name is required" })}
-        />
-        {errors.first_name && (
-          <p className="text-xs text-destructive">
-            {errors.first_name.message}
-          </p>
-        )}
-      </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-      {/* Last Name */}
-      <div className="space-y-1">
-        <Label>Last Name</Label>
-        <Input
-          {...register("last_name", { required: "Last name is required" })}
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="john.doe@example.com" type="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.last_name && (
-          <p className="text-xs text-destructive">
-            {errors.last_name.message}
-          </p>
-        )}
-      </div>
 
-      {/* License Number */}
-      <div className="space-y-1">
-        <Label>Driver License Number</Label>
-        <Input
-          {...register("driver_license_number", {
-            required: "License number is required",
-          })}
+        <FormField
+          control={form.control}
+          name="phone_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="+251..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.driver_license_number && (
-          <p className="text-xs text-destructive">
-            {errors.driver_license_number.message}
-          </p>
-        )}
-      </div>
 
-      {/* Phone */}
-      <div className="space-y-1">
-        <Label>Phone Number</Label>
-        <Input
-          {...register("phone_number", {
-            required: "Phone number is required",
-          })}
+        <FormField
+          control={form.control}
+          name="driver_license_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Driver License Number</FormLabel>
+              <FormControl>
+                <Input placeholder="DL123456" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.phone_number && (
-          <p className="text-xs text-destructive">
-            {errors.phone_number.message}
-          </p>
-        )}
-      </div>
-
-      {/* Email */}
-      <div className="space-y-1">
-        <Label>Email</Label>
-        <Input
-          type="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: {
-              value: /^\S+@\S+$/i,
-              message: "Invalid email address",
-            },
-          })}
-        />
-        {errors.email && (
-          <p className="text-xs text-destructive">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <Button className="w-full">Save Driver</Button>
-    </form>
+      </form>
+    </Form>
   );
 }

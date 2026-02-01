@@ -29,8 +29,6 @@ import { driverColumns } from "../columns/driver-columns";
 import { DriverDialog } from "../components/driver-dialog";
 
 import { useDrivers } from "../../server/hooks/use-drivers";
-import { useCreateDriver } from "../../server/hooks/use-create-driver";
-import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 
 import type { CreateDriverInput } from "@/lib/zod/driver";
@@ -59,9 +57,6 @@ export function DriverManagementView() {
   );
 
   const { data, isLoading } = useDrivers(listParams);
-
-  const createDriver = useCreateDriver();
-  const updateDriver = useUpdateDriver(selectedDriver?.id ?? 0);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
@@ -164,20 +159,6 @@ export function DriverManagementView() {
           if (!val) setSelectedDriver(null);
         }}
         driver={selectedDriver}
-        onSubmit={(values: CreateDriverInput) => {
-          if (selectedDriver?.id) {
-            updateDriver.mutate(values, {
-              onSuccess: () => {
-                setOpen(false);
-                setSelectedDriver(null);
-              },
-            });
-          } else {
-            createDriver.mutate(values, {
-              onSuccess: () => setOpen(false),
-            });
-          }
-        }}
       />
 
       {/* Delete Dialog */}

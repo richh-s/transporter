@@ -53,7 +53,9 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
-const DOCUMENT_TYPES = ["trade_licence", "id", "other"] as const;
+import { toast } from "sonner";
+
+const DOCUMENT_TYPES = ["driver_id", "driver_license", "other"] as const;
 type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
@@ -96,7 +98,11 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           setFile(null);
           setDocumentType("");
           setReplaceDocId(null);
+          toast.success(replaceDocId ? "Document replaced successfully" : "Document uploaded successfully");
         },
+        onError: (error: any) => {
+          toast.error(error.message || "Failed to upload document");
+        }
       }
     );
   };
@@ -281,6 +287,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 deleteMutation.mutate({
                   driverId,
                   documentId: docToDelete,
+                }, {
+                  onSuccess: () => {
+                    toast.success("Document deleted successfully");
+                  }
                 });
               }}
             >
