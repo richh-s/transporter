@@ -58,6 +58,10 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
         }
 
         setIsUploading(true);
+        console.log("🚀 Starting upload for ship item:", shipItem.id);
+        console.log("📊 Ship Item Status:", shipItem.status);
+        console.log("📑 Document Type:", documentType);
+
         try {
             if (isBatch) {
                 // Batch upload for selected containers

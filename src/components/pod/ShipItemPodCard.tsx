@@ -51,44 +51,9 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         }
     }, [shipItem.id]);
 
-    const fetchDetails = useCallback(async () => {
-        try {
-            const response = await shipApi.getShipItemDetail(shipItem.ship_id);
-            console.log(`Card #${shipItem.id} - Full Ship Detail Response:`, response.data);
-            if (response.data) {
-                // The response is the parent Ship object containing ship_items
-                const parentShip = response.data;
-                const detailedItem = parentShip.ship_items?.find((item: ShipItem) => item.id == shipItem.id);
-
-                console.log(`Card #${shipItem.id} - Found Detailed Item:`, detailedItem);
-
-                if (detailedItem) {
-                    setFullShipItem(prev => ({
-                        ...prev,
-                        ...detailedItem,
-                        // Priority to assigned_truck/driver, then truck/driver keys, then previous state
-                        assigned_truck: detailedItem.assigned_truck || detailedItem.truck || prev.assigned_truck,
-                        assigned_driver: detailedItem.assigned_driver || detailedItem.driver || prev.assigned_driver,
-                        // Ensure container is preserved
-                        container: detailedItem.container || prev.container,
-                        // Ensure containers array is updated correctly
-                        containers: detailedItem.containers || (detailedItem.container ? [detailedItem.container] : prev.containers) || [],
-                        // Explicitly update origin/dest from parentShip if available
-                        origin: parentShip.origin || prev.origin,
-                        destination: parentShip.destination || prev.destination,
-                        pickup_date: parentShip.pickup_date || prev.pickup_date
-                    }));
-                }
-            }
-        } catch (e) {
-            console.error("Failed to fetch ship item details", e);
-        }
-    }, [shipItem.id, shipItem.ship_id]);
-
     useEffect(() => {
         fetchDocuments();
-        fetchDetails();
-    }, [fetchDocuments, fetchDetails]);
+    }, [fetchDocuments]);
 
 
 
