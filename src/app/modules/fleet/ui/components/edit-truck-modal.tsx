@@ -56,7 +56,7 @@ const truckFormSchema = z.object({
   gov_id: z.string().nullable().optional(),
   make: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
-  year: z.number().nullable().optional(),
+  year: z.number().max(2100, "Year should be less than or equal to 2100").nullable().optional(),
   color: z.string().nullable().optional(),
   capacity_quintal: z.number().min(1, "Capacity is required"),
   libre_key: z.string().nullable().optional(),
@@ -449,6 +449,10 @@ export function EditTruckModal({
                           <Input
                             type="number"
                             {...field}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === "" ? null : Number(val));
+                            }}
                             value={field.value || ""}
                             className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
                           />
@@ -470,6 +474,10 @@ export function EditTruckModal({
                           <Input
                             type="number"
                             {...field}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === "" ? null : Number(val));
+                            }}
                             value={field.value || ""}
                             className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
                           />
