@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
@@ -78,14 +80,20 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     });
   };
 
+
   const handleUploadDocument = async (file: File, documentType: string) => {
-    await uploadDocumentMutation.mutateAsync({
-      truckId: id,
-      file,
-      documentType,
-    });
-    // Invalidate documents query to refresh the list
-    queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
+    try {
+      await uploadDocumentMutation.mutateAsync({
+        truckId: id,
+        file,
+        documentType,
+      });
+      // Invalidate documents query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
+      toast.success("Document uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload document");
+    }
   };
 
   const handleUpdateDocument = (documentId: number) => {
@@ -109,8 +117,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       });
       setIsUpdateDocumentModalOpen(false);
       setSelectedDocument(null);
-    } catch (error: unknown) {
+      toast.success("Document updated successfully");
+    } catch (error: any) {
       console.error("Failed to update document:", error);
+      toast.error(error.message || "Failed to update document");
     }
   };
 
@@ -131,8 +141,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       });
       setIsDeleteDocumentModalOpen(false);
       setSelectedDocument(null);
-    } catch (error: unknown) {
+      toast.success("Document deleted successfully");
+    } catch (error: any) {
       console.error("Failed to delete document:", error);
+      toast.error(error.message || "Failed to delete document");
     }
   };
 

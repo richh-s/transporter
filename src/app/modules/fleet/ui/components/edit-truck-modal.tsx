@@ -39,6 +39,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { Truck } from "@/lib/api/trucks";
+import { toast } from "sonner";
 import { useUpdateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-update-truck";
 
 const truckFormSchema = z.object({
@@ -150,6 +151,7 @@ export function EditTruckModal({
         data: values,
       });
       // Only close modal and show success on actual success
+      toast.success("Truck updated successfully");
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {

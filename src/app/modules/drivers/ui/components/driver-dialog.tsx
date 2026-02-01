@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,8 +74,10 @@ export function DriverDialog({
     try {
       if (driver?.id) {
         await updateDriver.mutateAsync(values);
+        toast.success("Driver updated successfully");
       } else {
         await createDriver.mutateAsync(values);
+        toast.success("Driver created successfully");
       }
       onOpenChange(false);
     } catch (error) {

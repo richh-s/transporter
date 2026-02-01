@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
@@ -200,7 +201,11 @@ export function DriverManagementView() {
 
                 setDeleteOpen(false);
                 setDriverToDelete(null);
-                deleteDriver.mutate(driverToDelete.id);
+                deleteDriver.mutate(driverToDelete.id, {
+                  onSuccess: () => {
+                    toast.success("Driver deleted successfully");
+                  },
+                });
               }}
             >
               Delete

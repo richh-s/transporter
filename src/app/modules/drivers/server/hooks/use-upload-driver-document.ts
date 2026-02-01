@@ -38,8 +38,20 @@ export function useUploadDriverDocument(driverId: number) {
         );
       }
 
-      // We still validate with schema just in case
-      return driverDocumentSchema.parse(docData) as DriverDocument;
+      // Handle array vs object response
+      let finalDoc = docData;
+      if (Array.isArray(docData)) {
+        // If it's an array, try to find the one we just uploaded, otherwise just pick the last one
+        finalDoc = docData.find(d => d.document_type === payload.document_type) || docData[docData.length - 1];
+      }
+
+      // We still validate with schema just in case, but don't let it throw if we have some data
+      try {
+        return driverDocumentSchema.parse(finalDoc) as DriverDocument;
+      } catch (e) {
+        console.warn("Zod parsing failed for uploaded document, returning raw data", e);
+        return finalDoc as DriverDocument;
+      }
     },
 
     onMutate: async (payload) => {

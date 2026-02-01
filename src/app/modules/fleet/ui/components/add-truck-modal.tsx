@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useCreateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
 
 const truckFormSchema = z.object({
@@ -175,6 +176,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
     try {
       await createTruckMutation.mutateAsync(values);
       // Only close modal, reset form, and show success on actual success
+      toast.success("Truck created successfully");
       setIsOpen(false);
       form.reset();
       onSuccess?.();
