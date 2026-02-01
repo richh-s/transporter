@@ -29,7 +29,8 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { formatDateToUTCISO, cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -50,10 +51,19 @@ const formSchema = z.object({
     .max(50, "IMEI Number must be less than 50 characters"),
   device_name: z.string().max(255).optional().or(z.literal("")),
   device_model: z.string().max(255).optional().or(z.literal("")),
-  expire_date: z.date({
-    message: "Expire date is required",
-  }),
-  last_synced_at: z.date().optional(), // Will be set automatically to now()
+  expire_date: z
+    .date({
+      message: "Expire date is required",
+    })
+    .refine((date) => date > new Date(), {
+      message: "Expire date must be in the future",
+    }),
+  last_synced_at: z
+    .date()
+    .optional()
+    .refine((date) => !date || date <= new Date(), {
+      message: "Last synced date cannot be in the future",
+    }),
   status: z.boolean(),
   truck_id: z.number().optional(),
   unlink_truck: z.boolean(),
@@ -111,37 +121,42 @@ export default function EditGPSDevicePage() {
   }, [id]);
 
   const onSubmit = async (values: FormValues) => {
-    const updateData: UpdateGPSDeviceRequest = {
-      external_device_id: values.external_device_id,
-      imei_number: values.imei_number,
-      device_name: values.device_name || undefined,
-      device_model: values.device_model || undefined,
-      expire_date: values.expire_date.toISOString(),
-      status: values.status,
-    };
+    try {
+      const updateData: UpdateGPSDeviceRequest = {
+        external_device_id: values.external_device_id,
+        imei_number: values.imei_number,
+        device_name: values.device_name || undefined,
+        device_model: values.device_model || undefined,
+        expire_date: formatDateToUTCISO(values.expire_date),
+        status: values.status,
+      };
 
-    // Handle truck assignment
-    if (values.unlink_truck) {
-      updateData.truck_id = 0;
-      // Don't update last_synced_at when unlinked - keep existing value (cannot be null)
-    } else if (values.truck_id) {
-      updateData.truck_id = values.truck_id;
-      // Update last_synced_at to now() when assigning/reassigning to a truck
-      updateData.last_synced_at = new Date().toISOString();
-    }
-    // If no truck selected and not unlinked, don't update truck_id or last_synced_at
-
-    updateMutation.mutate(
-      { id, data: updateData },
-      {
-        onSuccess: (updatedDevice) => {
-          // Log for debugging
-          console.log("Updated device:", updatedDevice);
-          console.log("Truck ID:", updatedDevice.truck_id);
-          router.push(`/gps-devices/${updatedDevice.id}`);
-        },
+      // Handle truck assignment
+      if (values.unlink_truck) {
+        updateData.truck_id = 0;
+        // Don't update last_synced_at when unlinked - keep existing value (cannot be null)
+      } else if (values.truck_id) {
+        updateData.truck_id = values.truck_id;
+        // Update last_synced_at to now() when assigning/reassigning to a truck
+        updateData.last_synced_at = formatDateToUTCISO(new Date());
       }
-    );
+      // If no truck selected and not unlinked, don't update truck_id or last_synced_at
+
+      updateMutation.mutate(
+        { id, data: updateData },
+        {
+          onSuccess: (updatedDevice) => {
+            toast.success("GPS device updated successfully");
+            router.push(`/gps-devices/${updatedDevice.id}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.message || "Failed to update GPS device");
+          },
+        }
+      );
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
   };
 
   if (isLoading) {
