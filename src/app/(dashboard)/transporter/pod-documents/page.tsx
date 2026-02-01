@@ -33,17 +33,24 @@ export default function PodDocumentsPage() {
                 if (response.data && response.data.items) {
                     const groupsMap = new Map<number, GroupedShip>();
 
-                    response.data.items.forEach(ship => {
-                        // Backend might return duplicate ships in the list if there are multiple items
-                        // We merge them using the groupsMap
-
+                    response.data.items.forEach((ship: any) => {
                         if (ship.ship_items && ship.ship_items.length > 0) {
                             const filteredItems = ship.ship_items
-                                .map(item => {
+                                .map((item: any) => {
                                     // Normalize data for the UI
                                     const normalizedTruck = item.assigned_truck || item.truck || null;
                                     const normalizedDriver = item.assigned_driver || item.driver || null;
-                                    const normalizedContainers = item.containers || (item.container ? [item.container] : []);
+
+                                    // Robust container normalization:
+                                    // 1. Try item.containers (plural) or item.container (singular)
+                                    // 2. Look up in parent ship.containers using item.container_id or item.id
+                                    let normalizedContainers = item.containers || (item.container ? [item.container] : []);
+
+                                    if (normalizedContainers.length === 0 && ship.containers) {
+                                        const containerId = item.container_id || item.id;
+                                        const found = ship.containers.find((c: any) => c.id === containerId);
+                                        if (found) normalizedContainers = [found];
+                                    }
 
                                     return {
                                         ...item,
@@ -56,7 +63,7 @@ export default function PodDocumentsPage() {
                                         containers: normalizedContainers
                                     } as ShipItem;
                                 })
-                                .filter(item => {
+                                .filter((item: ShipItem) => {
                                     // Only show items with truck and driver assigned
                                     const hasTruck = !!item.assigned_truck || !!item.truck_id || !!item.assigned_truck_id;
                                     const hasDriver = !!item.assigned_driver || !!item.driver_id || !!item.assigned_driver_id;
@@ -75,7 +82,7 @@ export default function PodDocumentsPage() {
                                     const existingGroup = groupsMap.get(ship.id)!;
                                     // Merge unique items from this ship record into the group
                                     filteredItems.forEach(item => {
-                                        if (!existingGroup.items.find(i => i.id === item.id)) {
+                                        if (!existingGroup.items.find((i: ShipItem) => i.id === item.id)) {
                                             existingGroup.items.push(item);
                                         }
                                     });

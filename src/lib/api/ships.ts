@@ -104,6 +104,13 @@ export const shipApi = {
     },
 
     /**
+     * Get specific ship item details
+     */
+    getShipItem: async (id: number | string) => {
+        return request<ShipItem>(`/ship-item/${id}/`);
+    },
+
+    /**
      * Assign truck to ship item
      */
     assignTruck: async (shipItemId: number | string, data: AssignTruckRequest) => {
@@ -228,7 +235,7 @@ export const shipApi = {
         formData: FormData
     ) => {
         const endpoint = `/ship-item/${shipItemId}/documents/`;
-        
+
         // Log the endpoint and form data
         console.log("📤 POD Upload - Endpoint:", endpoint);
         console.log("📤 POD Upload - FormData contents:");
@@ -239,7 +246,7 @@ export const shipApi = {
                 console.log(`  ${key}:`, value);
             }
         }
-        
+
         // Use apiRequest which handles JWT authentication automatically
         return apiRequest<any>(endpoint, {
             method: "POST",
