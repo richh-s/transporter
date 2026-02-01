@@ -41,19 +41,18 @@ export interface UpdateDriverPayload extends Partial<CreateDriverPayload> {
 }
 
 export interface DriverDocument {
-    id: number;
-    document_type: "trade_licence" | "id" | "other";
-    status: "pending" | "approved" | "rejected";
-    file_path: string;
-    presigned_url?: string;
-    created_at: string;
-  }
-  
+  id: number;
+  document_type: "driver_id" | "driver_license" | "other" | "trade_licence";
+  status: "pending" | "approved" | "rejected";
+  file_path: string;
+  presigned_url?: string;
+  created_at: string;
+}
+
 
 export interface ApiResult<T> {
-    status: boolean;
-    success_message?: string;
-    error_message?: string | null;
-    result: T;
-  }
-  
+  status: boolean;
+  success_message?: string;
+  error_message?: string | null;
+  result: T;
+}

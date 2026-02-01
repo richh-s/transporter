@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
 import { driverDocumentSchema } from "@/lib/zod/driver";
 import { driverKeys } from "../query-keys";
+import type { DriverDocument } from "../types";
 
 export function useDriverDocument(
   driverId?: number,
@@ -17,11 +18,13 @@ export function useDriverDocument(
     staleTime: 0,
 
     queryFn: async () => {
-      const data = await driverApi.getDriverDocument(
+      const response = await driverApi.getDriverDocument(
         driverId!,
         documentId!
       );
-      return driverDocumentSchema.parse(data);
+      // Assuming it might return ApiResult or direct object
+      const docData = (response as any).result || response;
+      return driverDocumentSchema.parse(docData) as DriverDocument;
     },
   });
 }
