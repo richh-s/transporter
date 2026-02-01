@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Loader2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -73,6 +74,7 @@ export function UploadDocumentModal({
         fileInputRef.current.value = "";
       }
       onOpenChange(false);
+      toast.success("Document uploaded successfully");
     } catch (error: unknown) {
       if (error instanceof ApiError && error.fields) {
         const fieldErrors = Object.entries(error.fields)

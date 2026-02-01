@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -76,6 +77,7 @@ export function UpdateDocumentModal({
       onOpenChange(false);
       setFile(null);
       setFileName("");
+      toast.success("Document updated successfully");
     } catch (err: unknown) {
       if (err instanceof ApiError && err.fields) {
         const fieldErrors = Object.entries(err.fields)
