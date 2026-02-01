@@ -52,10 +52,11 @@ export interface PriceQuote {
 }
 
 export interface CreatePriceQuoteRequest {
-    origin: LocationEnum;
-    destination: LocationEnum;
+    origin: string; // Display name like "Addis Ababa" or "Djibouti Port"
+    destination: string; // Display name like "Addis Ababa" or "Djibouti Port"
     gross_weight_min: number;
     gross_weight_max: number;
+    gross_weight_unit: string; // Required field, e.g., "kg"
     truck_type: TruckTypeEnum;
     container_size: ContainerSizeEnum;
     amount: number;

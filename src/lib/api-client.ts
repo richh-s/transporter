@@ -10,6 +10,7 @@ export type ApiResponse<T> = {
   data?: T;
   error?: string;
   status: number;
+  errorCode?: string; // Error code from backend (e.g., "MISSING_DOCUMENTS")
 };
 
 /**
@@ -117,6 +118,7 @@ export async function request<T>(
       return {
         error: result?.detail || result?.message || "Something went wrong",
         status,
+        errorCode: result?.code || undefined, // Extract error code if available
       };
     }
 

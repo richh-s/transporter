@@ -60,8 +60,12 @@ const DRIVER_DOCUMENT_TYPES = [
   "other",
 ] as const;
 
-
 type DriverDocumentType = (typeof DRIVER_DOCUMENT_TYPES)[number];
+
+interface UploadErrors {
+  documentType?: string;
+  file?: string;
+}
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
   const qc = useQueryClient();
@@ -74,25 +78,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DriverDocumentType | "">("");
   const [editDocId, setEditDocId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<UploadErrors>({});
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
-
-  /* ---------------- Validation ---------------- */
-  const validateUpload = (): boolean => {
-    const newErrors: UploadErrors = {};
-
-    if (!documentType) {
-      newErrors.documentType = "Document type is required";
-    }
-
-    if (!file) {
-      newErrors.file = "File is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   /* ---------------- Handlers ---------------- */
   const handleView = async (documentId: number) => {
@@ -118,12 +107,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         },
         {
           onSuccess: () => resetForm(),
-        }
+        },
       );
     } else {
       uploadMutation.mutate(
         { document_type: documentType, file: file! },
-        { onSuccess: () => resetForm() }
+        { onSuccess: () => resetForm() },
       );
     }
   };
@@ -132,6 +121,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
     setFile(null);
     setDocumentType("");
     setEditDocId(null);
+    setErrors({});
   };
 
   const backendError = uploadMutation.error
@@ -156,9 +146,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             </Label>
             <Select
               value={documentType}
-              onValueChange={(v) =>
-                setDocumentType(v as DriverDocumentType)
-              }
+              onValueChange={(v) => setDocumentType(v as DriverDocumentType)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select document type" />
@@ -172,9 +160,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               </SelectContent>
             </Select>
             {errors.documentType && (
-              <p className="text-sm text-red-500">
-                {errors.documentType}
-              </p>
+              <p className="text-sm text-red-500">{errors.documentType}</p>
             )}
           </div>
 
@@ -273,7 +259,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                           onClick={() => {
                             setEditDocId(doc.id);
                             setDocumentType(
-                              doc.document_type as DriverDocumentType
+                              doc.document_type as DriverDocumentType,
                             );
                           }}
                         >
@@ -304,9 +290,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone.
-            </DialogDescription>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
 
           <DialogFooter>
