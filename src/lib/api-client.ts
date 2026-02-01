@@ -114,7 +114,7 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error: result?.detail || result?.message || "Something went wrong",
+        error: result?.error || result?.detail || result?.message || "Something went wrong",
         status,
       };
     }

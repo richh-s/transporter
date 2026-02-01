@@ -68,7 +68,7 @@ export default function PodDocumentsPage() {
                                     // 2. Status check
                                     const status = item.status;
                                     const s = status.toLowerCase();
-                                    if (s === 'created' || s === 'pending') return false;
+                                    if (s === 'pending') return false;
 
                                     return true;
                                 });

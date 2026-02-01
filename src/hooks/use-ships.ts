@@ -58,10 +58,20 @@ export function useAssignTruck(shipId: string | number) {
     return useMutation({
         mutationFn: async ({ shipItemId, data }: { shipItemId: number | string; data: AssignTruckRequest }) => {
             const response = await shipApi.assignTruck(shipItemId, data);
-            if (response.error) throw new Error(response.error);
-            if (response.data && response.data.status === false) {
-                throw new Error(response.data.message || "Failed to assign truck");
+            
+            // Handle API-level error (from ApiResponse wrapper)
+            if (response.error) {
+                throw new Error(response.error);
             }
+            
+            // Handle structured error responses in data
+            if (response.data) {
+                const data = response.data as any;
+                if (data.status === false) {
+                    throw new Error(data.error || data.message || "Failed to assign truck");
+                }
+            }
+            
             return response.data;
         },
         onSuccess: () => {
@@ -81,10 +91,20 @@ export function useAssignDriver(shipId: string | number) {
     return useMutation({
         mutationFn: async ({ shipItemId, data }: { shipItemId: number | string; data: AssignDriverRequest }) => {
             const response = await shipApi.assignDriver(shipItemId, data);
-            if (response.error) throw new Error(response.error);
-            if (response.data && response.data.status === false) {
-                throw new Error(response.data.message || "Failed to assign driver");
+            
+            // Handle API-level error (from ApiResponse wrapper)
+            if (response.error) {
+                throw new Error(response.error);
             }
+            
+            // Handle structured error responses in data
+            if (response.data) {
+                const data = response.data as any;
+                if (data.status === false) {
+                    throw new Error(data.error || data.message || "Failed to assign driver");
+                }
+            }
+            
             return response.data;
         },
         onSuccess: () => {

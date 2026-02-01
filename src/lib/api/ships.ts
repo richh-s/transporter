@@ -1,4 +1,5 @@
 import { request } from "../api-client";
+import { apiRequest } from "../api";
 import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument } from "@/types/ship";
 
 export interface BaseResponse {
@@ -213,8 +214,8 @@ export const shipApi = {
         }
         const queryString = queryParams.toString();
         const endpoint = queryString
-            ? `/ship-item/${shipItemId}/documents?${queryString}`
-            : `/ship-item/${shipItemId}/documents`;
+            ? `/ship-item/${shipItemId}/documents/?${queryString}`
+            : `/ship-item/${shipItemId}/documents/`;
 
         return request<ShipItemDocument[]>(endpoint);
     },
@@ -226,35 +227,31 @@ export const shipApi = {
         shipItemId: number | string,
         formData: FormData
     ) => {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        // Using direct fetch to ensure correct FormData handling without 'application/json' header
-        const response = await fetch(`${API_URL}/ship-item/${shipItemId}/documents/`, {
+        const endpoint = `/ship-item/${shipItemId}/documents/`;
+        
+        // Log the endpoint and form data
+        console.log("📤 POD Upload - Endpoint:", endpoint);
+        console.log("📤 POD Upload - FormData contents:");
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`  ${key}:`, value.name, `(${value.size} bytes, ${value.type})`);
+            } else {
+                console.log(`  ${key}:`, value);
+            }
+        }
+        
+        // Use apiRequest which handles JWT authentication automatically
+        return apiRequest<any>(endpoint, {
             method: "POST",
-            credentials: "include",
             body: formData,
         });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Upload failed. Status:", response.status, "Response:", errorText);
-
-            let errorData: { error?: string; message?: string; detail?: string } = {};
-            try {
-                errorData = JSON.parse(errorText);
-            } catch {
-                // Not JSON
-            }
-
-            throw new Error(errorData.error || errorData.message || errorData.detail || `Upload failed: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
     },
 
     /**
      * Delete a ship item document
      */
     deleteShipItemDocument: async (shipItemId: number | string, documentId: number | string) => {
-        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}`, {
+        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}/`, {
             method: "DELETE",
         });
     },
