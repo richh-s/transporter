@@ -297,14 +297,16 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             <Button
               variant="destructive"
               onClick={() => {
-                deleteMutation.mutate({
-                  driverId,
-                  documentId: docToDelete,
-                }, {
-                  onSuccess: () => {
-                    toast.success("Document deleted successfully");
-                  }
-                });
+                if (docToDelete !== null) {
+                  deleteMutation.mutate({
+                    driverId,
+                    documentId: docToDelete,
+                  }, {
+                    onSuccess: () => {
+                      toast.success("Document deleted successfully");
+                    }
+                  });
+                }
                 setDeleteOpen(false);
               }}
             >
