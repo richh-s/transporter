@@ -7,7 +7,7 @@ import { Container, Truck, Driver } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download, User } from "lucide-react";
+import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download, User, Eye } from "lucide-react";
 import Link from "next/link";
 import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
@@ -25,7 +25,43 @@ export default function ShipDetailsPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const { data: ship, isLoading: isShipLoading, error: shipError } = useShip(id);
+    const { data: realShip, isLoading: isShipLoading, error: shipError } = useShip(id);
+
+    // TEMPORARY: Mock data for visualization as requested
+    let ship = realShip;
+    if (ship) {
+        ship = {
+            ...ship,
+            shipment_details: {
+                ...ship.shipment_details,
+                bill_of_lading_number: null,
+                pickup_number: null,
+                delivery_number: null
+            },
+            ship_documents: [
+                {
+                    id: 1,
+                    ship_id: Number(id),
+                    document_type: "BILL_OF_LADING",
+                    status: "approved",
+                    file_path: "/documents/bl_21.pdf",
+                    file_ext: "pdf",
+                    presigned_url: "https://pdfobject.com/pdf/sample.pdf",
+                    created_at: "2026-02-02T13:27:37Z"
+                },
+                {
+                    id: 2,
+                    ship_id: Number(id),
+                    document_type: "PACKING_LIST",
+                    status: "approved",
+                    file_path: "/documents/pl_21.pdf",
+                    file_ext: "pdf",
+                    presigned_url: "https://pdfobject.com/pdf/sample.pdf",
+                    created_at: "2026-02-02T13:27:37Z"
+                }
+            ] as any
+        };
+    }
     const { data: trucksData } = useTrucksQuery({ per_page: 100 });
     const { data: driversData } = useDrivers({ per_page: 100 });
     const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id);
@@ -412,18 +448,69 @@ export default function ShipDetailsPage() {
                         ) : (
                             <>
                                 <div className="space-y-4">
-                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Bill of Lading</p>
-                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.bill_of_lading_number || "-"}</p>
-                                    </div>
-                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Pickup Number</p>
-                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.pickup_number || "-"}</p>
-                                    </div>
-                                    <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Delivery Number</p>
-                                        <p className="font-mono text-sm font-bold text-foreground">{ship?.shipment_details?.delivery_number || "-"}</p>
-                                    </div>
+                                    {/* Bill of Lading - Show if number exists OR document exists */}
+                                    {(ship?.shipment_details?.bill_of_lading_number || ship?.ship_documents?.some(d => d.document_type === "BILL_OF_LADING")) && (
+                                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Bill of Lading</p>
+                                                    <p className="font-mono text-sm font-bold text-foreground">
+                                                        {ship?.shipment_details?.bill_of_lading_number || "Document Only"}
+                                                    </p>
+                                                </div>
+                                                {ship?.ship_documents?.find(d => d.document_type === "BILL_OF_LADING" && d.presigned_url) && (
+                                                    <a
+                                                        href={ship.ship_documents.find(d => d.document_type === "BILL_OF_LADING")?.presigned_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                                        title="View Bill of Lading"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Packing List - Show if document exists */}
+                                    {ship?.ship_documents?.some(d => d.document_type === "PACKING_LIST") && (
+                                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Packing List</p>
+                                                    <p className="font-mono text-sm font-bold text-foreground">Available</p>
+                                                </div>
+                                                {ship?.ship_documents?.find(d => d.document_type === "PACKING_LIST" && d.presigned_url) && (
+                                                    <a
+                                                        href={ship.ship_documents.find(d => d.document_type === "PACKING_LIST")?.presigned_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                                        title="View Packing List"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Pickup Number - Show only if exists */}
+                                    {ship?.shipment_details?.pickup_number && (
+                                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Pickup Number</p>
+                                            <p className="font-mono text-sm font-bold text-foreground">{ship.shipment_details.pickup_number}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Delivery Number - Show only if exists */}
+                                    {ship?.shipment_details?.delivery_number && (
+                                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Delivery Number</p>
+                                            <p className="font-mono text-sm font-bold text-foreground">{ship.shipment_details.delivery_number}</p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="pt-2">
                                     <Button variant="outline" className="w-full text-xs font-bold uppercase tracking-widest border-border/50 hover:bg-orange-500/5 hover:text-orange-600 hover:border-orange-500/30 transition-all rounded-xl h-9">

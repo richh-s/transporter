@@ -128,9 +128,9 @@ export interface Facility {
 }
 
 export interface ShipmentDetails {
-    bill_of_lading_number: string;
-    pickup_number: string;
-    delivery_number: string;
+    bill_of_lading_number: string | null;
+    pickup_number: string | null;
+    delivery_number: string | null;
 }
 
 export interface Ship {
@@ -146,6 +146,7 @@ export interface Ship {
     status: string;
     ship_items: ShipItem[];
     containers: Container[];
+    ship_documents: ShipDocument[];
 }
 
 export interface ShipItem {
@@ -182,8 +183,10 @@ export interface ShipDocument {
     id: number;
     document_type: string; // ShipDocumentTypeEnum
     file_path: string;
-    file_name: string;
+    file_name?: string;
     file_ext: string;
+    presigned_url: string;
+    status: string;
     created_at: string;
     updated_at?: string;
 }
