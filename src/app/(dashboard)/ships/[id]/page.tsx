@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { Container, Truck, Driver } from "@/types/ship";
+import { Container, Truck, Driver, ShipDocument } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Building2, FileText, Truck as TruckIcon, ArrowLeft, CreditCard, Download, User, Eye } from "lucide-react";
 import Link from "next/link";
-import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder } from "@/hooks/use-ships";
+import { useShip, useAssignTruck, useAssignDriver, useShipPayments, useCreatePaymentOrder, useShipDocuments } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -26,36 +26,24 @@ export default function ShipDetailsPage() {
     const id = params.id as string;
 
     const { data: realShip, isLoading: isShipLoading, error: shipError } = useShip(id);
+    const { data: documentsResponse, isLoading: isDocsLoading } = useShipDocuments(id);
+
+    // Debug Logs
+    console.log("🚢 Ship Data:", realShip);
+    console.log("📄 Documents Response:", documentsResponse);
+
+    // Use documents from response if available, otherwise fallback to ship documents
+    const documents = documentsResponse?.documents || realShip?.ship_documents || [];
 
     let ship = realShip;
-    // Mock data if no documents found
-    if (ship && (!ship.ship_documents || ship.ship_documents.length === 0)) {
+    if (ship && documentsResponse) {
+        // Update ship items with real documents
         ship = {
             ...ship,
-            ship_documents: [
-                {
-                    id: 1,
-                    ship_id: Number(id),
-                    document_type: "BILL_OF_LADING",
-                    status: "approved",
-                    file_path: "/documents/bl_21.pdf",
-                    file_ext: "pdf",
-                    presigned_url: "https://pdfobject.com/pdf/sample.pdf",
-                    created_at: "2026-02-02T13:27:37Z"
-                },
-                {
-                    id: 2,
-                    ship_id: Number(id),
-                    document_type: "PACKING_LIST",
-                    status: "approved",
-                    file_path: "/documents/pl_21.pdf",
-                    file_ext: "pdf",
-                    presigned_url: "https://pdfobject.com/pdf/sample.pdf",
-                    created_at: "2026-02-02T13:27:37Z"
-                }
-            ] as unknown as { id: number; ship_id: number; document_type: string; status: string; file_path: string; file_ext: string; presigned_url: string; created_at: string; }[]
+            ship_documents: documents
         };
     }
+
     const { data: trucksData } = useTrucksQuery({ per_page: 100 });
     const { data: driversData } = useDrivers({ per_page: 100 });
     const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id);
@@ -454,7 +442,7 @@ export default function ShipDetailsPage() {
                                                 </div>
                                                 {ship?.ship_documents?.find(d => d.document_type === "BILL_OF_LADING" && d.presigned_url) && (
                                                     <a
-                                                        href={ship.ship_documents.find(d => d.document_type === "BILL_OF_LADING")?.presigned_url}
+                                                        href={ship.ship_documents.find(d => d.document_type === "BILL_OF_LADING")?.presigned_url || "#"}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
@@ -477,7 +465,7 @@ export default function ShipDetailsPage() {
                                                 </div>
                                                 {ship?.ship_documents?.find(d => d.document_type === "PACKING_LIST" && d.presigned_url) && (
                                                     <a
-                                                        href={ship.ship_documents.find(d => d.document_type === "PACKING_LIST")?.presigned_url}
+                                                        href={ship.ship_documents.find(d => d.document_type === "PACKING_LIST")?.presigned_url || "#"}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
@@ -505,6 +493,17 @@ export default function ShipDetailsPage() {
                                             <p className="font-mono text-sm font-bold text-foreground">{ship.shipment_details.delivery_number}</p>
                                         </div>
                                     )}
+
+                                    {/* Empty State */}
+                                    {(!ship?.ship_documents || ship.ship_documents.length === 0) &&
+                                        !ship?.shipment_details?.bill_of_lading_number &&
+                                        !ship?.shipment_details?.pickup_number &&
+                                        !ship?.shipment_details?.delivery_number && (
+                                            <div className="text-center py-8 text-muted-foreground bg-white/40 dark:bg-card/40 rounded-2xl border border-dashed border-muted-foreground/20">
+                                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                                                <p className="text-xs font-medium italic">No shipment documents available</p>
+                                            </div>
+                                        )}
                                 </div>
 
                             </>

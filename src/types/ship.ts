@@ -181,14 +181,21 @@ export interface ShipItem {
 
 export interface ShipDocument {
     id: number;
+    ship_id: number;
     document_type: string; // ShipDocumentTypeEnum
+    status: string; // DocumentStatusEnum
     file_path: string;
-    file_name?: string;
     file_ext: string;
-    presigned_url: string;
-    status: string;
+    expired_at: string | null;
+    rejection_reason: string | null;
+    presigned_url: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at: string;
+}
+
+export interface ShipDocumentsResponse {
+    ship_id: number;
+    documents: ShipDocument[];
 }
 
 // Payment Types

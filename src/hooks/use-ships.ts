@@ -15,6 +15,7 @@ export const shipKeys = {
         list: (params: Record<string, unknown>) => [...shipKeys.items.lists(), params] as const,
     },
     payments: (shipId: string | number) => [...shipKeys.all, "payments", shipId] as const,
+    documents: (shipId: string | number) => [...shipKeys.all, "documents", shipId] as const,
 };
 
 export function useShips(params: GetShipsParams = {}) {
@@ -175,5 +176,20 @@ export function useCreatePaymentOrder(shipId: string | number) {
                 toast.error(errorMsg || "Failed to create payment order");
             }
         },
+    });
+}
+/**
+ * Hook to fetch documents for a ship
+ */
+export function useShipDocuments(shipId: string | number) {
+    return useQuery({
+        queryKey: shipKeys.documents(shipId),
+        queryFn: async () => {
+            if (!shipId) return null;
+            const response = await shipApi.getDocuments(shipId);
+            if (response.error) throw new Error(response.error);
+            return response.data;
+        },
+        enabled: !!shipId,
     });
 }

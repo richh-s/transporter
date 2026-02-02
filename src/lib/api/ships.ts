@@ -1,6 +1,6 @@
 import { request } from "../api-client";
 import { apiRequest } from "../api";
-import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument } from "@/types/ship";
+import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument, ShipDocumentsResponse } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -53,6 +53,7 @@ export interface AssignDriverRequest {
     driver_id: number;
 }
 
+// This might be deprecated or updated depending on usage
 export interface PaginatedDocumentsResponse {
     status: boolean;
     message: string;
@@ -160,15 +161,8 @@ export const shipApi = {
     /**
      * Get ship documents
      */
-    getDocuments: async (shipId: number | string, params?: { page?: number; per_page?: number }) => {
-        const queryParams = new URLSearchParams();
-        if (params) {
-            if (params.page) queryParams.append("page", params.page.toString());
-            if (params.per_page) queryParams.append("per_page", params.per_page.toString());
-        }
-        const queryString = queryParams.toString();
-        const endpoint = queryString ? `/ship/${shipId}/documents?${queryString}` : `/ship/${shipId}/documents`;
-        return request<PaginatedDocumentsResponse>(endpoint);
+    getDocuments: async (shipId: number | string) => {
+        return request<ShipDocumentsResponse>(`/ship/transporter/${shipId}/documents`);
     },
 
     /**
