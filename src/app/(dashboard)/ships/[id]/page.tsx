@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { Container, Truck, Driver, ShipDocument } from "@/types/ship";
+import { Container, Truck, Driver } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -26,7 +26,7 @@ export default function ShipDetailsPage() {
     const id = params.id as string;
 
     const { data: realShip, isLoading: isShipLoading, error: shipError } = useShip(id);
-    const { data: documentsResponse, isLoading: isDocsLoading } = useShipDocuments(id);
+    const { data: documentsResponse } = useShipDocuments(id);
 
     // Debug Logs
     console.log("🚢 Ship Data:", realShip);
