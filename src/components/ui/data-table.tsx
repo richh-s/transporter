@@ -270,7 +270,13 @@ export function DataTable<TData, TValue>({
     };
 
     return (
-      <div className="bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden">
+      <div
+        onClick={() => onRowClick?.(row.original)}
+        className={cn(
+          "bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden",
+          onRowClick && "cursor-pointer"
+        )}
+      >
         {/* Brand Tint Overlay */}
         <div className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.05] pointer-events-none" />
 
@@ -285,7 +291,7 @@ export function DataTable<TData, TValue>({
           </div>
           {/* Actions Button */}
           {actionsCell && (
-            <div className="flex-shrink-0 -mr-1 -mt-1">
+            <div className="flex-shrink-0 -mr-1 -mt-1" onClick={(e) => e.stopPropagation()}>
               {flexRender(
                 actionsCell.column.columnDef.cell,
                 actionsCell.getContext()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,6 +22,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 export const FleetView = () => {
+  const router = useRouter();
   // Pagination state - Use 10 for mobile, 5 for desktop
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -171,6 +173,7 @@ export const FleetView = () => {
       {/* Main Content - Table with Suspense - Takes remaining space */}
       <div className="flex-1 min-h-0 shrink-0">
         <TrucksTable
+          onRowClick={(truck) => router.push(`/fleet/${truck.id}`)}
           page={page}
           perPage={perPage}
           filters={filters}

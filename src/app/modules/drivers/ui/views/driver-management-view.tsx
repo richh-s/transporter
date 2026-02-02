@@ -135,6 +135,7 @@ export function DriverManagementView() {
       <Card className="p-0 overflow-hidden">
         {/* Table */}
         <DataTable
+          onRowClick={(driver) => router.push(`/drivers/${driver.id}`)}
           columns={driverColumns({
             onView: (driver) => router.push(`/drivers/${driver.id}`),
             onEdit: (driver) => {

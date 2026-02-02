@@ -34,6 +34,7 @@ interface TrucksTableProps {
   filterControls: React.ReactNode;
   headerActions?: React.ReactNode;
   mobileAddButton?: React.ReactNode;
+  onRowClick?: (truck: Truck) => void;
 }
 
 function TrucksTableContent({
@@ -51,6 +52,7 @@ function TrucksTableContent({
   filterControls,
   headerActions,
   mobileAddButton,
+  onRowClick,
 }: TrucksTableProps) {
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
@@ -135,6 +137,7 @@ function TrucksTableContent({
 
   return (
     <DataTable
+      onRowClick={onRowClick}
       columns={truckColumns}
       data={trucks as TruckTableRow[]}
       searchKey="plate_number"
