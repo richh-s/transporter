@@ -102,11 +102,11 @@ export default function CreateGPSDevicePage() {
           toast.success("GPS device created successfully");
           router.push(`/gps-devices/${device.id}`);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
           toast.error(error.message || "Failed to create GPS device");
         },
       });
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred");
     }
   };

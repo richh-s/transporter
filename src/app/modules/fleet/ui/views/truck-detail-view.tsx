@@ -91,8 +91,9 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       // Invalidate documents query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
       toast.success("Document uploaded successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload document");
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || "Failed to upload document");
     }
   };
 
@@ -118,9 +119,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       setIsUpdateDocumentModalOpen(false);
       setSelectedDocument(null);
       toast.success("Document updated successfully");
-    } catch (error: any) {
-      console.error("Failed to update document:", error);
-      toast.error(error.message || "Failed to update document");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Failed to update document:", err);
+      toast.error(err.message || "Failed to update document");
     }
   };
 
@@ -142,9 +144,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       setIsDeleteDocumentModalOpen(false);
       setSelectedDocument(null);
       toast.success("Document deleted successfully");
-    } catch (error: any) {
-      console.error("Failed to delete document:", error);
-      toast.error(error.message || "Failed to delete document");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Failed to delete document:", err);
+      toast.error(err.message || "Failed to delete document");
     }
   };
 

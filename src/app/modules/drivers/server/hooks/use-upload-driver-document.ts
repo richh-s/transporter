@@ -25,16 +25,17 @@ export function useUploadDriverDocument(driverId: number) {
         file: payload.file,
       });
 
+      const resp = response as unknown as Record<string, unknown>;
       // Try to find the document object in different common fields
-      const docData = (response as any).result || (response as any).data || (response as any).item || response;
+      const docData = resp.result || resp.data || resp.item || response;
 
       // If response.status is explicitly false, it's a backend error
       // Otherwise, as long as we have docData, we proceed
-      if ((response as any).status === false || !docData || typeof docData !== 'object') {
+      if (resp.status === false || !docData || typeof docData !== 'object') {
         throw new ApiError(
           400,
           "Failed to upload document",
-          (response as any).error_message || (response as any).message || "Unknown error"
+          (resp.error_message as string) || (resp.message as string) || "Unknown error"
         );
       }
 

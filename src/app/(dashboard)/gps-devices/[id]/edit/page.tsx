@@ -149,12 +149,12 @@ export default function EditGPSDevicePage() {
             toast.success("GPS device updated successfully");
             router.push(`/gps-devices/${updatedDevice.id}`);
           },
-          onError: (error: any) => {
+          onError: (error: Error) => {
             toast.error(error.message || "Failed to update GPS device");
           },
         }
       );
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred");
     }
   };

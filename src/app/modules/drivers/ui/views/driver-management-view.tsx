@@ -32,7 +32,6 @@ import { DriverDialog } from "../components/driver-dialog";
 import { useDrivers } from "../../server/hooks/use-drivers";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 
-import type { CreateDriverInput } from "@/lib/zod/driver";
 import type { Driver } from "../../server/types";
 
 export function DriverManagementView() {

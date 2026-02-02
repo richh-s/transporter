@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
+import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum, Container } from "@/types/ship";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ export function ShipItemPodCard({ shipItem: initialShipItem }: ShipItemPodCardPr
             const data = response.data;
             if (data) {
                 // Find this specific item in the ship's items to get its latest data
-                const itemDetail = data.ship_items?.find((i: any) => i.id === initialShipItem.id);
+                const itemDetail = (data.ship_items as ShipItem[])?.find((i: ShipItem) => i.id === initialShipItem.id);
 
                 // Robust container normalization from the ship detail
                 let containers = itemDetail?.containers || (itemDetail?.container ? [itemDetail.container] : []);
@@ -52,7 +52,7 @@ export function ShipItemPodCard({ shipItem: initialShipItem }: ShipItemPodCardPr
                 if (containers.length === 0 && data.containers) {
                     // Fallback mapping: use container_id if present, otherwise try item ID (based on user's sample)
                     const containerId = itemDetail?.container_id || initialShipItem.id;
-                    const found = data.containers.find((c: any) => c.id === containerId);
+                    const found = (data.containers as unknown as Container[]).find((c: Container) => c.id === containerId);
                     if (found) containers = [found];
                 }
 

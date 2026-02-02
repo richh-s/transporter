@@ -53,7 +53,7 @@ export default function ShipDetailsPage() {
                     presigned_url: "https://pdfobject.com/pdf/sample.pdf",
                     created_at: "2026-02-02T13:27:37Z"
                 }
-            ] as any // Cast to any to avoid strict type issues with mock data if types are strict
+            ] as unknown as { id: number; ship_id: number; document_type: string; status: string; file_path: string; file_ext: string; presigned_url: string; created_at: string; }[]
         };
     }
     const { data: trucksData } = useTrucksQuery({ per_page: 100 });
@@ -125,9 +125,9 @@ export default function ShipDetailsPage() {
 
             toast.dismiss();
             toast.success("Invoice downloaded successfully");
-        } catch (error: unknown) {
+        } catch (error) {
             toast.dismiss();
-            const err = error as any;
+            const err = error as Error & { code?: string };
             if (err?.code === "NO_UNPAID_PAYMENT" || err?.message?.includes("No unpaid payment")) {
                 toast.error("Invoice is not available", {
                     description: "No unpaid payment found for this ship."

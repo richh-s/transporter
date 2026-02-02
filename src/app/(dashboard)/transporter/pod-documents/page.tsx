@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShipItem } from "@/types/ship";
+import { ShipItem, Ship, Container } from "@/types/ship";
 import { shipApi } from "@/lib/api/ships";
 import { ShipItemPodCard } from "@/components/pod/ShipItemPodCard";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -33,10 +33,11 @@ export default function PodDocumentsPage() {
                 if (response.data && response.data.items) {
                     const groupsMap = new Map<number, GroupedShip>();
 
-                    response.data.items.forEach((ship: any) => {
+                    (response.data.items as Ship[]).forEach((ship: Ship) => {
                         if (ship.ship_items && ship.ship_items.length > 0) {
                             const filteredItems = ship.ship_items
-                                .map((item: any) => {
+                                .map((item: ShipItem) => {
+                                    const shipContainers = (ship.containers as unknown as Record<string, unknown>[]) || [];
                                     // Normalize data for the UI
                                     const normalizedTruck = item.assigned_truck || item.truck || null;
                                     const normalizedDriver = item.assigned_driver || item.driver || null;
@@ -46,10 +47,10 @@ export default function PodDocumentsPage() {
                                     // 2. Look up in parent ship.containers using item.container_id or item.id
                                     let normalizedContainers = item.containers || (item.container ? [item.container] : []);
 
-                                    if (normalizedContainers.length === 0 && ship.containers) {
-                                        const containerId = item.container_id || item.id;
-                                        const found = ship.containers.find((c: any) => c.id === containerId);
-                                        if (found) normalizedContainers = [found];
+                                    if (normalizedContainers.length === 0 && shipContainers.length > 0) {
+                                        const containerId = (item.container_id || item.id);
+                                        const found = shipContainers.find((c) => c.id === containerId);
+                                        if (found) normalizedContainers = [found as unknown as Container];
                                     }
 
                                     return {

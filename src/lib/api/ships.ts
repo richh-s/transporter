@@ -227,11 +227,11 @@ export const shipApi = {
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("application/json")) {
                 try {
-                    const errorData = await response.json();
+                    const errorData = await response.json() as Record<string, unknown>;
                     // Throw a structured error with the API error message
-                    const error = new Error(errorData.error || errorData.message || "Failed to fetch invoice");
-                    (error as any).code = errorData.code;
-                    (error as any).status_code = errorData.status_code || response.status;
+                    const error = new Error((errorData.error as string) || (errorData.message as string) || "Failed to fetch invoice");
+                    (error as Error & { code?: string }).code = errorData.code as string;
+                    (error as Error & { status_code?: number }).status_code = (errorData.status_code as number) || response.status;
                     throw error;
                 } catch (parseError) {
                     // If JSON parsing fails, throw the original error
@@ -283,7 +283,7 @@ export const shipApi = {
         }
 
         // Use apiRequest which handles JWT authentication automatically
-        return apiRequest<any>(endpoint, {
+        return apiRequest<Record<string, unknown>>(endpoint, {
             method: "POST",
             body: formData,
         });

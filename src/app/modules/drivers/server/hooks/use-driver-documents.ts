@@ -18,12 +18,13 @@ export function useDriverDocuments(driverId?: number) {
     queryFn: async () => {
       const response = await driverApi.getDriverDocuments(driverId!);
 
-      let data: any = null;
+      let data: unknown = null;
       if (Array.isArray(response)) {
         data = response;
       } else if (response && typeof response === "object") {
-        data = (response as any).result || (response as any).items || (response as any).data;
-        if ((response as any).status === false && !data) return [];
+        const resObj = response as unknown as Record<string, unknown>;
+        data = resObj.result || resObj.items || resObj.data;
+        if (resObj.status === false && !data) return [];
       }
 
       if (!data || !Array.isArray(data)) {

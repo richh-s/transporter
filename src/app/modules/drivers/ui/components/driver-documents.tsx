@@ -101,19 +101,13 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           setReplaceDocId(null);
           toast.success(replaceDocId ? "Document replaced successfully" : "Document uploaded successfully");
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
           toast.error(error.message || "Failed to upload document");
         }
       }
     );
   };
 
-  const resetForm = () => {
-    setFile(null);
-    setDocumentType("");
-    setReplaceDocId(null);
-    setErrors({});
-  };
 
   const backendError = uploadMutation.error
     ? (uploadMutation.error as Error).message

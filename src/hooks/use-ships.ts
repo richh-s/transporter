@@ -66,9 +66,9 @@ export function useAssignTruck(shipId: string | number) {
 
             // Handle structured error responses in data
             if (response.data) {
-                const data = response.data as any;
+                const data = response.data as unknown as Record<string, unknown>;
                 if (data.status === false) {
-                    throw new Error(data.error || data.message || "Failed to assign truck");
+                    throw new Error((data.error as string) || (data.message as string) || "Failed to assign truck");
                 }
             }
 
@@ -99,9 +99,9 @@ export function useAssignDriver(shipId: string | number) {
 
             // Handle structured error responses in data
             if (response.data) {
-                const data = response.data as any;
+                const data = response.data as unknown as Record<string, unknown>;
                 if (data.status === false) {
-                    throw new Error(data.error || data.message || "Failed to assign driver");
+                    throw new Error((data.error as string) || (data.message as string) || "Failed to assign driver");
                 }
             }
 

@@ -23,7 +23,7 @@ export function useDriverDocument(
         documentId!
       );
       // Assuming it might return ApiResult or direct object
-      const docData = (response as any).result || response;
+      const docData = (response as unknown as Record<string, unknown>).result || response;
       return driverDocumentSchema.parse(docData) as DriverDocument;
     },
   });
