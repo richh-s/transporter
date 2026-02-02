@@ -66,9 +66,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const deleteMutation = useDeleteDriverDocument();
 
   const [file, setFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<DriverDocumentType | "">("");
-  const [editDocId, setEditDocId] = useState<number | null>(null);
-  const [errors, setErrors] = useState<UploadErrors>({});
+  const [documentType, setDocumentType] = useState<DocumentType | "">("");
+  const [replaceDocId, setReplaceDocId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
@@ -86,7 +86,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   };
 
   const handleSubmit = () => {
-    if (!file && !documentType) return;
+    if (!file || !documentType) return;
 
     uploadMutation.mutate(
       {
@@ -111,7 +111,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const resetForm = () => {
     setFile(null);
     setDocumentType("");
-    setEditDocId(null);
+    setReplaceDocId(null);
     setErrors({});
   };
 
@@ -126,7 +126,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       {/* Upload / Edit */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">
-          {editDocId ? "Edit Document" : "Upload New Document"}
+          {replaceDocId ? "Edit Document" : "Upload New Document"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -137,13 +137,13 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             </Label>
             <Select
               value={documentType}
-              onValueChange={(v) => setDocumentType(v as DriverDocumentType)}
+              onValueChange={(v) => setDocumentType(v as DocumentType)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                {DRIVER_DOCUMENT_TYPES.map((type) => (
+                {DOCUMENT_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type.replace(/_/g, " ").toUpperCase()}
                   </SelectItem>
@@ -165,7 +165,11 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => {
                 setFile(e.target.files?.[0] ?? null);
-                setErrors((e) => ({ ...e, file: undefined }));
+                setErrors((e) => {
+                  const newErrors = { ...e };
+                  delete newErrors.file;
+                  return newErrors;
+                });
               }}
               className={errors.file ? "border-red-500" : ""}
             />
@@ -178,7 +182,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           <div className="flex items-end">
             <Button
               onClick={handleSubmit}
-              disabled={uploadMutation.isPending || updateMutation.isPending}
+              disabled={uploadMutation.isPending || updateMutation.isPending || !file || !documentType}
               className="w-full"
             >
               {uploadMutation.isPending || updateMutation.isPending ? (
@@ -189,7 +193,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  {editDocId ? "Save Changes" : "Upload"}
+                  {replaceDocId ? "Save Changes" : "Upload"}
                 </>
               )}
             </Button>
@@ -230,7 +234,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                   </TableCell>
 
                   <TableCell>
-                    {new Date(doc.created_at).toLocaleDateString()}
+                    {doc.created_at
+                      ? new Date(doc.created_at).toLocaleDateString()
+                      : "-"}
                   </TableCell>
 
                   <TableCell className="text-center">
@@ -248,9 +254,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
                         <DropdownMenuItem
                           onClick={() => {
-                            setEditDocId(doc.id);
+                            setReplaceDocId(doc.id);
                             setDocumentType(
-                              doc.document_type as DriverDocumentType,
+                              doc.document_type as DocumentType,
                             );
                           }}
                         >

@@ -3,9 +3,9 @@ import { z } from "zod";
 export const driverDocumentSchema = z.object({
   id: z.number(),
 
-  document_type: z.string(), // Use string to be safe
+  document_type: z.enum(["driver_id", "driver_license", "other"]),
 
-  status: z.string().optional().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]).optional().nullable(),
 
   file_path: z.string().optional().nullable(),
 

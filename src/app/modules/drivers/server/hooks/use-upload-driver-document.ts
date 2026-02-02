@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { driverDocumentSchema } from "@/lib/zod/driver";
+import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
 import { driverApi } from "../api/driver.api";

@@ -41,14 +41,7 @@ export interface UpdateDriverPayload extends Partial<CreateDriverPayload> {
   status?: DriverStatus;
 }
 
-export interface DriverDocument {
-  id: number;
-  document_type: "driver_id" | "driver_license" | "other" | "trade_licence";
-  status: "pending" | "approved" | "rejected";
-  file_path: string;
-  presigned_url?: string;
-  created_at: string;
-}
+
 
 
 export interface ApiResult<T> {

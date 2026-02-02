@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
+import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 
 export function useDriverDocument(
   driverId?: number,

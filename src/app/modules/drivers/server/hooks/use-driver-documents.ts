@@ -3,6 +3,7 @@ import { z } from "zod";
 import { driverApi } from "../api/driver.api";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
+import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 
 const listSchema = z.array(driverDocumentSchema);
 
