@@ -223,6 +223,23 @@ export const shipApi = {
         });
 
         if (!response.ok) {
+            // Try to parse error response as JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    const errorData = await response.json();
+                    // Throw a structured error with the API error message
+                    const error = new Error(errorData.error || errorData.message || "Failed to fetch invoice");
+                    (error as any).code = errorData.code;
+                    (error as any).status_code = errorData.status_code || response.status;
+                    throw error;
+                } catch (parseError) {
+                    // If JSON parsing fails, throw the original error
+                    if (parseError instanceof Error && parseError.message !== "Failed to fetch invoice") {
+                        throw parseError;
+                    }
+                }
+            }
             throw new Error(`Failed to fetch invoice: ${response.statusText}`);
         }
 

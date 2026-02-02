@@ -97,8 +97,15 @@ export default function ShipDetailsPage() {
             toast.success("Invoice downloaded successfully");
         } catch (error: unknown) {
             toast.dismiss();
-            const errorMessage = error instanceof Error ? error.message : "Failed to download invoice";
-            toast.error(errorMessage);
+            const err = error as any;
+            if (err?.code === "NO_UNPAID_PAYMENT" || err?.message?.includes("No unpaid payment")) {
+                toast.error("Invoice is not available", {
+                    description: "No unpaid payment found for this ship."
+                });
+            } else {
+                const errorMessage = error instanceof Error ? error.message : "Failed to download invoice";
+                toast.error(errorMessage);
+            }
         } finally {
             setIsDownloadingInvoice(false);
         }
