@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { columns as shipItemColumns } from "./ship-items-columns";
 import { toast } from "sonner";
 import { shipApi } from "@/lib/api/ships";
+import { useShipperInfo } from "@/hooks/use-shipper-info";
 
 export default function ShipDetailsPage() {
     const params = useParams();
@@ -45,6 +46,18 @@ export default function ShipDetailsPage() {
     // Find unpaid payment
     const unpaidPayment = payments?.find(p => !p.paid);
     const hasUnpaidPayment = !!unpaidPayment;
+
+    // Find paid payment for shipper info
+    const paidPayment = payments?.find(p => p.paid);
+
+    // Fetch shipper info if payment is made
+    const { data: shipperInfoData, isLoading: isShipperLoading } = useShipperInfo({
+        ship_id: id,
+        payment_id: paidPayment?.id || null,
+        enabled: !!paidPayment
+    });
+
+    const shipperInfo = shipperInfoData?.result;
 
     const handlePayNow = () => {
         if (!unpaidPayment) {
@@ -414,6 +427,61 @@ export default function ShipDetailsPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Shipper Info Card - Only show if available */}
+                {(shipperInfo || isShipperLoading) && (
+                    <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-500/5 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
+                        <div className="absolute -right-8 -bottom-8 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
+                        <CardHeader className="relative z-10 pb-2">
+                            <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
+                                    <User className="h-4 w-4" />
+                                </div>
+                                Shipper Details
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 relative z-10 pt-2">
+                            {isShipperLoading ? (
+                                <div className="space-y-3">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-6 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                </div>
+                            ) : shipperInfo ? (
+                                <>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Shipper Name</p>
+                                        <p className="font-bold text-foreground text-lg">{shipperInfo.name}</p>
+                                    </div>
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
+                                                <FileText className="h-3 w-3" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Email</p>
+                                                <p className="text-sm font-medium">{shipperInfo.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
+                                                <User className="h-3 w-3" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Phone</p>
+                                                <p className="text-sm font-medium">{shipperInfo.phone}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-sm text-muted-foreground">
+                                    No shipper details available.
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             {/* Ship Items Table Section */}

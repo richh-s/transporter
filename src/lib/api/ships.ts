@@ -63,6 +63,24 @@ export interface PaginatedDocumentsResponse {
     items: ShipDocument[];
 }
 
+export interface ShipperInfo {
+    name: string;
+    email: string;
+    phone: string;
+}
+
+export interface ShipperInfoResponse {
+    status: boolean;
+    error_message: string | null;
+    success_message: string;
+    result: ShipperInfo;
+}
+
+export interface GetShipperInfoParams {
+    ship_id: number | string;
+    payment_id: number | string;
+}
+
 export const shipApi = {
     /**
      * Get assigned ships for transporter
@@ -265,5 +283,16 @@ export const shipApi = {
 
     getShipItemDetail: async (shipId: number | string) => {
         return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
+    },
+
+    /**
+     * Get shipper info after payment
+     */
+    getShipperInfo: async (params: GetShipperInfoParams) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append("ship_id", params.ship_id.toString());
+        queryParams.append("payment_id", params.payment_id.toString());
+
+        return request<ShipperInfoResponse>(`/transporter/shipper-info?${queryParams.toString()}`);
     },
 };

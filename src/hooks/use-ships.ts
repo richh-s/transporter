@@ -58,12 +58,12 @@ export function useAssignTruck(shipId: string | number) {
     return useMutation({
         mutationFn: async ({ shipItemId, data }: { shipItemId: number | string; data: AssignTruckRequest }) => {
             const response = await shipApi.assignTruck(shipItemId, data);
-            
+
             // Handle API-level error (from ApiResponse wrapper)
             if (response.error) {
                 throw new Error(response.error);
             }
-            
+
             // Handle structured error responses in data
             if (response.data) {
                 const data = response.data as any;
@@ -71,7 +71,7 @@ export function useAssignTruck(shipId: string | number) {
                     throw new Error(data.error || data.message || "Failed to assign truck");
                 }
             }
-            
+
             return response.data;
         },
         onSuccess: () => {
@@ -91,12 +91,12 @@ export function useAssignDriver(shipId: string | number) {
     return useMutation({
         mutationFn: async ({ shipItemId, data }: { shipItemId: number | string; data: AssignDriverRequest }) => {
             const response = await shipApi.assignDriver(shipItemId, data);
-            
+
             // Handle API-level error (from ApiResponse wrapper)
             if (response.error) {
                 throw new Error(response.error);
             }
-            
+
             // Handle structured error responses in data
             if (response.data) {
                 const data = response.data as any;
@@ -104,7 +104,7 @@ export function useAssignDriver(shipId: string | number) {
                     throw new Error(data.error || data.message || "Failed to assign driver");
                 }
             }
-            
+
             return response.data;
         },
         onSuccess: () => {
@@ -153,7 +153,8 @@ export function useCreatePaymentOrder(shipId: string | number) {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
-            
+            queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
+
             // Open payment URL in new tab
             if (data?.result?.payment_url) {
                 toast.success("Opening payment gateway in new tab...");
