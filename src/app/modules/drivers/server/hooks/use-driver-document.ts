@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver.api";
-import { driverDocumentSchema } from "@/lib/zod/driver";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
 

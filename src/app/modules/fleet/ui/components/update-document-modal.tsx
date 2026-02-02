@@ -33,7 +33,6 @@ interface UpdateDocumentModalProps {
   onUpdate: (documentType: string, file?: File) => Promise<void>;
   isUpdating: boolean;
 }
-
 const DOCUMENT_TYPES = [
   "libre",
   "other",
@@ -100,11 +99,21 @@ export function UpdateDocumentModal({
           <DialogDescription>
             Update the document type or upload a new file.
           </DialogDescription>
+          {/* ✅ Added explanation */}
+          <p className="text-xs text-muted-foreground mt-1">
+            Fields marked with <span className="text-red-500">*</span> are required.
+          </p>
         </DialogHeader>
+
+
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            {/* Document Type */}
             <div className="space-y-2">
-              <Label htmlFor="document-type">Document Type</Label>
+              {/* ✅ Added * */}
+              <Label htmlFor="document-type">
+                Document Type <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={documentType}
                 onValueChange={setDocumentType}
@@ -116,12 +125,26 @@ export function UpdateDocumentModal({
                 <SelectContent>
                   {DOCUMENT_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {type
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {type
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* ✅ Added client-side validation message */}
+              {!documentType && (
+                <p className="text-xs text-destructive">
+                  Document type is required
+                </p>
+              )}
             </div>
+
+            {/* File */}
             <div className="space-y-2">
               <Label htmlFor="file">File (Optional)</Label>
               <Input
@@ -150,6 +173,8 @@ export function UpdateDocumentModal({
               </Alert>
             )}
           </div>
+
+
           <DialogFooter>
             <Button
               type="button"
@@ -171,5 +196,3 @@ export function UpdateDocumentModal({
     </Dialog>
   );
 }
-
-

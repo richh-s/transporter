@@ -71,7 +71,6 @@ export function FleetStatsCardsWrapper({
         };
       }
       
-      // Handle array response (fallback)
       if (Array.isArray(data)) {
         const trucksArray = data as Truck[];
         return {

@@ -101,7 +101,7 @@ export async function fetchTrucks(): Promise<Truck[]> {
 
         // If no endpoint works, log warning and return empty array
         console.error(
-            "[Trucks API] ❌ Could not fetch trucks from any endpoint. Tried:",
+            "[Trucks API] Could not fetch trucks from any endpoint. Tried:",
             endpoints.join(", ")
         );
         console.error(
