@@ -15,19 +15,28 @@ import { useRouter } from "next/navigation";
 type FormData = z.infer<typeof forgotPasswordSchema>;
 
 export function ForgotPasswordForm() {
-  const mutation = useRequestPasswordReset();
   const router = useRouter();
+  const mutation = useRequestPasswordReset();
 
   const form = useForm<FormData>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: "" },
+    defaultValues: {
+      email: "",
+    },
+    mode: "onSubmit",
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
   const onSubmit = async (data: FormData) => {
     await mutation.mutateAsync(data.email);
   };
 
-  // ✅ Auto redirect after OTP sent
+  // Auto redirect after OTP sent
   useEffect(() => {
     if (mutation.isSuccess) {
       const timer = setTimeout(() => {
@@ -38,6 +47,7 @@ export function ForgotPasswordForm() {
     }
   }, [mutation.isSuccess, router]);
 
+  // Success state
   if (mutation.isSuccess) {
     return (
       <Alert className="bg-green-50 border-green-200">
@@ -50,16 +60,31 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div className="relative">
-        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        <Input
-          placeholder="Enter your registered email"
-          {...form.register("email")}
-          className="pl-9"
-        />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Email Field */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">
+          Email <span className="text-red-500">*</span>
+        </label>
+
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <Input
+            placeholder="Enter your registered email"
+            {...register("email")}
+            className={`pl-9 ${
+              errors.email ? "border-red-500 focus-visible:ring-red-500" : ""
+            }`}
+          />
+        </div>
+
+        {/* Client-side validation error */}
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email.message}</p>
+        )}
       </div>
 
+      {/* Backend validation / server error */}
       {mutation.error && (
         <Alert variant="destructive">
           <AlertDescription>
@@ -68,6 +93,7 @@ export function ForgotPasswordForm() {
         </Alert>
       )}
 
+      {/* Submit Button */}
       <Button type="submit" className="w-full" disabled={mutation.isPending}>
         {mutation.isPending ? (
           <>

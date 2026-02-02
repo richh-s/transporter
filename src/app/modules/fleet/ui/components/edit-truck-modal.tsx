@@ -139,8 +139,7 @@ export function EditTruckModal({
         gps_device_id: truck.gps_device_id,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [truck, isOpen]); // form and updateTruckMutation are stable references
+  }, [truck, isOpen, form, updateTruckMutation]);
 
   const onSubmit = async (values: TruckFormValues) => {
     if (!truck) return;
@@ -178,15 +177,16 @@ export function EditTruckModal({
           <DialogDescription className="text-xs sm:text-sm">
             Update the truck details.
           </DialogDescription>
+          <p className="text-xs text-muted-foreground mt-1">
+            Fields marked with <span className="text-red-500">*</span> are required.
+          </p>
         </DialogHeader>
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                e.target instanceof HTMLInputElement
-              ) {
+              if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
                 e.preventDefault();
               }
             }}
@@ -206,13 +206,16 @@ export function EditTruckModal({
                   </AlertDescription>
                 </Alert>
               )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <FormField
                   control={form.control}
                   name="vin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VIN</FormLabel>
+                      <FormLabel>
+                        VIN <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -229,7 +232,9 @@ export function EditTruckModal({
                   name="plate_number"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plate Number</FormLabel>
+                      <FormLabel>
+                        Plate Number <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -246,7 +251,9 @@ export function EditTruckModal({
                   name="truck_type"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Truck Type</FormLabel>
+                      <FormLabel>
+                        Truck Type <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Popover
                         open={isTypePopoverOpen}
                         onOpenChange={setIsTypePopoverOpen}
@@ -263,8 +270,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_TYPES.find(
-                                  (type) => type.value === field.value
-                                )?.label
+                                    (type) => type.value === field.value
+                                  )?.label
                                 : "Select type..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -316,7 +323,9 @@ export function EditTruckModal({
                   name="status"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>
+                        Status <span className="text-red-500">*</span>
+                      </FormLabel>
                       <Popover
                         open={isStatusPopoverOpen}
                         onOpenChange={setIsStatusPopoverOpen}
@@ -333,8 +342,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_STATUSES.find(
-                                  (status) => status.value === field.value
-                                )?.label
+                                    (status) => status.value === field.value
+                                  )?.label
                                 : "Select status..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -387,7 +396,9 @@ export function EditTruckModal({
                   name="capacity_quintal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Capacity (Quintal)</FormLabel>
+                      <FormLabel>
+                        Capacity (Quintal) <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -423,6 +434,7 @@ export function EditTruckModal({
                     </FormItem>
                   )}
                 />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 col-span-full">
                   <FormField
                     control={form.control}
@@ -569,4 +581,3 @@ export function EditTruckModal({
     </Dialog>
   );
 }
-

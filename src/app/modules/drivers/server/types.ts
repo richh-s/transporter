@@ -1,3 +1,4 @@
+export type { DriverDocument } from "@/lib/zod/driver";
 
 export type DriverStatus = "active" | "inactive";
 

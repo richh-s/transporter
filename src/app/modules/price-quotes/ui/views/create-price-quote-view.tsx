@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Form,
     FormControl,
@@ -35,7 +36,7 @@ import {
     TruckAxleTypeEnum,
 } from "@/types/price-quote";
 import type { CreatePriceQuoteRequest } from "@/types/price-quote";
-import { LOCATION_OPTIONS } from "@/lib/price-quote-utils";
+import { LOCATION_OPTIONS, locationEnumToDisplayName } from "@/lib/price-quote-utils";
 
 const formSchema = z.object({
     origin: z.nativeEnum(LocationEnum, {
@@ -106,11 +107,13 @@ export function CreatePriceQuoteView() {
         }
 
         // Prepare the quote data according to API specification
+        // Convert location enums to display names as expected by backend
         const quoteData: CreatePriceQuoteRequest = {
-            origin: values.origin,
-            destination: values.destination,
+            origin: locationEnumToDisplayName(values.origin),
+            destination: locationEnumToDisplayName(values.destination),
             gross_weight_min: Math.floor(values.gross_weight_min), // int
             gross_weight_max: Math.floor(values.gross_weight_max), // int
+            gross_weight_unit: "kg", // Required field - backend expects this
             truck_type: values.truck_type,
             container_size: values.container_size,
             amount: values.amount, // float (already validated as number)
@@ -157,6 +160,31 @@ export function CreatePriceQuoteView() {
                     </p>
                 </div>
             </div>
+
+            {/* Error Alert for Missing Documents */}
+            {createMutation.error && (createMutation.error as Error & { code?: string }).code === "MISSING_DOCUMENTS" && (
+                <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Document Required</AlertTitle>
+                    <AlertDescription className="mt-2">
+                        <p className="mb-3">
+                            {createMutation.error.message || "The required Trade License document is missing or has not been approved."}
+                        </p>
+                        <p className="mb-3 text-sm">
+                            Please upload your Trade License document and wait for approval before creating price quotes.
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push("/organization/documents")}
+                            className="mt-2"
+                        >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Go to Documents Page
+                        </Button>
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <Card className="overflow-visible">
                 <CardHeader>
