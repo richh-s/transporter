@@ -2,16 +2,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { truckApi } from "@/lib/api/trucks";
 import type { CreateTruckRequest, Truck } from "@/lib/api/trucks";
 
-// Custom error class for API errors with status codes
 export class ApiError extends Error {
   status: number;
-  
-  constructor(message: string, status: number) {
+  fields?: Record<string, string>;
+
+  constructor(
+    message: string,
+    status: number,
+    fields?: Record<string, string>
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.fields = fields;
   }
 }
+
 
 export function useCreateTruck() {
   const queryClient = useQueryClient();
@@ -28,15 +34,13 @@ export function useCreateTruck() {
 
       // Log response for debugging
       if (process.env.NODE_ENV === "development") {
-        console.log("🚛 Create truck response:", {
+        console.log(" Create truck response:", {
           status: response.status,
           hasData: !!response.data,
           error: response.error,
         });
       }
 
-      // Check for error status codes first (even if data might exist)
-      // Status 409 means conflict - truck already exists
       if (response.status === 409) {
         throw new ApiError(
           "A truck with this plate number already exists. Please use a unique plate number.",

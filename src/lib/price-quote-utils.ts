@@ -16,7 +16,23 @@ export function formatLocation(location: string): string {
         [LocationEnum.ADDIS_ABABA]: "Addis Ababa",
         [LocationEnum.ADAMA]: "Adama",
         [LocationEnum.DUKEM]: "Dukem",
-        [LocationEnum.DEBRE_ZEIT]: "Debre Zeit",
+        [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
+        [LocationEnum.HAWASSA]: "Hawassa",
+        [LocationEnum.SHASHEMENE]: "Shashemene",
+        [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",
+    };
+    return map[location] || location;
+}
+
+/**
+ * Convert enum values to API display format (for sending to backend)
+ */
+export function locationEnumToDisplayName(location: LocationEnum): string {
+    const map: Record<LocationEnum, string> = {
+        [LocationEnum.ADDIS_ABABA]: "Addis Ababa",
+        [LocationEnum.ADAMA]: "Adama",
+        [LocationEnum.DUKEM]: "Dukem",
+        [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
         [LocationEnum.HAWASSA]: "Hawassa",
         [LocationEnum.SHASHEMENE]: "Shashemene",
         [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",

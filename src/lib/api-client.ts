@@ -1,14 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Debug: Log the API URL in development
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  console.log("🔗 API URL:", API_URL);
+if (!API_URL) {
+  throw new Error(
+    "NEXT_PUBLIC_API_URL is not defined. Check your .env.local file."
+  );
 }
 
 export type ApiResponse<T> = {
   data?: T;
   error?: string;
   status: number;
+  errorCode?: string; // Error code from backend (e.g., "MISSING_DOCUMENTS")
 };
 
 /**
@@ -116,6 +118,7 @@ export async function request<T>(
       return {
         error: result?.detail || result?.message || "Something went wrong",
         status,
+        errorCode: result?.code || undefined, // Extract error code if available
       };
     }
 
