@@ -27,17 +27,11 @@ export default function ShipDetailsPage() {
 
     const { data: realShip, isLoading: isShipLoading, error: shipError } = useShip(id);
 
-    // TEMPORARY: Mock data for visualization as requested
     let ship = realShip;
-    if (ship) {
+    // Mock data if no documents found
+    if (ship && (!ship.ship_documents || ship.ship_documents.length === 0)) {
         ship = {
             ...ship,
-            shipment_details: {
-                ...ship.shipment_details,
-                bill_of_lading_number: null,
-                pickup_number: null,
-                delivery_number: null
-            },
             ship_documents: [
                 {
                     id: 1,
@@ -59,7 +53,7 @@ export default function ShipDetailsPage() {
                     presigned_url: "https://pdfobject.com/pdf/sample.pdf",
                     created_at: "2026-02-02T13:27:37Z"
                 }
-            ] as any
+            ] as any // Cast to any to avoid strict type issues with mock data if types are strict
         };
     }
     const { data: trucksData } = useTrucksQuery({ per_page: 100 });
@@ -512,11 +506,7 @@ export default function ShipDetailsPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="pt-2">
-                                    <Button variant="outline" className="w-full text-xs font-bold uppercase tracking-widest border-border/50 hover:bg-orange-500/5 hover:text-orange-600 hover:border-orange-500/30 transition-all rounded-xl h-9">
-                                        View All Details
-                                    </Button>
-                                </div>
+
                             </>
                         )}
                     </CardContent>
