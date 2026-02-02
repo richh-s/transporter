@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { driverKeys } from "../query-keys";
-import { driverDocumentSchema } from "@/lib/zod/driver";
+import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 import type { DriverDocument } from "../types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;

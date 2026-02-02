@@ -41,8 +41,7 @@ export enum ShipDocumentTypeEnum {
 
 export enum ShipItemDocumentTypeEnum {
     PROOF_OF_DELIVERY = "proof_of_delivery",
-    CONTAINER_RETURN_RECEIPT = "container_interchange_document",
-    POD_DOCUMENT = "pod_document",
+    CONTAINER_INTERCHANGE_DOCUMENT = "container_interchange_document",
     PROOF_OF_DELIVERY_OF_DOCUMENT = "proof_of_delivery_of_document",
 }
 
@@ -65,7 +64,6 @@ export enum DocumentStatusEnum {
     APPROVED = "Approved",
     REJECTED = "Rejected",
 }
-
 
 export interface Container {
     id: number;
@@ -130,9 +128,9 @@ export interface Facility {
 }
 
 export interface ShipmentDetails {
-    bill_of_lading_number: string;
-    pickup_number: string;
-    delivery_number: string;
+    bill_of_lading_number: string | null;
+    pickup_number: string | null;
+    delivery_number: string | null;
 }
 
 export interface Ship {
@@ -148,6 +146,7 @@ export interface Ship {
     status: string;
     ship_items: ShipItem[];
     containers: Container[];
+    ship_documents: ShipDocument[];
 }
 
 export interface ShipItem {
@@ -182,12 +181,21 @@ export interface ShipItem {
 
 export interface ShipDocument {
     id: number;
+    ship_id: number;
     document_type: string; // ShipDocumentTypeEnum
+    status: string; // DocumentStatusEnum
     file_path: string;
-    file_name: string;
     file_ext: string;
+    expired_at: string | null;
+    rejection_reason: string | null;
+    presigned_url: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at: string;
+}
+
+export interface ShipDocumentsResponse {
+    ship_id: number;
+    documents: ShipDocument[];
 }
 
 // Payment Types

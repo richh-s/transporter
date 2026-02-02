@@ -1,13 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { truckApi } from "@/lib/api/trucks";
-
-export interface TruckDocument {
-  id: number;
-  document_type: string;
-  file_url?: string;
-  presigned_url?: string;
-  created_at?: string;
-}
+import { truckApi, type TruckDocument } from "@/lib/api/trucks";
+import { ApiError } from "./use-create-truck";
 
 export function useTruckDocuments(truckId: string) {
   return useQuery({
@@ -39,7 +32,11 @@ export function useUploadTruckDocument() {
     }) => {
       const response = await truckApi.uploadDocument(truckId, file, documentType);
       if (!response.data) {
-        throw new Error(response.error || "Failed to upload document");
+        throw new ApiError(
+          response.error || "Failed to upload document",
+          response.status || 500,
+          response.fields
+        );
       }
       return response.data;
     },
@@ -66,7 +63,11 @@ export function useUpdateTruckDocument() {
     }) => {
       const response = await truckApi.updateDocument(truckId, documentId, updateData);
       if (!response.data) {
-        throw new Error(response.error || "Failed to update document");
+        throw new ApiError(
+          response.error || "Failed to update document",
+          response.status || 500,
+          response.fields
+        );
       }
       return response.data;
     },

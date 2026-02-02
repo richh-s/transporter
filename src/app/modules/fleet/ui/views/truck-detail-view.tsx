@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
@@ -26,7 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/ui/data-table";
 import { documentColumns } from "../columns/document-columns";
 import type { DocumentTableRow } from "../columns/document-columns";
-import type { TruckDocument } from "@/app/modules/fleet/server/hooks/use-truck-documents";
+import type { TruckDocument } from "@/lib/api/trucks";
 
 interface TruckDetailContentProps {
   id: string;
@@ -78,14 +80,21 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     });
   };
 
+
   const handleUploadDocument = async (file: File, documentType: string) => {
-    await uploadDocumentMutation.mutateAsync({
-      truckId: id,
-      file,
-      documentType,
-    });
-    // Invalidate documents query to refresh the list
-    queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
+    try {
+      await uploadDocumentMutation.mutateAsync({
+        truckId: id,
+        file,
+        documentType,
+      });
+      // Invalidate documents query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["truck-documents", id] });
+      toast.success("Document uploaded successfully");
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || "Failed to upload document");
+    }
   };
 
   const handleUpdateDocument = (documentId: number) => {
@@ -109,8 +118,11 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       });
       setIsUpdateDocumentModalOpen(false);
       setSelectedDocument(null);
-    } catch (error: unknown) {
-      console.error("Failed to update document:", error);
+      toast.success("Document updated successfully");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Failed to update document:", err);
+      toast.error(err.message || "Failed to update document");
     }
   };
 
@@ -131,8 +143,11 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       });
       setIsDeleteDocumentModalOpen(false);
       setSelectedDocument(null);
-    } catch (error: unknown) {
-      console.error("Failed to delete document:", error);
+      toast.success("Document deleted successfully");
+    } catch (error) {
+      const err = error as Error;
+      console.error("Failed to delete document:", err);
+      toast.error(err.message || "Failed to delete document");
     }
   };
 
@@ -143,7 +158,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
 
 
   return (
-    <div className="flex flex-col h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
+    <div className="flex flex-col min-h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden pb-8">
       {/* Header */}
       <div className="space-y-3 pb-2 border-b shrink-0">
         <div className="flex flex-row items-center justify-between gap-3">
@@ -187,15 +202,8 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
         </Button>
       </div>
 
-      {/* Main Content - Scrollable */}
-      <div
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y scrollbar-hide"
-        style={{
-          WebkitOverflowScrolling: "touch",
-          overscrollBehavior: "contain",
-          touchAction: "pan-y",
-        }}
-      >
+      {/* Main Content - No restrictive nested scroll */}
+      <div className="flex-1 min-h-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pb-4">
           {/* Basic Information */}
           <Card className="p-2 flex flex-col gap-2">

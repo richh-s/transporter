@@ -21,7 +21,7 @@ export function DocumentList({ documents }: DocumentListProps) {
     // Group documents by type
     const podDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY);
     const podDocumentDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT);
-    const returnDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT);
+    const returnDocs = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT);
 
     const renderDocItem = (doc: ShipItemDocument) => (
         <div key={doc.id} className="flex items-center justify-between p-3 border rounded-md bg-card mb-2">

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Loader2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
+import { ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -57,27 +59,31 @@ export function UploadDocumentModal({
       return;
     }
 
-    if (!documentType) {
+    if (!documentType.trim()) {
       setError("Please select a document type");
       return;
     }
 
     setError(null);
     try {
-      await onUpload(selectedFile, documentType);
-
-      // Reset on success
+      await onUpload(selectedFile, documentType.trim());
+      // Reset form on success
       setSelectedFile(null);
       setDocumentType("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-
       onOpenChange(false);
+      toast.success("Document uploaded successfully");
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Failed to upload document"
-      );
+      if (error instanceof ApiError && error.fields) {
+        const fieldErrors = Object.entries(error.fields)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(", ");
+        setError(fieldErrors || error.message);
+      } else {
+        setError(error instanceof Error ? error.message : "Failed to upload document");
+      }
     }
   };
 
@@ -101,19 +107,11 @@ export function UploadDocumentModal({
           <DialogDescription>
             Select a document type and file to upload.
           </DialogDescription>
-          {/*  Added explanation */}
-          <p className="text-xs text-muted-foreground mt-1">
-            Fields marked with <span className="text-red-500">*</span> are required.
-          </p>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Document Type */}
           <div className="space-y-2">
-            {/*  Required field marker */}
-            <Label htmlFor="document-type">
-              Document Type <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="document-type">Document Type</Label>
             <Select
               value={documentType}
               onValueChange={(value) => {
@@ -125,29 +123,14 @@ export function UploadDocumentModal({
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trade_licence">Trade Licence</SelectItem>
-
-                <SelectItem value="authorised_contact_person_company_id">
-                  Authorised Contact Person Company ID
-                </SelectItem>
-
                 <SelectItem value="libre">Libre</SelectItem>
-
-                <SelectItem value="driver_id">Driver ID</SelectItem>
-
-                <SelectItem value="driver_license">Driver License</SelectItem>
-
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* File */}
           <div className="space-y-2">
-            {/* ✅ Required field marker */}
-            <Label htmlFor="file">
-              File <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="file">File</Label>
             <input
               ref={fileInputRef}
               id="file"
@@ -156,37 +139,34 @@ export function UploadDocumentModal({
               onChange={handleFileChange}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleFileSelect}
-              disabled={isUploading}
-              className="w-full"
-            >
-              {selectedFile ? (
-                <>
-                  <X className="h-4 w-4 mr-2" />
-                  {selectedFile.name}
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Select File
-                </>
-              )}
-            </Button>
-
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleFileSelect}
+                disabled={isUploading}
+                className="flex-1"
+              >
+                {selectedFile ? (
+                  <>
+                    <X className="h-4 w-4 mr-2" />
+                    {selectedFile.name}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Select File
+                  </>
+                )}
+              </Button>
+            </div>
             {selectedFile && (
               <p className="text-xs text-muted-foreground">
-                Selected: {selectedFile.name} (
-                {(selectedFile.size / 1024).toFixed(2)} KB)
-                Selected: {selectedFile.name} (
-                {(selectedFile.size / 1024).toFixed(2)} KB)
+                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
               </p>
             )}
           </div>
 
-          {/* Error */}
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -223,3 +203,4 @@ export function UploadDocumentModal({
     </Dialog>
   );
 }
+

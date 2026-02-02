@@ -30,7 +30,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useUnassignedTrucks } from "@/hooks/use-trucks";
 import { useCreateGPSDevice } from "@/hooks/use-gps-devices";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { formatDateToUTCISO, cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { CalendarIcon } from "lucide-react";
 
 const formSchema = z.object({
@@ -44,10 +45,19 @@ const formSchema = z.object({
     .max(50, "IMEI Number must be less than 50 characters"),
   device_name: z.string().max(255).optional().or(z.literal("")),
   device_model: z.string().max(255).optional().or(z.literal("")),
-  expire_date: z.date({
-    message: "Expire date is required",
-  }),
-  last_synced_at: z.date().optional(), // Will be set automatically to now()
+  expire_date: z
+    .date({
+      message: "Expire date is required",
+    })
+    .refine((date) => date > new Date(), {
+      message: "Expire date must be in the future",
+    }),
+  last_synced_at: z
+    .date()
+    .optional()
+    .refine((date) => !date || date <= new Date(), {
+      message: "Last synced date cannot be in the future",
+    }),
   status: z.boolean(),
   truck_id: z.number().min(1, "Truck selection is required"),
 });
@@ -68,29 +78,37 @@ export default function CreateGPSDevicePage() {
       device_model: "",
       status: true,
       expire_date: undefined,
-      last_synced_at: undefined, // Will be set automatically on submit
+      last_synced_at: undefined,
       truck_id: undefined,
     },
   });
 
   const onSubmit = async (values: FormValues) => {
-    const deviceData = {
-      external_device_id: values.external_device_id,
-      imei_number: values.imei_number,
-      device_name: values.device_name || undefined,
-      device_model: values.device_model || undefined,
-      expire_date: values.expire_date.toISOString(),
-      // Always set last_synced_at to now() when creating (required field, cannot be null)
-      last_synced_at: new Date().toISOString(),
-      status: values.status,
-      truck_id: values.truck_id!,
-    };
+    try {
+      const deviceData = {
+        external_device_id: values.external_device_id,
+        imei_number: values.imei_number,
+        device_name: values.device_name || undefined,
+        device_model: values.device_model || undefined,
+        expire_date: formatDateToUTCISO(values.expire_date),
+        // Always set last_synced_at to now() when creating (required field, cannot be null)
+        last_synced_at: formatDateToUTCISO(new Date()),
+        status: values.status,
+        truck_id: values.truck_id!,
+      };
 
-    createMutation.mutate(deviceData, {
-      onSuccess: (device) => {
-        router.push(`/gps-devices/${device.id}`);
-      },
-    });
+      createMutation.mutate(deviceData, {
+        onSuccess: (device) => {
+          toast.success("GPS device created successfully");
+          router.push(`/gps-devices/${device.id}`);
+        },
+        onError: (error: Error) => {
+          toast.error(error.message || "Failed to create GPS device");
+        },
+      });
+    } catch {
+      toast.error("An unexpected error occurred");
+    }
   };
 
   return (

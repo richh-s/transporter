@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShipItem } from "@/types/ship";
+import { ShipItem, Ship, Container } from "@/types/ship";
 import { shipApi } from "@/lib/api/ships";
 import { ShipItemPodCard } from "@/components/pod/ShipItemPodCard";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -24,27 +24,34 @@ export default function PodDocumentsPage() {
         const fetchShipItems = async () => {
             try {
                 setLoading(true);
+                // Use getShips because getShipItems returned 404.
+                // Note: The backend may return duplicate Ship entries in the list if there are multiple assignments;
+                // our grouping logic below handles deduplication and merging correctly.
                 const response = await shipApi.getShips({ per_page: 100 });
                 console.log("POD Page - Raw getShips response:", response.data);
 
                 if (response.data && response.data.items) {
-                    const groups: GroupedShip[] = [];
+                    const groupsMap = new Map<number, GroupedShip>();
 
-                    response.data.items.forEach(ship => {
-                        console.log(`Checking ship #${ship.id}, ship_items:`, ship.ship_items);
+                    (response.data.items as Ship[]).forEach((ship: Ship) => {
                         if (ship.ship_items && ship.ship_items.length > 0) {
                             const filteredItems = ship.ship_items
-                                .map(item => {
-                                    // Normalize truck, driver, and containers
+                                .map((item: ShipItem) => {
+                                    const shipContainers = (ship.containers as unknown as Record<string, unknown>[]) || [];
+                                    // Normalize data for the UI
                                     const normalizedTruck = item.assigned_truck || item.truck || null;
                                     const normalizedDriver = item.assigned_driver || item.driver || null;
-                                    const normalizedContainers = item.containers || (item.container ? [item.container] : []);
 
-                                    console.log(`Normalized item #${item.id}:`, {
-                                        hasTruck: !!normalizedTruck,
-                                        hasDriver: !!normalizedDriver,
-                                        containerCount: normalizedContainers.length
-                                    });
+                                    // Robust container normalization:
+                                    // 1. Try item.containers (plural) or item.container (singular)
+                                    // 2. Look up in parent ship.containers using item.container_id or item.id
+                                    let normalizedContainers = item.containers || (item.container ? [item.container] : []);
+
+                                    if (normalizedContainers.length === 0 && shipContainers.length > 0) {
+                                        const containerId = (item.container_id || item.id);
+                                        const found = shipContainers.find((c) => c.id === containerId);
+                                        if (found) normalizedContainers = [found as unknown as Container];
+                                    }
 
                                     return {
                                         ...item,
@@ -55,37 +62,47 @@ export default function PodDocumentsPage() {
                                         assigned_truck: normalizedTruck,
                                         assigned_driver: normalizedDriver,
                                         containers: normalizedContainers
-                                    };
+                                    } as ShipItem;
                                 })
-                                .filter(item => {
-                                    // 1. Assigned Truck and Driver
-                                    // Use normalized fields or fallback IDs
+                                .filter((item: ShipItem) => {
+                                    // Only show items with truck and driver assigned
                                     const hasTruck = !!item.assigned_truck || !!item.truck_id || !!item.assigned_truck_id;
                                     const hasDriver = !!item.assigned_driver || !!item.driver_id || !!item.assigned_driver_id;
 
                                     if (!hasTruck || !hasDriver) return false;
 
-                                    // 2. Status check
-                                    const status = item.status;
-                                    const s = status.toLowerCase();
-                                    if (s === 'created' || s === 'pending') return false;
+                                    // Filter out pending status
+                                    const status = (item.status || "").toLowerCase();
+                                    if (status === 'pending') return false;
 
                                     return true;
                                 });
 
                             if (filteredItems.length > 0) {
-                                groups.push({
-                                    id: ship.id,
-                                    origin: ship.origin,
-                                    destination: ship.destination,
-                                    pickup_date: ship.pickup_date,
-                                    items: filteredItems
-                                });
+                                if (groupsMap.has(ship.id)) {
+                                    const existingGroup = groupsMap.get(ship.id)!;
+                                    // Merge unique items from this ship record into the group
+                                    filteredItems.forEach(item => {
+                                        if (!existingGroup.items.find((i: ShipItem) => i.id === item.id)) {
+                                            existingGroup.items.push(item);
+                                        }
+                                    });
+                                } else {
+                                    groupsMap.set(ship.id, {
+                                        id: ship.id,
+                                        origin: ship.origin || "Unknown",
+                                        destination: ship.destination || "Unknown",
+                                        pickup_date: ship.pickup_date || "N/A",
+                                        items: filteredItems
+                                    });
+                                }
                             }
                         }
                     });
 
-                    setGroupedShips(groups);
+                    const finalizedGroups = Array.from(groupsMap.values());
+                    console.log("POD Page - Finalized grouped shipments:", finalizedGroups);
+                    setGroupedShips(finalizedGroups);
                 }
             } catch (err: unknown) {
                 const errorMessage = err instanceof Error ? err.message : "Failed to load shipments";
@@ -140,8 +157,13 @@ export default function PodDocumentsPage() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-bold">Shipment #{group.id}</h2>
-                                        <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                                            {group.items.length} {group.items.length === 1 ? 'Item' : 'Items'}
+                                        <div className="flex gap-2">
+                                            <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                                {group.items.length} {group.items.length === 1 ? 'Item' : 'Items'}
+                                            </div>
+                                            <div className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium">
+                                                {group.items.reduce((acc, item) => acc + (item.containers?.length || 0), 0)} Containers
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">

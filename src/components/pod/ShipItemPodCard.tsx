@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
+import { ShipItem, ShipItemDocument, ShipItemDocumentTypeEnum, Container } from "@/types/ship";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,18 +29,53 @@ interface ShipItemPodCardProps {
     shipItem: ExtendedShipItem;
 }
 
-export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
+export function ShipItemPodCard({ shipItem: initialShipItem }: ShipItemPodCardProps) {
     const [expanded, setExpanded] = useState(false);
     const [documents, setDocuments] = useState<ShipItemDocument[]>([]);
     const [loadingDocs, setLoadingDocs] = useState(false);
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [selectedContainers, setSelectedContainers] = useState<string[]>([]);
-    const [fullShipItem, setFullShipItem] = useState<ExtendedShipItem>(shipItem);
+    const [shipItem, setShipItem] = useState<ExtendedShipItem>(initialShipItem);
+
+    const fetchShipDetail = useCallback(async () => {
+        try {
+            if (!initialShipItem.ship_id) return;
+            const response = await shipApi.getShip(initialShipItem.ship_id);
+            const data = response.data;
+            if (data) {
+                // Find this specific item in the ship's items to get its latest data
+                const itemDetail = (data.ship_items as ShipItem[])?.find((i: ShipItem) => i.id === initialShipItem.id);
+
+                // Robust container normalization from the ship detail
+                let containers = itemDetail?.containers || (itemDetail?.container ? [itemDetail.container] : []);
+
+                if (containers.length === 0 && data.containers) {
+                    // Fallback mapping: use container_id if present, otherwise try item ID (based on user's sample)
+                    const containerId = itemDetail?.container_id || initialShipItem.id;
+                    const found = (data.containers as unknown as Container[]).find((c: Container) => c.id === containerId);
+                    if (found) containers = [found];
+                }
+
+                setShipItem(prev => ({
+                    ...prev,
+                    ...(itemDetail || {}),
+                    containers: containers.length > 0 ? containers : prev.containers,
+                    // Keep parent values as fallback
+                    origin: data.origin || prev.origin,
+                    destination: data.destination || prev.destination,
+                    pickup_date: data.pickup_date || prev.pickup_date,
+                    ship_id: data.id,
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch ship details", error);
+        }
+    }, [initialShipItem.id, initialShipItem.ship_id]);
 
     const fetchDocuments = useCallback(async () => {
         setLoadingDocs(true);
         try {
-            const response = await shipApi.getShipItemDocuments(shipItem.id);
+            const response = await shipApi.getShipItemDocuments(initialShipItem.id);
             if (response.data) {
                 setDocuments(response.data);
             }
@@ -49,46 +84,12 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
         } finally {
             setLoadingDocs(false);
         }
-    }, [shipItem.id]);
-
-    const fetchDetails = useCallback(async () => {
-        try {
-            const response = await shipApi.getShipItemDetail(shipItem.ship_id);
-            console.log(`Card #${shipItem.id} - Full Ship Detail Response:`, response.data);
-            if (response.data) {
-                // The response is the parent Ship object containing ship_items
-                const parentShip = response.data;
-                const detailedItem = parentShip.ship_items?.find((item: ShipItem) => item.id == shipItem.id);
-
-                console.log(`Card #${shipItem.id} - Found Detailed Item:`, detailedItem);
-
-                if (detailedItem) {
-                    setFullShipItem(prev => ({
-                        ...prev,
-                        ...detailedItem,
-                        // Priority to assigned_truck/driver, then truck/driver keys, then previous state
-                        assigned_truck: detailedItem.assigned_truck || detailedItem.truck || prev.assigned_truck,
-                        assigned_driver: detailedItem.assigned_driver || detailedItem.driver || prev.assigned_driver,
-                        // Ensure container is preserved
-                        container: detailedItem.container || prev.container,
-                        // Ensure containers array is updated correctly
-                        containers: detailedItem.containers || (detailedItem.container ? [detailedItem.container] : prev.containers) || [],
-                        // Explicitly update origin/dest from parentShip if available
-                        origin: parentShip.origin || prev.origin,
-                        destination: parentShip.destination || prev.destination,
-                        pickup_date: parentShip.pickup_date || prev.pickup_date
-                    }));
-                }
-            }
-        } catch (e) {
-            console.error("Failed to fetch ship item details", e);
-        }
-    }, [shipItem.id, shipItem.ship_id]);
+    }, [initialShipItem.id]);
 
     useEffect(() => {
         fetchDocuments();
-        fetchDetails();
-    }, [fetchDocuments, fetchDetails]);
+        fetchShipDetail();
+    }, [fetchDocuments, fetchShipDetail]);
 
 
 
@@ -102,7 +103,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
 
     const podCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY).length;
     const podDocCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT).length;
-    const returnCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT).length;
+    const returnCount = documents.filter(d => d.document_type === ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT).length;
 
     return (
         <Card className="w-full">
@@ -110,10 +111,10 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="text-lg font-bold">
-                            Shipment #{fullShipItem.ship_id} - Item #{fullShipItem.id}
+                            Shipment #{shipItem.ship_id} - Item #{shipItem.id}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Status: <Badge variant="outline" className="capitalize">{fullShipItem.status.replace(/_/g, " ")}</Badge>
+                            Status: <Badge variant="outline" className="capitalize">{shipItem.status.replace(/_/g, " ")}</Badge>
                         </p>
                     </div>
                     <div className="text-right flex flex-col gap-1 items-end">
@@ -132,12 +133,12 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                         )}
                     </div>
                 </div>
-                {(fullShipItem.origin || fullShipItem.destination) && (
+                {(shipItem.origin || shipItem.destination) && (
                     <div className="mt-2 text-sm font-medium flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-3 w-3 text-red-500" />
-                        {fullShipItem.origin || 'Unknown'}
+                        {shipItem.origin || 'Unknown'}
                         <span className="text-muted-foreground/60">→</span>
-                        {fullShipItem.destination || 'Unknown'}
+                        {shipItem.destination || 'Unknown'}
                     </div>
                 )}
             </CardHeader>
@@ -149,15 +150,15 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             <Truck className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Truck:</span>
                             <span className="font-bold">
-                                {fullShipItem.assigned_truck ? (
+                                {shipItem.assigned_truck ? (
                                     <>
-                                        {fullShipItem.assigned_truck.plate_number}{" "}
+                                        {shipItem.assigned_truck.plate_number}{" "}
                                         <span className="text-muted-foreground font-normal">
-                                            ({fullShipItem.assigned_truck.make || ''} {fullShipItem.assigned_truck.model || ''})
+                                            ({shipItem.assigned_truck.make || ''} {shipItem.assigned_truck.model || ''})
                                         </span>
                                     </>
                                 ) : (
-                                    fullShipItem.truck_id ? `Assigned (ID: ${fullShipItem.truck_id})` : 'Not Assigned'
+                                    shipItem.truck_id ? `Assigned (ID: ${shipItem.truck_id})` : 'Not Assigned'
                                 )}
                             </span>
                         </div>
@@ -165,16 +166,16 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Driver:</span>
                             <span className="font-bold">
-                                {fullShipItem.assigned_driver ?
-                                    `${fullShipItem.assigned_driver.first_name} ${fullShipItem.assigned_driver.last_name}` :
-                                    fullShipItem.driver_id ? `Assigned (ID: ${fullShipItem.driver_id})` :
+                                {shipItem.assigned_driver ?
+                                    `${shipItem.assigned_driver.first_name} ${shipItem.assigned_driver.last_name}` :
+                                    shipItem.driver_id ? `Assigned (ID: ${shipItem.driver_id})` :
                                         'Not Assigned'}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Date:</span>
-                            <span>{fullShipItem.created_at ? format(new Date(fullShipItem.created_at), "yyyy-MM-dd") : "N/A"}</span>
+                            <span>{shipItem.created_at ? format(new Date(shipItem.created_at), "yyyy-MM-dd") : "N/A"}</span>
                         </div>
                     </div>
 
@@ -184,7 +185,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             <span className="font-bold text-primary">Containers:</span>
                         </div>
 
-                        {fullShipItem.containers && fullShipItem.containers.length > 0 ? (
+                        {shipItem.containers && shipItem.containers.length > 0 ? (
                             <div className="border rounded-md overflow-hidden bg-card">
                                 <Table>
                                     <TableHeader className="bg-muted/50">
@@ -197,7 +198,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {fullShipItem.containers.map((c) => (
+                                        {shipItem.containers.map((c) => (
                                             <TableRow key={c.id} className="cursor-default">
                                                 <TableCell className="text-center">
                                                     <Checkbox
@@ -226,7 +227,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                             </div>
                         ) : (
                             <div className="text-sm text-muted-foreground italic">
-                                {fullShipItem.container?.container_number || "No container detailed info available"}
+                                {shipItem.container?.container_number || "No container detailed info available"}
                             </div>
                         )}
 
@@ -291,7 +292,7 @@ export function ShipItemPodCard({ shipItem }: ShipItemPodCardProps) {
                     setUploadModalOpen(open);
                     if (!open) setSelectedContainers([]);
                 }}
-                shipItem={fullShipItem}
+                shipItem={shipItem}
                 onUploadSuccess={() => {
                     fetchDocuments();
                     setSelectedContainers([]);
