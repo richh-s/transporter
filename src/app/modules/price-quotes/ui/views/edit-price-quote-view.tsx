@@ -43,7 +43,7 @@ import {
     TruckAxleTypeEnum,
     PriceQuoteStatusEnum,
 } from "@/types/price-quote";
-import { LOCATION_OPTIONS } from "@/lib/price-quote-utils";
+import { LOCATION_OPTIONS, locationEnumToDisplayName } from "@/lib/price-quote-utils";
 
 const formSchema = z.object({
     origin: z.nativeEnum(LocationEnum, {
@@ -135,6 +135,7 @@ export function EditPriceQuoteView() {
             destination: locationEnumToDisplayName(values.destination),
             gross_weight_min: Math.floor(values.gross_weight_min),
             gross_weight_max: Math.floor(values.gross_weight_max),
+            gross_weight_unit: "kg",
             truck_type: values.truck_type,
             container_size: values.container_size,
             amount: Number(values.amount),
@@ -324,7 +325,10 @@ export function EditPriceQuoteView() {
                                                         type="number"
                                                         placeholder="e.g., 1000"
                                                         {...field}
-                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            field.onChange(value === "" ? undefined : Number(value));
+                                                        }}
                                                         value={field.value || ""}
                                                     />
                                                 </FormControl>
@@ -349,7 +353,10 @@ export function EditPriceQuoteView() {
                                                         type="number"
                                                         placeholder="e.g., 20000"
                                                         {...field}
-                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            field.onChange(value === "" ? undefined : Number(value));
+                                                        }}
                                                         value={field.value || ""}
                                                     />
                                                 </FormControl>
@@ -479,7 +486,10 @@ export function EditPriceQuoteView() {
                                                         step="0.01"
                                                         placeholder="e.g., 50000.00"
                                                         {...field}
-                                                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            field.onChange(value === "" ? undefined : parseFloat(value));
+                                                        }}
                                                         value={field.value || ""}
                                                     />
                                                 </FormControl>
