@@ -131,8 +131,8 @@ export function EditPriceQuoteView() {
 
     const onSubmit = async (values: FormValues) => {
         const updateData: UpdatePriceQuoteRequest = {
-            origin: values.origin,
-            destination: values.destination,
+            origin: locationEnumToDisplayName(values.origin),
+            destination: locationEnumToDisplayName(values.destination),
             gross_weight_min: Math.floor(values.gross_weight_min),
             gross_weight_max: Math.floor(values.gross_weight_max),
             truck_type: values.truck_type,

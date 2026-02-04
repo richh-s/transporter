@@ -4,9 +4,11 @@ export enum LocationEnum {
     ADDIS_ABABA = "addis_ababa",
     ADAMA = "adama",
     DUKEM = "dukem",
-    DEBRE_ZEIT = "debre_zeit",
     HAWASSA = "hawassa",
     SHASHEMENE = "shashemene",
+    BISHOFTU = "bishoftu",
+    DJIBOUTI = "djibouti",
+    DEBRE_ZEIT = "debre_zeit",
     DJIBOUTI_PORT = "djibouti_port",
 }
 
@@ -65,8 +67,8 @@ export interface CreatePriceQuoteRequest {
 }
 
 export interface UpdatePriceQuoteRequest {
-    origin?: LocationEnum;
-    destination?: LocationEnum;
+    origin?: string;
+    destination?: string;
     gross_weight_min?: number;
     gross_weight_max?: number;
     truck_type?: TruckTypeEnum;
