@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Edit, Trash2, Loader2 } from "lucide-react";
+import { useState, Suspense, useEffect, useMemo } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Edit,
+  Power,
+  Loader2,
+  Satellite,
+  Truck,
+  Calendar,
+  Clock,
+  Hash,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -19,23 +27,114 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGPSDevice, useDeactivateGPSDevice } from "@/hooks/use-gps-devices";
 import { useTrucks } from "@/hooks/use-trucks";
-import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 
-export default function GPSDeviceDetailClient() {
+// Status Badge Component
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+        active
+          ? "bg-emerald-500/10 text-emerald-600"
+          : "bg-gray-500/10 text-gray-600",
+      )}
+    >
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          active ? "bg-emerald-500" : "bg-gray-400",
+        )}
+      />
+      {active ? "Active" : "Inactive"}
+    </span>
+  );
+}
+
+// Info Card Component
+function InfoCard({
+  icon: Icon,
+  title,
+  children,
+  accent = "bg-primary/10 text-primary",
+}: {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-xl bg-card border border-border/50 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 p-3 border-b border-border/50 bg-muted/30">
+        <div className={cn("p-1.5 rounded-lg", accent)}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
+// Detail Row Component
+function DetailRow({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string | number | React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span
+        className={cn(
+          "text-sm font-medium text-foreground",
+          mono && "font-mono",
+        )}
+      >
+        {value || "—"}
+      </span>
+    </div>
+  );
+}
+
+// Loading Skeleton
+function DetailSkeleton() {
+  return (
+    <div className="space-y-4 p-4 animate-in fade-in">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-9 w-9 rounded-xl" />
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <Skeleton className="h-32 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+    </div>
+  );
+}
+
+function GPSDeviceDetailContent() {
   const router = useRouter();
   const params = useParams();
-  const id = Number(params.id);
+  const searchParams = useSearchParams();
+  const rawId = searchParams.get("id") || (params.id as string);
+  const id = rawId && rawId !== "placeholder" ? Number(rawId) : NaN;
 
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
 
-  const { data: device, isLoading, error } = useGPSDevice(id);
+  const { data: device, isLoading, error } = useGPSDevice(isNaN(id) ? 0 : id);
   const deactivateMutation = useDeactivateGPSDevice();
-
-  // Fetch all trucks to create mapping (same as table)
   const { data: trucks = [] } = useTrucks();
 
   // Create mapping object: { [gps_device_id]: truck_id }
-  // Only include trucks that have a gps_device_id (assigned trucks)
   const gpsDeviceToTruckMap = useMemo(() => {
     const map: Record<number, number> = {};
     trucks.forEach((truck) => {
@@ -43,20 +142,20 @@ export default function GPSDeviceDetailClient() {
         map[truck.gps_device_id] = truck.id;
       }
     });
-    if (process.env.NODE_ENV === "development") {
-      console.log("[GPS Device Detail] GPS Device to Truck Mapping:", map);
-      console.log("[GPS Device Detail] Device ID:", id);
-      console.log(
-        "[GPS Device Detail] Device truck_id from API:",
-        device?.truck_id,
-      );
-      console.log("[GPS Device Detail] Truck ID from mapping:", map[id]);
-    }
     return map;
-  }, [trucks, id, device?.truck_id]);
+  }, [trucks]);
 
-  // Get the assigned truck ID from the mapping (more reliable than device.truck_id)
   const assignedTruckId = device ? gpsDeviceToTruckMap[device.id] : undefined;
+
+  useEffect(() => {
+    if (isNaN(id)) {
+      router.replace("/gps-devices");
+    }
+  }, [id, router]);
+
+  if (isNaN(id)) {
+    return <DetailSkeleton />;
+  }
 
   const handleDeactivate = () => {
     deactivateMutation.mutate(id, {
@@ -66,15 +165,9 @@ export default function GPSDeviceDetailClient() {
     });
   };
 
-  // Redirect if device not found
-  if (error && !isLoading) {
-    router.push("/gps-devices");
-    return null;
-  }
-
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "MMMM dd, yyyy");
+      return format(new Date(dateString), "MMM dd, yyyy");
     } catch {
       return dateString;
     }
@@ -82,256 +175,249 @@ export default function GPSDeviceDetailClient() {
 
   const formatDateTime = (dateString: string) => {
     try {
-      return format(new Date(dateString), "MMMM dd, yyyy 'at' HH:mm");
+      return format(new Date(dateString), "MMM dd, yyyy HH:mm");
     } catch {
       return dateString;
     }
   };
 
   if (isLoading) {
+    return <DetailSkeleton />;
+  }
+
+  if (error && !isLoading) {
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <Skeleton className="h-10 w-64" />
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 p-6">
+        <div className="p-4 rounded-full bg-red-500/10">
+          <AlertCircle className="h-8 w-8 text-red-500" />
+        </div>
+        <p className="text-sm text-muted-foreground text-center">
+          Failed to load device
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/gps-devices")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Devices
+        </Button>
       </div>
     );
   }
 
-  if (!device) {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">GPS device not found</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => router.push("/gps-devices")}
-          >
-            Back to List
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  if (!device) return null;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/gps-devices")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-brand-primary">
-              GPS Device Details
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {device.external_device_id}
+    <div className="min-h-screen bg-background animate-in fade-in duration-300">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl"
+              onClick={() => router.push("/gps-devices")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold">
+                  {device.external_device_id}
+                </h1>
+                <StatusBadge active={device.status} />
+              </div>
+              <p className="text-xs text-muted-foreground font-mono">
+                IMEI: {device.imei_number}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4 pb-24">
+        {/* Device Icon Card */}
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                GPS Device
+              </p>
+              <p className="text-xl font-bold text-foreground">
+                {device.device_name || device.external_device_id}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {device.device_model || "Unknown Model"}
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-primary/10">
+              <Satellite className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+        </div>
+
+        {/* Device Info */}
+        <InfoCard
+          icon={Hash}
+          title="Device Information"
+          accent="bg-blue-500/10 text-blue-500"
+        >
+          <div className="space-y-0">
+            <DetailRow
+              label="External ID"
+              value={device.external_device_id}
+              mono
+            />
+            <DetailRow label="IMEI Number" value={device.imei_number} mono />
+            <DetailRow label="Device Name" value={device.device_name || "—"} />
+            <DetailRow
+              label="Device Model"
+              value={device.device_model || "—"}
+            />
+          </div>
+        </InfoCard>
+
+        {/* Truck Assignment */}
+        <InfoCard
+          icon={Truck}
+          title="Truck Assignment"
+          accent="bg-emerald-500/10 text-emerald-600"
+        >
+          {assignedTruckId ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  Truck #{assignedTruckId}
+                </p>
+                <p className="text-xs text-muted-foreground">Assigned</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  router.push(`/fleet/placeholder?id=${assignedTruckId}`)
+                }
+                className="rounded-xl"
+              >
+                View Truck
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-sm text-muted-foreground">
+                Not assigned to any truck
+              </p>
+            </div>
+          )}
+        </InfoCard>
+
+        {/* Dates */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-amber-500/10">
+                <Calendar className="h-3.5 w-3.5 text-amber-600" />
+              </div>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                Expires
+              </span>
+            </div>
+            <p className="text-sm font-semibold">
+              {formatDate(device.expire_date)}
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-purple-500/10">
+                <Clock className="h-3.5 w-3.5 text-purple-500" />
+              </div>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                Last Synced
+              </span>
+            </div>
+            <p className="text-sm font-semibold">
+              {formatDateTime(device.last_synced_at)}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/gps-devices/${id}/edit`)}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          {device.status && (
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeactivateDialog(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Deactivate
-            </Button>
-          )}
-        </div>
+
+        {/* Timestamps */}
+        <InfoCard
+          icon={Clock}
+          title="Timestamps"
+          accent="bg-gray-500/10 text-gray-600"
+        >
+          <DetailRow
+            label="Created"
+            value={formatDateTime(device.created_at)}
+          />
+          <DetailRow
+            label="Updated"
+            value={formatDateTime(device.updated_at)}
+          />
+        </InfoCard>
       </div>
 
-      {/* Device Information Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Device Information</CardTitle>
-            <Badge
-              variant={device.status ? "default" : "secondary"}
-              className={
-                device.status
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-500 hover:bg-gray-600"
-              }
-            >
-              {device.status ? "Active" : "Inactive"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                External Device ID
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {device.external_device_id}
-              </p>
-            </div>
+      {/* Fixed Bottom Actions */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3">
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/gps-devices/placeholder/edit?id=${id}`)}
+          className="flex-1 rounded-xl h-11"
+        >
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </Button>
+        {device.status && (
+          <Button
+            variant="destructive"
+            onClick={() => setShowDeactivateDialog(true)}
+            className="rounded-xl h-11"
+          >
+            <Power className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                IMEI Number
-              </label>
-              <p className="mt-1 text-sm font-semibold">{device.imei_number}</p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Device Name
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {device.device_name || (
-                  <span className="text-muted-foreground">N/A</span>
-                )}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Device Model
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {device.device_model || (
-                  <span className="text-muted-foreground">N/A</span>
-                )}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Expire Date
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {formatDate(device.expire_date)}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Last Synced
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {formatDateTime(device.last_synced_at)}
-              </p>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">
-              Truck Assignment
-            </label>
-            <div className="mt-2 flex items-center gap-2">
-              {assignedTruckId ? (
-                <>
-                  <p className="text-sm font-semibold">
-                    Truck #{assignedTruckId}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      router.push(`/fleet?truck=${assignedTruckId}`)
-                    }
-                  >
-                    View Truck
-                  </Button>
-                </>
-              ) : (
-                <span className="text-muted-foreground">Unassigned</span>
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Created
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {formatDateTime(device.created_at)}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Updated
-              </label>
-              <p className="mt-1 text-sm font-semibold">
-                {formatDateTime(device.updated_at)}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Deactivate Confirmation Dialog */}
+      {/* Deactivate Dialog */}
       <Dialog
         open={showDeactivateDialog}
         onOpenChange={setShowDeactivateDialog}
       >
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Deactivate GPS Device</DialogTitle>
+            <DialogTitle>Deactivate Device</DialogTitle>
             <DialogDescription>
               Are you sure you want to deactivate this GPS device?
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-2">
-            <p className="text-sm">
-              <strong>Device:</strong> {device.external_device_id}
+          <div className="py-3 space-y-2 text-sm">
+            <p>
+              <span className="text-muted-foreground">Device:</span>{" "}
+              <span className="font-medium">{device.external_device_id}</span>
             </p>
-            <p className="text-sm">
-              <strong>IMEI:</strong> {device.imei_number}
+            <p>
+              <span className="text-muted-foreground">IMEI:</span>{" "}
+              <span className="font-mono">{device.imei_number}</span>
             </p>
             {assignedTruckId && (
-              <p className="text-sm">
-                <strong>Current Truck:</strong> Truck #{assignedTruckId}
+              <p>
+                <span className="text-muted-foreground">Truck:</span>{" "}
+                <span className="font-medium">#{assignedTruckId}</span>
               </p>
             )}
           </div>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-2">This will:</p>
-            <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
-              <li>Set device status to inactive</li>
-              <li>Unlink the device from its truck</li>
-              <li>The device will not be deleted</li>
-            </ul>
+          <div className="py-2 px-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            This will set the device status to inactive and unlink it from any
+            truck.
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setShowDeactivateDialog(false)}
               disabled={deactivateMutation.isPending}
+              className="rounded-xl"
             >
               Cancel
             </Button>
@@ -339,6 +425,7 @@ export default function GPSDeviceDetailClient() {
               variant="destructive"
               onClick={handleDeactivate}
               disabled={deactivateMutation.isPending}
+              className="rounded-xl"
             >
               {deactivateMutation.isPending ? (
                 <>
@@ -346,12 +433,20 @@ export default function GPSDeviceDetailClient() {
                   Deactivating...
                 </>
               ) : (
-                "Deactivate Device"
+                "Deactivate"
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function GPSDeviceDetailClient() {
+  return (
+    <Suspense fallback={<DetailSkeleton />}>
+      <GPSDeviceDetailContent />
+    </Suspense>
   );
 }

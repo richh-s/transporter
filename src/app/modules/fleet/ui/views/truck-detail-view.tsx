@@ -27,6 +27,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { documentColumns } from "../columns/document-columns";
 import type { DocumentTableRow } from "../columns/document-columns";
 import type { TruckDocument } from "@/app/modules/fleet/server/hooks/use-truck-documents";
+import { openInApp } from "@/lib/utils/open-in-app";
 
 interface TruckDetailContentProps {
   id: string;
@@ -39,9 +40,12 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isUpdateDocumentModalOpen, setIsUpdateDocumentModalOpen] = useState(false);
-  const [isDeleteDocumentModalOpen, setIsDeleteDocumentModalOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<TruckDocument | null>(null);
+  const [isUpdateDocumentModalOpen, setIsUpdateDocumentModalOpen] =
+    useState(false);
+  const [isDeleteDocumentModalOpen, setIsDeleteDocumentModalOpen] =
+    useState(false);
+  const [selectedDocument, setSelectedDocument] =
+    useState<TruckDocument | null>(null);
 
   const { data: documents, isLoading: documentsLoading } =
     useTruckDocuments(id);
@@ -96,7 +100,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     }
   };
 
-  const handleUpdateDocumentSubmit = async (documentType: string, file?: File) => {
+  const handleUpdateDocumentSubmit = async (
+    documentType: string,
+    file?: File,
+  ) => {
     if (!selectedDocument) return;
     try {
       await updateDocumentMutation.mutateAsync({
@@ -136,11 +143,9 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     }
   };
 
-  const handleViewDocument = (url: string) => {
-    window.open(url, "_blank");
+  const handleViewDocument = async (url: string) => {
+    await openInApp(url);
   };
-
-
 
   return (
     <div className="flex flex-col h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
@@ -231,15 +236,15 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                       variant="secondary"
                       className={cn(
                         "font-semibold text-[10px] px-0.5 py-0 h-3.5",
-                        getStatusColor(truck.status)
+                        getStatusColor(truck.status),
                       )}
                     >
                       {truck.status
                         ? truck.status
-                          .replace(/_/g, " ")
-                          .charAt(0)
-                          .toUpperCase() +
-                        truck.status.replace(/_/g, " ").slice(1)
+                            .replace(/_/g, " ")
+                            .charAt(0)
+                            .toUpperCase() +
+                          truck.status.replace(/_/g, " ").slice(1)
                         : "Unknown"}
                     </Badge>
                   </div>
@@ -381,7 +386,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
               handleViewDocument,
               handleUpdateDocument,
               handleDeleteDocument,
-              deleteDocumentMutation.isPending
+              deleteDocumentMutation.isPending,
             )}
             data={(documents || []) as DocumentTableRow[]}
             searchKey="document_type"

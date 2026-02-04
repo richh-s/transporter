@@ -24,13 +24,16 @@ import {
 } from "../components";
 import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
+import { openInApp } from "@/lib/utils/open-in-app";
 
 export function OrganizationDocumentsView() {
   const router = useRouter();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null,
+  );
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
 
   // Pagination state
@@ -55,13 +58,10 @@ export function OrganizationDocumentsView() {
 
   // Get selected document for editing
   const { data: selectedDocument } = useOrganizationDocument(
-    selectedDocumentId || ""
+    selectedDocumentId || "",
   );
 
-  const handleUploadDocument = async (
-    file: File,
-    documentType: string
-  ) => {
+  const handleUploadDocument = async (file: File, documentType: string) => {
     // Close modal optimistically
     setIsUploadModalOpen(false);
 
@@ -76,16 +76,18 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to upload document"
+            error instanceof Error
+              ? error.message
+              : "Failed to upload document",
           );
         },
-      }
+      },
     );
   };
 
   const handleUpdateDocument = async (
     id: string | number,
-    data: { document_type?: string; file?: File }
+    data: { document_type?: string; file?: File },
   ) => {
     // Close modal optimistically
     setIsEditModalOpen(false);
@@ -99,10 +101,12 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to update document"
+            error instanceof Error
+              ? error.message
+              : "Failed to update document",
           );
         },
-      }
+      },
     );
   };
 
@@ -122,7 +126,7 @@ export function OrganizationDocumentsView() {
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete document"
+          error instanceof Error ? error.message : "Failed to delete document",
         );
       },
     });
@@ -138,13 +142,13 @@ export function OrganizationDocumentsView() {
       }
 
       if (response.data.presigned_url) {
-        window.open(response.data.presigned_url, "_blank");
+        await openInApp(response.data.presigned_url);
       } else {
         toast.error("Document URL not available");
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to view document"
+        error instanceof Error ? error.message : "Failed to view document",
       );
     }
   };
@@ -163,17 +167,17 @@ export function OrganizationDocumentsView() {
     if (!entityId) return;
 
     if (entityType === "truck") {
-      router.push(`/fleet/${entityId}`);
+      router.push(`/fleet/placeholder?id=${entityId}`);
     } else if (entityType === "driver") {
       // Navigate to driver detail page when it's available
       // For now, you can update this route when driver pages are implemented
-      router.push(`/drivers/${entityId}`);
+      router.push(`/drivers/placeholder?id=${entityId}`);
     }
   };
 
   // Filter handlers
   const handleStatusFilter = (
-    status: "pending" | "approved" | "rejected" | "all" | null
+    status: "pending" | "approved" | "rejected" | "all" | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -183,7 +187,7 @@ export function OrganizationDocumentsView() {
   };
 
   const handleDocumentTypeFilter = (
-    type: "trade_licence" | "id" | "other" | "all" | null
+    type: "trade_licence" | "id" | "other" | "all" | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -192,9 +196,7 @@ export function OrganizationDocumentsView() {
     setPage(1);
   };
 
-  const handleEntityTypeFilter = (
-    type: "truck" | "driver" | "all" | null
-  ) => {
+  const handleEntityTypeFilter = (type: "truck" | "driver" | "all" | null) => {
     setFilters((prev) => ({
       ...prev,
       entity_type: type === "all" ? null : type,
@@ -240,10 +242,11 @@ export function OrganizationDocumentsView() {
 
       {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
       <div
-        className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
+        className={`shrink-0 transition-all duration-300 md:block ${
+          isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
             ? "hidden md:block"
             : "block"
-          }`}
+        }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />
       </div>
@@ -256,7 +259,7 @@ export function OrganizationDocumentsView() {
             handleEditDocument,
             handleDeleteDocument,
             deleteDocumentMutation.isPending,
-            handleEntityClick
+            handleEntityClick,
           )}
           data={filteredDocuments as OrganizationDocumentTableRow[]}
           searchKey="document_type"
@@ -337,4 +340,3 @@ export function OrganizationDocumentsView() {
     </div>
   );
 }
-

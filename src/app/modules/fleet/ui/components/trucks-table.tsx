@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { truckColumns, type TruckTableRow } from "../columns/truck-columns";
@@ -52,6 +53,7 @@ function TrucksTableContent({
   headerActions,
   mobileAddButton,
 }: TrucksTableProps) {
+  const router = useRouter();
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
     queryFn: async () => {
@@ -139,6 +141,7 @@ function TrucksTableContent({
       data={trucks as TruckTableRow[]}
       searchKey="plate_number"
       searchPlaceholder="Search plate, VIN, or make..."
+      onRowClick={(row) => router.push(`/fleet/placeholder?id=${row.id}`)}
       meta={{
         onEdit,
         onDelete,

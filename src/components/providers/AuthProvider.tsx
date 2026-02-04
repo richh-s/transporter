@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { request } from "@/lib/api-client";
+import { request, tokenStorage } from "@/lib/api-client";
 
 type User = {
   id: string;
@@ -14,13 +14,20 @@ interface LoginResponse {
   message?: string;
   role: string;
   expires_in: number;
+  access_token: string;
+  refresh_token: string;
 }
 
 interface AuthContextType {
   user: User;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, captchaId?: string, captchaSolution?: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    captchaId?: string,
+    captchaSolution?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -66,7 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string, captchaId?: string, captchaSolution?: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    captchaId?: string,
+    captchaSolution?: string,
+  ) => {
     console.log(email, password, captchaId, captchaSolution);
 
     const { data, error } = await request<LoginResponse>("/auth/login", {
@@ -83,6 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw new Error(error);
 
     if (data) {
+      // Store tokens in localStorage for Capacitor app compatibility
+      if (data.access_token && data.refresh_token) {
+        tokenStorage.setTokens(data.access_token, data.refresh_token);
+        console.log("✅ Tokens stored successfully");
+      }
+
       // Create user data from login response
       const user: User = {
         id: "", // Backend can provide this later if needed
@@ -98,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      // Call backend to clear cookies
+      // Call backend to clear cookies/invalidate token
       await request("/auth/logout", {
         method: "POST",
       });
@@ -106,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Even if backend call fails, still clear local data
       console.warn("Logout endpoint failed, clearing local data anyway", error);
     } finally {
-      // Always clear local user data
+      // Always clear tokens and local user data
+      tokenStorage.clearTokens();
       setUser(null);
       localStorage.removeItem("wetruck_user");
     }

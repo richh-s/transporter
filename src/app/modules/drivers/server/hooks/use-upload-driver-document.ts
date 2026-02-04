@@ -5,8 +5,14 @@ import { driverDocumentSchema } from "@/lib/zod/driver";
 import { driverKeys } from "../query-keys";
 import type { DriverDocument } from "../types";
 import { driverApi } from "../api/driver.api";
+import { tokenStorage } from "@/lib/api-client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+
+function getAuthHeaders(): Record<string, string> {
+  const token = tokenStorage.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 type UploadInput = {
   document_type: string;
@@ -26,12 +32,13 @@ export function useUploadDriverDocument(driverId: number) {
       if (payload.replace_document_id !== undefined) {
         formData.append(
           "replace_document_id",
-          String(payload.replace_document_id)
+          String(payload.replace_document_id),
         );
       }
 
       const res = await fetch(`${API_BASE}/driver/${driverId}/documents`, {
         method: "POST",
+        headers: getAuthHeaders(),
         credentials: "include",
         body: formData,
       });
@@ -51,9 +58,7 @@ export function useUploadDriverDocument(driverId: number) {
         qc.setQueryData<DriverDocument[]>(
           driverKeys.documents(driverId),
           (old = []) =>
-            old.filter(
-              (doc) => doc.id !== payload.replace_document_id
-            )
+            old.filter((doc) => doc.id !== payload.replace_document_id),
         );
       }
     },
@@ -64,7 +69,7 @@ export function useUploadDriverDocument(driverId: number) {
         try {
           await driverApi.deleteDriverDocument(
             driverId,
-            vars.replace_document_id
+            vars.replace_document_id,
           );
         } catch (e) {
           console.error("Failed to delete old document", e);

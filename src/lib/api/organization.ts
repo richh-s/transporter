@@ -1,4 +1,14 @@
+import { tokenStorage } from "@/lib/api-client";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+/**
+ * Get authorization headers with Bearer token
+ */
+function getAuthHeaders(): HeadersInit {
+  const token = tokenStorage.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface OrganizationDocument {
   id: number;
@@ -42,6 +52,7 @@ export const organizationApi = {
 
     const response = await fetch(`${API_URL}/organization/documents`, {
       method: "POST",
+      headers: getAuthHeaders(),
       body: formData,
       credentials: "include",
     });
@@ -67,6 +78,7 @@ export const organizationApi = {
   listDocuments: async () => {
     const response = await fetch(`${API_URL}/organization/documents/list`, {
       method: "GET",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -91,10 +103,14 @@ export const organizationApi = {
    * GET /api/v1/organization/documents/{document_id}/get
    */
   getDocument: async (documentId: string | number) => {
-    const response = await fetch(`${API_URL}/organization/documents/${documentId}/get`, {
-      method: "GET",
-      credentials: "include",
-    });
+    const response = await fetch(
+      `${API_URL}/organization/documents/${documentId}/get`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     const status = response.status;
     const text = await response.text();
@@ -116,7 +132,7 @@ export const organizationApi = {
    */
   updateDocument: async (
     documentId: string | number,
-    data: UpdateOrganizationDocumentRequest
+    data: UpdateOrganizationDocumentRequest,
   ) => {
     const formData = new FormData();
 
@@ -127,11 +143,15 @@ export const organizationApi = {
       formData.append("file", data.file);
     }
 
-    const response = await fetch(`${API_URL}/organization/documents/${documentId}/update`, {
-      method: "PATCH",
-      body: formData,
-      credentials: "include",
-    });
+    const response = await fetch(
+      `${API_URL}/organization/documents/${documentId}/update`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: formData,
+        credentials: "include",
+      },
+    );
 
     const status = response.status;
     const text = await response.text();
@@ -152,10 +172,14 @@ export const organizationApi = {
    * DELETE /api/v1/organization/documents/{document_id}/delete
    */
   deleteDocument: async (documentId: string | number) => {
-    const response = await fetch(`${API_URL}/organization/documents/${documentId}/delete`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    const response = await fetch(
+      `${API_URL}/organization/documents/${documentId}/delete`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     const status = response.status;
 
@@ -171,4 +195,3 @@ export const organizationApi = {
     return { data: { success: true }, status };
   },
 };
-

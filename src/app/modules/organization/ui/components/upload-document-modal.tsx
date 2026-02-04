@@ -64,7 +64,9 @@ export function UploadDocumentModal({
     ];
 
     if (!validTypes.includes(file.type)) {
-      setError("Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG files.");
+      setError(
+        "Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG files.",
+      );
       return;
     }
 
@@ -155,20 +157,30 @@ export function UploadDocumentModal({
   const getFileIcon = (fileName: string) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ext = fileName.split(".").pop()?.toLowerCase();
-    return <FileText className="h-5 w-5 text-muted-foreground" />;
+    return <FileText className="h-5 w-5 text-muted-foreground shrink-0" />;
+  };
+
+  /** Truncate long filenames so the modal layout stays stable */
+  const truncateFileName = (name: string, maxLen = 35) => {
+    if (name.length <= maxLen) return name;
+    const ext = name.includes(".") ? name.slice(name.lastIndexOf(".")) : "";
+    const base = name.slice(0, name.length - ext.length);
+    const keep = maxLen - ext.length - 3; // 3 for "..."
+    return keep > 0 ? `${base.slice(0, keep)}...${ext}` : `...${ext}`;
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-w-[min(600px,calc(100vw-2rem))] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl">Upload Document</DialogTitle>
           <DialogDescription>
-            Select a document type and upload your file. Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+            Select a document type and upload your file. Supported formats: PDF,
+            DOC, DOCX, JPG, PNG (Max 10MB)
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 overflow-hidden">
           {/* Document Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="document-type" className="text-sm font-medium">
@@ -216,23 +228,31 @@ export function UploadDocumentModal({
                   "relative border-2 border-dashed rounded-lg p-8 transition-all cursor-pointer",
                   "hover:border-brand-primary hover:bg-brand-primary/5",
                   isDragging && "border-brand-primary bg-brand-primary/10",
-                  isUploading && "opacity-50 cursor-not-allowed"
+                  isUploading && "opacity-50 cursor-not-allowed",
                 )}
                 onClick={handleFileSelect}
               >
                 <div className="flex flex-col items-center justify-center gap-4 text-center">
-                  <div className={cn(
-                    "rounded-full p-4 transition-colors",
-                    isDragging ? "bg-brand-primary/20" : "bg-muted"
-                  )}>
-                    <Upload className={cn(
-                      "h-8 w-8 transition-colors",
-                      isDragging ? "text-brand-primary" : "text-muted-foreground"
-                    )} />
+                  <div
+                    className={cn(
+                      "rounded-full p-4 transition-colors",
+                      isDragging ? "bg-brand-primary/20" : "bg-muted",
+                    )}
+                  >
+                    <Upload
+                      className={cn(
+                        "h-8 w-8 transition-colors",
+                        isDragging
+                          ? "text-brand-primary"
+                          : "text-muted-foreground",
+                      )}
+                    />
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium">
-                      {isDragging ? "Drop your file here" : "Click to upload or drag and drop"}
+                      {isDragging
+                        ? "Drop your file here"
+                        : "Click to upload or drag and drop"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       PDF, DOC, DOCX, JPG, PNG (Max 10MB)
@@ -241,13 +261,18 @@ export function UploadDocumentModal({
                 </div>
               </div>
             ) : (
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <div className="flex items-center gap-3">
+              <div className="border rounded-lg p-4 bg-muted/50 overflow-hidden max-w-full">
+                <div className="flex items-center gap-3 min-w-0 w-full">
                   <div className="flex-shrink-0">
                     {getFileIcon(selectedFile.name)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p
+                      className="text-sm font-medium truncate block"
+                      title={selectedFile.name}
+                    >
+                      {truncateFileName(selectedFile.name)}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(selectedFile.size)}
                     </p>
@@ -304,4 +329,3 @@ export function UploadDocumentModal({
     </Dialog>
   );
 }
-

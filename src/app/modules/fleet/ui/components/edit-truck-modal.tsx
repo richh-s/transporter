@@ -138,7 +138,8 @@ export function EditTruckModal({
         gps_device_id: truck.gps_device_id,
       });
     }
-  }, [truck, isOpen, form, updateTruckMutation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [truck, isOpen]); // form.reset and updateTruckMutation.reset are stable
 
   const onSubmit = async (values: TruckFormValues) => {
     if (!truck) return;
@@ -159,14 +160,18 @@ export function EditTruckModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-w-[95vw] h-[500px] flex flex-col p-0 overflow-hidden">
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-[600px] max-w-[95vw] h-[500px] flex flex-col p-0 overflow-hidden"
+      >
         <DialogHeader className="p-4 sm:p-6 pb-2">
           <DialogTitle className="text-lg sm:text-xl">Edit Truck</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Update the truck details.
           </DialogDescription>
           <p className="text-xs text-muted-foreground mt-1">
-            Fields marked with <span className="text-red-500">*</span> are required.
+            Fields marked with <span className="text-red-500">*</span> are
+            required.
           </p>
         </DialogHeader>
 
@@ -183,7 +188,10 @@ export function EditTruckModal({
             {/* Hidden field to satisfy zod schema */}
             <input type="hidden" {...form.register("registration_date")} />
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div
+              className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 scrollbar-hide"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               {updateTruckMutation.error && (
                 <Alert
                   variant="destructive"
@@ -256,12 +264,12 @@ export function EditTruckModal({
                               role="combobox"
                               className={cn(
                                 "w-full h-11 justify-between border-gray-200 font-normal",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value
                                 ? TRUCK_TYPES.find(
-                                    (type) => type.value === field.value
+                                    (type) => type.value === field.value,
                                   )?.label
                                 : "Select type..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -294,7 +302,7 @@ export function EditTruckModal({
                                         "mr-2 h-4 w-4",
                                         type.value === field.value
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {type.label}
@@ -328,12 +336,12 @@ export function EditTruckModal({
                               role="combobox"
                               className={cn(
                                 "w-full h-11 justify-between border-gray-200 font-normal",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value
                                 ? TRUCK_STATUSES.find(
-                                    (status) => status.value === field.value
+                                    (status) => status.value === field.value,
                                   )?.label
                                 : "Select status..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -366,7 +374,7 @@ export function EditTruckModal({
                                         "mr-2 h-4 w-4",
                                         status.value === field.value
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {status.label}
@@ -388,7 +396,8 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Capacity (Quintal) <span className="text-red-500">*</span>
+                        Capacity (Quintal){" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input

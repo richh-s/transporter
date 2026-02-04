@@ -1,17 +1,24 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Hash,
+  Truck,
+  Calendar,
+  CalendarIcon,
+  Settings,
+  Link2Off,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,16 +32,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGPSDevice, useUpdateGPSDevice } from "@/hooks/use-gps-devices";
 import { useUnassignedTrucks } from "@/hooks/use-trucks";
@@ -44,17 +50,11 @@ const formSchema = z.object({
   external_device_id: z
     .string()
     .min(1, "External Device ID is required")
-    .max(255, "External Device ID must be less than 255 characters"),
-  imei_number: z
-    .string()
-    .min(1, "IMEI Number is required")
-    .max(50, "IMEI Number must be less than 50 characters"),
+    .max(255),
+  imei_number: z.string().min(1, "IMEI Number is required").max(50),
   device_name: z.string().max(255).optional().or(z.literal("")),
   device_model: z.string().max(255).optional().or(z.literal("")),
-  expire_date: z.date({
-    message: "Expire date is required",
-  }),
-  last_synced_at: z.date().optional(), // Will be set automatically to now()
+  expire_date: z.date({ message: "Expire date is required" }),
   status: z.boolean(),
   truck_id: z.number().optional(),
   unlink_truck: z.boolean(),
@@ -62,13 +62,54 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function EditGPSDeviceClient() {
+// Section Header Component
+function SectionHeader({
+  icon: Icon,
+  title,
+  accent,
+}: {
+  icon: React.ElementType;
+  title: string;
+  accent: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className={cn("p-1.5 rounded-lg", accent)}>
+        <Icon className="h-3.5 w-3.5" />
+      </div>
+      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </span>
+    </div>
+  );
+}
+
+// Loading Skeleton
+function EditSkeleton() {
+  return (
+    <div className="space-y-4 p-4 animate-in fade-in">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-9 w-9 rounded-xl" />
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+      <Skeleton className="h-40 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+    </div>
+  );
+}
+
+function EditGPSDeviceContent() {
   const router = useRouter();
   const params = useParams();
-  const id = Number(params.id);
+  const searchParams = useSearchParams();
+  const rawId = searchParams.get("id") || (params.id as string);
+  const id = rawId && rawId !== "placeholder" ? Number(rawId) : NaN;
 
-  const { data: device, isLoading } = useGPSDevice(id);
-  // Include current truck in unassigned list if it exists (so user can keep it or change it)
+  const { data: device, isLoading } = useGPSDevice(isNaN(id) ? 0 : id);
   const { data: trucks = [], isLoading: loadingTrucks } = useUnassignedTrucks(
     device?.truck_id,
   );
@@ -84,13 +125,17 @@ export default function EditGPSDeviceClient() {
       device_model: "",
       status: true,
       expire_date: undefined,
-      last_synced_at: undefined,
       truck_id: undefined,
       unlink_truck: false,
     },
   });
 
-  // Populate form when device data is loaded (only once per device)
+  useEffect(() => {
+    if (isNaN(id)) {
+      router.replace("/gps-devices");
+    }
+  }, [id, router]);
+
   useEffect(() => {
     if (device && device.id === id && !hasPopulatedForm.current) {
       form.reset({
@@ -99,19 +144,22 @@ export default function EditGPSDeviceClient() {
         device_name: device.device_name || "",
         device_model: device.device_model || "",
         expire_date: new Date(device.expire_date),
-        last_synced_at: undefined, // Will be set automatically on submit
         status: device.status,
         truck_id: device.truck_id,
         unlink_truck: false,
       });
       hasPopulatedForm.current = true;
     }
-  }, [device, id, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [device, id]);
 
-  // Reset the flag when device ID changes
   useEffect(() => {
     hasPopulatedForm.current = false;
   }, [id]);
+
+  if (isNaN(id) || isLoading) {
+    return <EditSkeleton />;
+  }
 
   const onSubmit = async (values: FormValues) => {
     const updateData: UpdateGPSDeviceRequest = {
@@ -123,362 +171,365 @@ export default function EditGPSDeviceClient() {
       status: values.status,
     };
 
-    // Handle truck assignment
     if (values.unlink_truck) {
       updateData.truck_id = 0;
-      // Don't update last_synced_at when unlinked - keep existing value (cannot be null)
     } else if (values.truck_id) {
       updateData.truck_id = values.truck_id;
-      // Update last_synced_at to now() when assigning/reassigning to a truck
       updateData.last_synced_at = new Date().toISOString();
     }
-    // If no truck selected and no unlink, don't update truck_id or last_synced_at
 
     updateMutation.mutate(
       { id, data: updateData },
       {
         onSuccess: (updatedDevice) => {
-          // Log for debugging
-          console.log("Updated device:", updatedDevice);
-          console.log("Truck ID:", updatedDevice.truck_id);
-          router.push(`/gps-devices/${updatedDevice.id}`);
+          router.push(`/gps-devices/placeholder?id=${updatedDevice.id}`);
         },
       },
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <Skeleton className="h-10 w-64" />
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/gps-devices/${id}`)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-brand-primary">
-            Edit GPS Device
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {device?.external_device_id}
-          </p>
+    <div className="min-h-screen bg-background animate-in fade-in duration-300">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
+        <div className="flex items-center gap-3 p-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-xl"
+            onClick={() => router.push(`/gps-devices/placeholder?id=${id}`)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-base font-bold">Edit Device</h1>
+            <p className="text-xs text-muted-foreground font-mono">
+              {device?.external_device_id}
+            </p>
+          </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Device Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Device Information */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Device Information</h3>
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="external_device_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          External Device ID{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter external device ID"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="imei_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          IMEI Number <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter IMEI number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="device_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Device Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter device name (optional)"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="device_model"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Device Model</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter device model (optional)"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="expire_date"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>
-                          Expire Date <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Select expiration date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(value === "active")
-                          }
-                          value={field.value ? "active" : "inactive"}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Truck Assignment */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Truck Assignment</h3>
-                <Separator />
-
-                {device?.truck_id && (
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Current Truck: Truck #{device.truck_id}
-                    </p>
-                  </div>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="p-4 space-y-4 pb-28"
+        >
+          {/* Device Info Section */}
+          <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
+            <SectionHeader
+              icon={Hash}
+              title="Device Info"
+              accent="bg-blue-500/10 text-blue-500"
+            />
+            <div className="space-y-3">
+              <FormField
+                control={form.control}
+                name="external_device_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">
+                      External Device ID <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter device ID"
+                        className="h-11 rounded-xl"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
+              <FormField
+                control={form.control}
+                name="imei_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">
+                      IMEI Number <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="15-digit IMEI"
+                        className="h-11 rounded-xl font-mono"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="unlink_truck"
+                  name="device_name"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormItem>
+                      <FormLabel className="text-xs">Device Name</FormLabel>
                       <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="mt-1"
+                        <Input
+                          placeholder="Optional"
+                          className="h-11 rounded-xl"
+                          {...field}
                         />
                       </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Unlink from Truck</FormLabel>
-                        <FormDescription>
-                          Check this to unlink the device from its current truck
-                        </FormDescription>
-                      </div>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {!form.watch("unlink_truck") && (
-                  <FormField
-                    control={form.control}
-                    name="truck_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reassign to Truck</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
-                          value={field.value?.toString() || undefined}
-                          disabled={loadingTrucks}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  device?.truck_id
-                                    ? `Truck #${device.truck_id} (current)`
-                                    : "Select a truck (optional)"
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {loadingTrucks ? (
-                              <SelectItem value="loading" disabled>
-                                Loading trucks...
-                              </SelectItem>
-                            ) : trucks.length === 0 ? (
-                              <SelectItem
-                                value="no-trucks"
-                                disabled
-                                className="text-red-500"
-                              >
-                                No available truck to assign
-                              </SelectItem>
-                            ) : (
-                              trucks.map(
-                                (truck: {
-                                  id: number;
-                                  license_plate?: string;
-                                  license_plate_number?: string;
-                                  plate_number?: string;
-                                }) => (
-                                  <SelectItem
-                                    key={truck.id}
-                                    value={truck.id.toString()}
-                                  >
-                                    Truck #{truck.id} -{" "}
-                                    {truck.license_plate ||
-                                      truck.license_plate_number ||
-                                      truck.plate_number ||
-                                      "N/A"}
-                                  </SelectItem>
-                                ),
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          {trucks.length === 0 && !loadingTrucks ? (
-                            <span className="text-red-500">
-                              No available truck to assign. All trucks are
-                              currently assigned to GPS devices.
-                            </span>
-                          ) : (
-                            "Select a different truck to reassign this device"
-                          )}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push(`/gps-devices/${id}`)}
-                  disabled={updateMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
+                <FormField
+                  control={form.control}
+                  name="device_model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Device Model</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Optional"
+                          className="h-11 rounded-xl"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
+                />
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </div>
+          </div>
+
+          {/* Truck Assignment Section */}
+          <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
+            <SectionHeader
+              icon={Truck}
+              title="Truck Assignment"
+              accent="bg-emerald-500/10 text-emerald-600"
+            />
+
+            {device?.truck_id && (
+              <div className="p-3 rounded-lg bg-muted/50 mb-3">
+                <p className="text-xs text-muted-foreground">
+                  Currently assigned to:{" "}
+                  <span className="font-semibold text-foreground">
+                    Truck #{device.truck_id}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <FormField
+                control={form.control}
+                name="unlink_truck"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="flex-1">
+                      <FormLabel className="text-sm font-medium cursor-pointer">
+                        Unlink from Truck
+                      </FormLabel>
+                      <p className="text-[10px] text-muted-foreground">
+                        Remove truck assignment
+                      </p>
+                    </div>
+                    <Link2Off className="h-4 w-4 text-muted-foreground" />
+                  </FormItem>
+                )}
+              />
+
+              {!form.watch("unlink_truck") && (
+                <FormField
+                  control={form.control}
+                  name="truck_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">
+                        Reassign to Truck
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value?.toString() || undefined}
+                        disabled={loadingTrucks}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-11 rounded-xl">
+                            <SelectValue
+                              placeholder={
+                                device?.truck_id
+                                  ? `Truck #${device.truck_id} (current)`
+                                  : "Select a truck"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          {loadingTrucks ? (
+                            <SelectItem value="loading" disabled>
+                              Loading...
+                            </SelectItem>
+                          ) : trucks.length === 0 ? (
+                            <SelectItem value="no-trucks" disabled>
+                              No available trucks
+                            </SelectItem>
+                          ) : (
+                            trucks.map(
+                              (truck: {
+                                id: number;
+                                license_plate?: string;
+                                license_plate_number?: string;
+                                plate_number?: string;
+                              }) => (
+                                <SelectItem
+                                  key={truck.id}
+                                  value={truck.id.toString()}
+                                >
+                                  Truck #{truck.id} -{" "}
+                                  {truck.license_plate ||
+                                    truck.license_plate_number ||
+                                    truck.plate_number ||
+                                    "N/A"}
+                                </SelectItem>
+                              ),
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Expiration & Status Section */}
+          <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
+            <SectionHeader
+              icon={Settings}
+              title="Settings"
+              accent="bg-gray-500/10 text-gray-600"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="expire_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-xs">
+                      Expire Date <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "h-11 rounded-xl pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "MMM dd, yyyy")
+                            ) : (
+                              <span>Select date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0 rounded-xl"
+                        align="start"
+                      >
+                        <CalendarComponent
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Status</FormLabel>
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(value === "active")
+                      }
+                      value={field.value ? "active" : "inactive"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </form>
+      </Form>
+
+      {/* Fixed Bottom Actions */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push(`/gps-devices/placeholder?id=${id}`)}
+          disabled={updateMutation.isPending}
+          className="flex-1 h-11 rounded-xl"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={updateMutation.isPending}
+          className="flex-1 h-11 rounded-xl"
+          onClick={form.handleSubmit(onSubmit)}
+        >
+          {updateMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
+      </div>
     </div>
+  );
+}
+
+export default function EditGPSDeviceClient() {
+  return (
+    <Suspense fallback={<EditSkeleton />}>
+      <EditGPSDeviceContent />
+    </Suspense>
   );
 }
