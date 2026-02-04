@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,11 +34,13 @@ export function DeleteTruckModal({
 
     try {
       await deleteTruckMutation.mutateAsync(truck.id);
+      toast.success("Truck deleted successfully");
+      // Only close modal and show success on actual success
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
       console.error("Failed to delete truck:", err);
-    
+      // Modal stays open to show error message
     }
   };
 

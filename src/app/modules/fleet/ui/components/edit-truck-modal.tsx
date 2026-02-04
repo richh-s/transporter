@@ -39,7 +39,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { Truck } from "@/lib/api/trucks";
-import { useUpdateTruck } from "@/app/modules/fleet/server/hooks";
+import { toast } from "sonner";
+import { useUpdateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-update-truck";
 
 const truckFormSchema = z.object({
   vin: z
@@ -56,7 +57,7 @@ const truckFormSchema = z.object({
   gov_id: z.string().nullable().optional(),
   make: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
-  year: z.number().nullable().optional(),
+  year: z.number().max(2100, "Year should be less than or equal to 2100").nullable().optional(),
   color: z.string().nullable().optional(),
   capacity_quintal: z.number().min(1, "Capacity is required"),
   libre_key: z.string().nullable().optional(),
@@ -149,9 +150,20 @@ export function EditTruckModal({
         id: truck.id,
         data: values,
       });
+      // Only close modal and show success on actual success
+      toast.success("Truck updated successfully");
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
+      if (err instanceof ApiError && err.fields) {
+        // Map backend field errors to React Hook Form
+        Object.entries(err.fields).forEach(([field, message]) => {
+          form.setError(field as keyof TruckFormValues, {
+            type: "manual",
+            message: message as string,
+          });
+        });
+      }
       console.error("Failed to update truck:", err);
     }
   };
@@ -162,7 +174,7 @@ export function EditTruckModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-[600px] max-w-[95vw] h-[500px] flex flex-col p-0 overflow-hidden"
+        className="sm:max-w-[600px] max-w-[95vw] h-auto max-h-[85vh] sm:h-[500px] flex flex-col p-0 overflow-hidden"
       >
         <DialogHeader className="p-4 sm:p-6 pb-2">
           <DialogTitle className="text-lg sm:text-xl">Edit Truck</DialogTitle>
@@ -463,6 +475,10 @@ export function EditTruckModal({
                           <Input
                             type="number"
                             {...field}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === "" ? null : Number(val));
+                            }}
                             value={field.value || ""}
                             className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
                           />
@@ -484,6 +500,10 @@ export function EditTruckModal({
                           <Input
                             type="number"
                             {...field}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === "" ? null : Number(val));
+                            }}
                             value={field.value || ""}
                             className="h-11 border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary"
                           />

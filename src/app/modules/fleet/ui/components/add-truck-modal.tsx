@@ -36,7 +36,8 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { useCreateTruck } from "@/app/modules/fleet/server/hooks";
+import { toast } from "sonner";
+import { useCreateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
 
 const truckFormSchema = z.object({
   vin: z
@@ -166,10 +167,29 @@ export function AddTruckModal({
 
     try {
       await createTruckMutation.mutateAsync(values);
+      toast.success("Truck created successfully");
       setIsOpen(false);
       form.reset();
       onSuccess?.();
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.fields) {
+        // Map backend field errors to React Hook Form
+        Object.entries(err.fields).forEach(([field, message]) => {
+          form.setError(field as keyof TruckFormValues, {
+            type: "manual",
+            message: message as string,
+          });
+
+          // Determine which step the error belongs to and navigate there
+          if (["vin", "plate_number"].includes(field)) setStep(1);
+          else if (["truck_type", "status", "capacity_quintal"].includes(field))
+            setStep(2);
+          else if (["make", "model", "year", "color"].includes(field))
+            setStep(3);
+          else if (["gov_id", "libre_key", "gps_device_id"].includes(field))
+            setStep(4);
+        });
+      }
       console.error("Failed to create truck:", err);
     }
   };

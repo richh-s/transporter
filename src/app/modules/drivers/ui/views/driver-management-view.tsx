@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,7 +18,6 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,10 +54,8 @@ import { cn } from "@/lib/utils";
 
 import { DriverDialog } from "../components/driver-dialog";
 import { useDrivers } from "../../server/hooks/use-drivers";
-import { useCreateDriver } from "../../server/hooks/use-create-driver";
-import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
-import type { CreateDriverInput } from "@/lib/zod/driver";
+
 import type { Driver } from "../../server/types";
 
 // Stats Card Component
@@ -260,8 +258,6 @@ export function DriverManagementView() {
   );
 
   const { data, isLoading } = useDrivers(listParams);
-  const createDriver = useCreateDriver();
-  const updateDriver = useUpdateDriver(selectedDriver?.id ?? 0);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
@@ -475,21 +471,6 @@ export function DriverManagementView() {
           if (!val) setSelectedDriver(null);
         }}
         driver={selectedDriver}
-        isSubmitting={createDriver.isPending || updateDriver.isPending}
-        onSubmit={(values: CreateDriverInput) => {
-          if (selectedDriver?.id) {
-            updateDriver.mutate(values, {
-              onSuccess: () => {
-                setOpen(false);
-                setSelectedDriver(null);
-              },
-            });
-          } else {
-            createDriver.mutate(values, {
-              onSuccess: () => setOpen(false),
-            });
-          }
-        }}
       />
 
       {/* Delete Dialog */}
@@ -529,7 +510,11 @@ export function DriverManagementView() {
                 if (!driverToDelete) return;
                 setDeleteOpen(false);
                 setDriverToDelete(null);
-                deleteDriver.mutate(driverToDelete.id);
+                deleteDriver.mutate(driverToDelete.id, {
+                  onSuccess: () => {
+                    toast.success("Driver deleted successfully");
+                  },
+                });
               }}
               className="rounded-xl"
             >

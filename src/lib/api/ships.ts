@@ -1,4 +1,5 @@
 import { request, tokenStorage } from "../api-client";
+import { apiRequest } from "../api";
 import {
   Ship,
   ShipDocument,
@@ -7,6 +8,7 @@ import {
   PaymentResponse,
   CreateOrderRequest,
   CreateOrderResponse,
+  ShipDocumentsResponse,
 } from "@/types/ship";
 
 /**
@@ -78,6 +80,24 @@ export interface PaginatedDocumentsResponse {
   items: ShipDocument[];
 }
 
+export interface ShipperInfo {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface ShipperInfoResponse {
+  status: boolean;
+  error_message: string | null;
+  success_message: string;
+  result: ShipperInfo;
+}
+
+export interface GetShipperInfoParams {
+  ship_id: number | string;
+  payment_id: number | string;
+}
+
 export const shipApi = {
   /**
    * Get assigned ships for transporter
@@ -120,7 +140,14 @@ export const shipApi = {
    * Get ship details for transporter
    */
   getShip: async (id: number | string) => {
-    return request<Ship>(`/ship/transporter/${id}?per_page=100`);
+    return request<Ship>(`/ship/transporter/${id}/?per_page=100`);
+  },
+
+  /**
+   * Get specific ship item details
+   */
+  getShipItem: async (id: number | string) => {
+    return request<ShipItem>(`/ship-item/${id}/`);
   },
 
   /**
@@ -170,21 +197,8 @@ export const shipApi = {
   /**
    * Get ship documents
    */
-  getDocuments: async (
-    shipId: number | string,
-    params?: { page?: number; per_page?: number },
-  ) => {
-    const queryParams = new URLSearchParams();
-    if (params) {
-      if (params.page) queryParams.append("page", params.page.toString());
-      if (params.per_page)
-        queryParams.append("per_page", params.per_page.toString());
-    }
-    const queryString = queryParams.toString();
-    const endpoint = queryString
-      ? `/ship/${shipId}/documents?${queryString}`
-      : `/ship/${shipId}/documents`;
-    return request<PaginatedDocumentsResponse>(endpoint);
+  getDocuments: async (shipId: number | string) => {
+    return request<ShipDocumentsResponse>(`/ship/transporter/${shipId}/documents`);
   },
 
   /**
@@ -196,13 +210,6 @@ export const shipApi = {
     shipId: number | string,
     documentId: number | string,
   ) => {
-    // Since it's a binary stream, we might need a blob.
-    // api-client.ts request assumes JSON response.
-    // We might need a custom fetch here or just construct the URL if cookies are used.
-    // The docs say "Response: Binary file stream".
-    // Let's assume we can just point to the URL if cookies handle auth?
-    // "Uses HttpOnly cookies for authentication" -> Yes.
-    // So window.open(`${API_URL}/ship/${shipId}/documents/${documentId}/download`) should work.
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     return `${API_URL}/ship/${shipId}/documents/${documentId}/download`;
   },
@@ -246,6 +253,23 @@ export const shipApi = {
     );
 
     if (!response.ok) {
+      // Try to parse error response as JSON
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          const errorData = await response.json() as Record<string, unknown>;
+          // Throw a structured error with the API error message
+          const error = new Error((errorData.error as string) || (errorData.message as string) || "Failed to fetch invoice");
+          (error as Error & { code?: string }).code = errorData.code as string;
+          (error as Error & { status_code?: number }).status_code = (errorData.status_code as number) || response.status;
+          throw error;
+        } catch (parseError) {
+          // If JSON parsing fails, throw the original error
+          if (parseError instanceof Error && parseError.message !== "Failed to fetch invoice") {
+            throw parseError;
+          }
+        }
+      }
       throw new Error(`Failed to fetch invoice: ${response.statusText}`);
     }
 
@@ -265,13 +289,9 @@ export const shipApi = {
     }
     const queryString = queryParams.toString();
     const endpoint = queryString
-      ? `/ship-item/${shipItemId}/documents?${queryString}`
-      : `/ship-item/${shipItemId}/documents`;
+      ? `/ship-item/${shipItemId}/documents/?${queryString}`
+      : `/ship-item/${shipItemId}/documents/`;
 
-    // Note: The API returns Array<ShipItemDocument> directly based on the docs, simpler than paginated response
-    // Docs say: Response (200 OK) is [ { ... }, ... ]
-    // So we might need to adjust return type if request<T> expects a wrapped response or if the API actually returns a list.
-    // The API docs show a JSON array.
     return request<ShipItemDocument[]>(endpoint);
   },
 
@@ -282,51 +302,24 @@ export const shipApi = {
     shipItemId: number | string,
     formData: FormData,
   ) => {
-    // We use fetch directly or a modified request helper that handles FormData.
-    // Usually `request` handles JSON. If it doesn't handle FormData, we might need a custom call.
-    // Assuming `request` might try to JSON.stringify body if it's an object.
-    // Let's look at `api-client.ts` to be sure, but for now I'll use a direct fetch pattern similar to getInvoice if unsure,
-    // OR if `request` is smart enough.
-    // Most generic `request` wrappers set Content-Type to application/json.
-    // For FormData, we need to NOT set Content-Type (browser sets it with boundary).
+    const endpoint = `/ship-item/${shipItemId}/documents/`;
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    // Using direct fetch to ensure correct FormData handling without 'application/json' header
-    const response = await fetch(
-      `${API_URL}/ship-item/${shipItemId}/documents`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: getAuthHeaders(),
-        body: formData,
-        // Do NOT set Content-Type header - browser sets it with boundary for FormData
-      },
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        "Upload failed. Status:",
-        response.status,
-        "Response:",
-        errorText,
-      );
-
-      let errorData: { error?: string; message?: string; detail?: string } = {};
-      try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        // Not JSON
+    // Log the endpoint and form data
+    console.log("📤 POD Upload - Endpoint:", endpoint);
+    console.log("📤 POD Upload - FormData contents:");
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}:`, value.name, `(${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}:`, value);
       }
-
-      throw new Error(
-        errorData.error ||
-          errorData.message ||
-          errorData.detail ||
-          `Upload failed: ${response.status} ${response.statusText}`,
-      );
     }
-    return response.json();
+
+    // Use apiRequest which handles JWT authentication automatically
+    return apiRequest<Record<string, unknown>>(endpoint, {
+      method: "POST",
+      body: formData,
+    });
   },
 
   /**
@@ -336,12 +329,23 @@ export const shipApi = {
     shipItemId: number | string,
     documentId: number | string,
   ) => {
-    return request<void>(`/ship-item/${shipItemId}/documents/${documentId}`, {
+    return request<void>(`/ship-item/${shipItemId}/documents/${documentId}/`, {
       method: "DELETE",
     });
   },
 
   getShipItemDetail: async (shipId: number | string) => {
-    return request<Ship>(`/ship/transporter/${shipId}?per_page=100`);
+    return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
+  },
+
+  /**
+   * Get shipper info after payment
+   */
+  getShipperInfo: async (params: GetShipperInfoParams) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("ship_id", params.ship_id.toString());
+    queryParams.append("payment_id", params.payment_id.toString());
+
+    return request<ShipperInfoResponse>(`/transporter/shipper-info?${queryParams.toString()}`);
   },
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,10 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { Driver } from "../../server/types";
-import { CreateDriverInput } from "@/lib/zod/driver";
+import { createDriverSchema, type CreateDriverInput } from "@/lib/zod/driver/create-driver.schema";
+import { useCreateDriver } from "../../server/hooks/use-create-driver";
+import { useUpdateDriver } from "../../server/hooks/use-update-driver";
+import { ApiError } from "@/lib/api";
 
 const driverSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -34,18 +38,16 @@ interface DriverDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   driver: Driver | null;
-  onSubmit: (values: CreateDriverInput) => void;
-  isSubmitting?: boolean;
 }
 
 export function DriverDialog({
   open,
   onOpenChange,
   driver,
-  onSubmit,
-  isSubmitting,
 }: DriverDialogProps) {
   const isEdit = !!driver;
+  const createDriver = useCreateDriver();
+  const updateDriver = useUpdateDriver(driver?.id ?? 0);
 
   const form = useForm<DriverFormValues>({
     resolver: zodResolver(driverSchema),
@@ -81,8 +83,35 @@ export function DriverDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, driver]);
 
-  const handleSubmit = (values: DriverFormValues) => {
-    onSubmit(values as CreateDriverInput);
+  const isPending = createDriver.isPending || updateDriver.isPending;
+
+  const handleSubmit = async (values: DriverFormValues) => {
+    try {
+      if (driver?.id) {
+        await updateDriver.mutateAsync(values as CreateDriverInput);
+        toast.success("Driver updated successfully");
+      } else {
+        await createDriver.mutateAsync(values as CreateDriverInput);
+        toast.success("Driver created successfully");
+      }
+      onOpenChange(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.fields) {
+        Object.entries(error.fields).forEach(([field, message]) => {
+          let translatedMessage = message as string;
+
+          // Customize phone number error message
+          if (field === "phone_number") {
+            translatedMessage = "Must be in format like +251XXXXXXXXX";
+          }
+
+          form.setError(field as keyof CreateDriverInput, {
+            type: "manual",
+            message: translatedMessage,
+          });
+        });
+      }
+    }
   };
 
   return (
@@ -255,16 +284,16 @@ export function DriverDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1 h-11 rounded-xl"
-                disabled={isSubmitting}
+                disabled={isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="flex-1 h-11 rounded-xl"
-                disabled={isSubmitting}
+                disabled={isPending}
               >
-                {isSubmitting ? (
+                {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...

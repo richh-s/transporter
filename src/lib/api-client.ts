@@ -11,6 +11,8 @@ export type ApiResponse<T> = {
   error?: string;
   status: number;
   errorCode?: string; // Error code from backend (e.g., "MISSING_DOCUMENTS")
+  code?: string;
+  fields?: Record<string, string>;
 };
 
 // Token storage keys
@@ -120,9 +122,13 @@ export async function request<T>(
   isRetry = false,
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  // Only set Content-Type for non-FormData requests
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   // Add Authorization header if we have a token (except for login/register endpoints)
   const isPublicEndpoint =
@@ -178,9 +184,11 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error: result?.detail || result?.message || "Something went wrong",
+        error: result?.error || result?.detail || result?.message || "Something went wrong",
         status,
         errorCode: result?.code || undefined, // Extract error code if available
+        code: result?.code || result?.status_code?.toString(),
+        fields: result?.fields,
       };
     }
 

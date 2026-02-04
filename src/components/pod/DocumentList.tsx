@@ -32,7 +32,7 @@ export function DocumentList({ documents }: DocumentListProps) {
   );
   const returnDocs = documents.filter(
     (d) =>
-      d.document_type === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT,
+      d.document_type === ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT,
   );
 
   const renderDocItem = (doc: ShipItemDocument) => (

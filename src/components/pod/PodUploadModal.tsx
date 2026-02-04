@@ -58,6 +58,10 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
         }
 
         setIsUploading(true);
+        console.log("🚀 Starting upload for ship item:", shipItem.id);
+        console.log("📊 Ship Item Status:", shipItem.status);
+        console.log("📑 Document Type:", documentType);
+
         try {
             if (isBatch) {
                 // Batch upload for selected containers
@@ -114,7 +118,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
     const isDelivered = shipItem.status.toLowerCase() === ShipItemStatusEnum.DELIVERED.toLowerCase();
 
     // Filter available containers based on document type
-    const availableContainers = documentType === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT
+    const availableContainers = documentType === ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT
         ? returningContainers
         : containers;
 
@@ -139,7 +143,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                             onValueChange={(val) => {
                                 setDocumentType(val as ShipItemDocumentTypeEnum);
                                 // Reset container selection if invalid for new type
-                                if (val === ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT && manualContainerId !== "all") {
+                                if (val === ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT && manualContainerId !== "all") {
                                     const isCurrentValid = returningContainers.find(c => c.id.toString() === manualContainerId);
                                     if (!isCurrentValid) setManualContainerId("all");
                                 }
@@ -151,7 +155,7 @@ export function PodUploadModal({ open, onOpenChange, shipItem, onUploadSuccess, 
                             <SelectContent>
                                 <SelectItem value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY}>Proof of Delivery (POD)</SelectItem>
                                 {showReturnReceiptOption && (
-                                    <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_RETURN_RECEIPT}>Container Return Receipt</SelectItem>
+                                    <SelectItem value={ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT}>Container Return Receipt</SelectItem>
                                 )}
                                 <SelectItem
                                     value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT}

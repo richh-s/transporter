@@ -50,20 +50,15 @@ import {
 import { openInApp } from "@/lib/utils/open-in-app";
 import { format } from "date-fns";
 
-const DRIVER_DOCUMENT_TYPES = [
-  "driver_id",
-  "driver_license",
-  "trade_licence",
-  "libre",
-  "other",
-] as const;
+import { toast } from "sonner";
 
+const DRIVER_DOCUMENT_TYPES = ["driver_id", "driver_license", "other"] as const;
 type DriverDocumentType = (typeof DRIVER_DOCUMENT_TYPES)[number];
 
-interface UploadErrors {
+type UploadErrors = {
   documentType?: string;
   file?: string;
-}
+};
 
 // Document Type Badge
 function DocumentTypeBadge({ type }: { type: string }) {
@@ -169,6 +164,13 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<number | null>(null);
 
+  const resetForm = () => {
+    setFile(null);
+    setDocumentType("");
+    setEditDocId(null);
+    setErrors({});
+  };
+
   /* ---------------- Handlers ---------------- */
   const handleView = async (documentId: number) => {
     const res = await qc.fetchQuery({
@@ -196,17 +198,22 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       return;
     }
 
-    if (editDocId) {
+    if (editDocId && documentType) {
+      // Update existing document
       updateMutation.mutate(
         {
           documentId: editDocId,
-          document_type: documentType || undefined,
-          file: file || undefined,
+          document_type: documentType as DriverDocumentType,
+          ...(file && { file }),
         },
         {
           onSuccess: () => {
             resetForm();
             setUploadOpen(false);
+            toast.success("Document updated successfully");
+          },
+          onError: (error: unknown) => {
+            toast.error(error instanceof Error ? error.message : "Failed to update document");
           },
         },
       );
@@ -217,17 +224,14 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           onSuccess: () => {
             resetForm();
             setUploadOpen(false);
+            toast.success("Document uploaded successfully");
+          },
+          onError: (error: unknown) => {
+            toast.error(error instanceof Error ? error.message : "Failed to upload document");
           },
         },
       );
     }
-  };
-
-  const resetForm = () => {
-    setFile(null);
-    setDocumentType("");
-    setEditDocId(null);
-    setErrors({});
   };
 
   const openUpload = (docId?: number, docType?: DriverDocumentType) => {
@@ -288,7 +292,11 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           documents.map((doc) => (
             <DocumentCard
               key={doc.id}
-              doc={doc}
+              doc={{
+                id: doc.id,
+                document_type: doc.document_type,
+                created_at: doc.created_at || new Date().toISOString(),
+              }}
               onView={() => handleView(doc.id)}
               onEdit={() =>
                 openUpload(doc.id, doc.document_type as DriverDocumentType)
@@ -463,10 +471,14 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             <Button
               variant="destructive"
               onClick={() => {
-                if (docToDelete) {
+                if (docToDelete !== null) {
                   deleteMutation.mutate({
                     driverId,
                     documentId: docToDelete,
+                  }, {
+                    onSuccess: () => {
+                      toast.success("Document deleted successfully");
+                    }
                   });
                 }
                 setDeleteOpen(false);

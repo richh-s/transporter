@@ -26,6 +26,14 @@ export interface Truck {
   created_at?: string;
 }
 
+export interface TruckDocument {
+  id: number;
+  document_type: string;
+  file_url?: string;
+  presigned_url?: string;
+  created_at?: string;
+}
+
 export interface CreateTruckRequest {
   vin: string;
   plate_number: string;
@@ -132,16 +140,17 @@ export const truckApi = {
    * Upload a document for a truck
    */
   uploadDocument: async (id: string, file: File, documentType: string) => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const formData = new FormData();
     formData.append("file", file);
     formData.append("document_type", documentType);
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
     const response = await fetch(`${API_URL}/truck/${id}/documents`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: formData,
       credentials: "include",
+      body: formData,
     });
 
     const status = response.status;
@@ -155,7 +164,7 @@ export const truckApi = {
       };
     }
 
-    return { data: result as string, status };
+    return { data: result, status };
   },
 
   /**

@@ -7,11 +7,9 @@ import * as z from "zod";
 import {
   ArrowLeft,
   Loader2,
-  Satellite,
   Hash,
   Truck,
   Calendar,
-  Settings,
   CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
