@@ -1,5 +1,6 @@
 import { request } from "../api-client";
-import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument } from "@/types/ship";
+import { apiRequest } from "../api";
+import { Ship, ShipDocument, ShipItem, PaymentResponse, CreateOrderRequest, CreateOrderResponse, ShipItemDocument, ShipDocumentsResponse } from "@/types/ship";
 
 export interface BaseResponse {
     status: boolean;
@@ -52,6 +53,7 @@ export interface AssignDriverRequest {
     driver_id: number;
 }
 
+// This might be deprecated or updated depending on usage
 export interface PaginatedDocumentsResponse {
     status: boolean;
     message: string;
@@ -60,6 +62,24 @@ export interface PaginatedDocumentsResponse {
     pages: number;
     per_page: number;
     items: ShipDocument[];
+}
+
+export interface ShipperInfo {
+    name: string;
+    email: string;
+    phone: string;
+}
+
+export interface ShipperInfoResponse {
+    status: boolean;
+    error_message: string | null;
+    success_message: string;
+    result: ShipperInfo;
+}
+
+export interface GetShipperInfoParams {
+    ship_id: number | string;
+    payment_id: number | string;
 }
 
 export const shipApi = {
@@ -103,6 +123,13 @@ export const shipApi = {
     },
 
     /**
+     * Get specific ship item details
+     */
+    getShipItem: async (id: number | string) => {
+        return request<ShipItem>(`/ship-item/${id}/`);
+    },
+
+    /**
      * Assign truck to ship item
      */
     assignTruck: async (shipItemId: number | string, data: AssignTruckRequest) => {
@@ -134,15 +161,8 @@ export const shipApi = {
     /**
      * Get ship documents
      */
-    getDocuments: async (shipId: number | string, params?: { page?: number; per_page?: number }) => {
-        const queryParams = new URLSearchParams();
-        if (params) {
-            if (params.page) queryParams.append("page", params.page.toString());
-            if (params.per_page) queryParams.append("per_page", params.per_page.toString());
-        }
-        const queryString = queryParams.toString();
-        const endpoint = queryString ? `/ship/${shipId}/documents?${queryString}` : `/ship/${shipId}/documents`;
-        return request<PaginatedDocumentsResponse>(endpoint);
+    getDocuments: async (shipId: number | string) => {
+        return request<ShipDocumentsResponse>(`/ship/transporter/${shipId}/documents`);
     },
 
     /**
@@ -197,6 +217,23 @@ export const shipApi = {
         });
 
         if (!response.ok) {
+            // Try to parse error response as JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    const errorData = await response.json() as Record<string, unknown>;
+                    // Throw a structured error with the API error message
+                    const error = new Error((errorData.error as string) || (errorData.message as string) || "Failed to fetch invoice");
+                    (error as Error & { code?: string }).code = errorData.code as string;
+                    (error as Error & { status_code?: number }).status_code = (errorData.status_code as number) || response.status;
+                    throw error;
+                } catch (parseError) {
+                    // If JSON parsing fails, throw the original error
+                    if (parseError instanceof Error && parseError.message !== "Failed to fetch invoice") {
+                        throw parseError;
+                    }
+                }
+            }
             throw new Error(`Failed to fetch invoice: ${response.statusText}`);
         }
 
@@ -213,8 +250,8 @@ export const shipApi = {
         }
         const queryString = queryParams.toString();
         const endpoint = queryString
-            ? `/ship-item/${shipItemId}/documents?${queryString}`
-            : `/ship-item/${shipItemId}/documents`;
+            ? `/ship-item/${shipItemId}/documents/?${queryString}`
+            : `/ship-item/${shipItemId}/documents/`;
 
         return request<ShipItemDocument[]>(endpoint);
     },
@@ -226,40 +263,47 @@ export const shipApi = {
         shipItemId: number | string,
         formData: FormData
     ) => {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        // Using direct fetch to ensure correct FormData handling without 'application/json' header
-        const response = await fetch(`${API_URL}/ship-item/${shipItemId}/documents/`, {
+        const endpoint = `/ship-item/${shipItemId}/documents/`;
+
+        // Log the endpoint and form data
+        console.log("📤 POD Upload - Endpoint:", endpoint);
+        console.log("📤 POD Upload - FormData contents:");
+        for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`  ${key}:`, value.name, `(${value.size} bytes, ${value.type})`);
+            } else {
+                console.log(`  ${key}:`, value);
+            }
+        }
+
+        // Use apiRequest which handles JWT authentication automatically
+        return apiRequest<Record<string, unknown>>(endpoint, {
             method: "POST",
-            credentials: "include",
             body: formData,
         });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Upload failed. Status:", response.status, "Response:", errorText);
-
-            let errorData: { error?: string; message?: string; detail?: string } = {};
-            try {
-                errorData = JSON.parse(errorText);
-            } catch {
-                // Not JSON
-            }
-
-            throw new Error(errorData.error || errorData.message || errorData.detail || `Upload failed: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
     },
 
     /**
      * Delete a ship item document
      */
     deleteShipItemDocument: async (shipItemId: number | string, documentId: number | string) => {
-        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}`, {
+        return request<void>(`/ship-item/${shipItemId}/documents/${documentId}/`, {
             method: "DELETE",
         });
     },
 
     getShipItemDetail: async (shipId: number | string) => {
         return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
+    },
+
+    /**
+     * Get shipper info after payment
+     */
+    getShipperInfo: async (params: GetShipperInfoParams) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append("ship_id", params.ship_id.toString());
+        queryParams.append("payment_id", params.payment_id.toString());
+
+        return request<ShipperInfoResponse>(`/transporter/shipper-info?${queryParams.toString()}`);
     },
 };

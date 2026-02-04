@@ -2,22 +2,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { truckApi } from "@/lib/api/trucks";
 import type { CreateTruckRequest, Truck } from "@/lib/api/trucks";
 
+// Custom error class for API errors with status codes
 export class ApiError extends Error {
   status: number;
+  code?: string;
   fields?: Record<string, string>;
 
-  constructor(
-    message: string,
-    status: number,
-    fields?: Record<string, string>
-  ) {
+  constructor(message: string, status: number, fields?: Record<string, string>, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.fields = fields;
+    this.code = code;
   }
 }
-
 
 export function useCreateTruck() {
   const queryClient = useQueryClient();
@@ -34,25 +32,32 @@ export function useCreateTruck() {
 
       // Log response for debugging
       if (process.env.NODE_ENV === "development") {
-        console.log(" Create truck response:", {
+        console.log("🚛 Create truck response:", {
           status: response.status,
           hasData: !!response.data,
           error: response.error,
+          fields: response.fields,
         });
       }
 
+      // Check for error status codes first (even if data might exist)
+      // Status 409 means conflict - truck already exists
       if (response.status === 409) {
         throw new ApiError(
-          "A truck with this plate number already exists. Please use a unique plate number.",
-          409
+          response.error || "A truck with this plate number already exists. Please use a unique plate number.",
+          409,
+          response.fields,
+          response.code
         );
       }
-      
+
       // Status 422 means validation error
       if (response.status === 422) {
         throw new ApiError(
           response.error || "Validation failed. Please check your input.",
-          422
+          422,
+          response.fields,
+          response.code
         );
       }
 
@@ -64,7 +69,9 @@ export function useCreateTruck() {
       // Otherwise, it's an error
       throw new ApiError(
         response.error || "Failed to create truck",
-        response.status || 500
+        response.status || 500,
+        response.fields,
+        response.code
       );
     },
     onMutate: async (newTruckData) => {
@@ -89,10 +96,10 @@ export function useCreateTruck() {
         { queryKey: ["trucks"] },
         (old) => {
           if (!old) return old;
-          
+
           // Add the new truck to the beginning of the list
           const updatedTrucks = [optimisticTruck, ...old.trucks];
-          
+
           return {
             ...old,
             trucks: updatedTrucks,
@@ -121,12 +128,12 @@ export function useCreateTruck() {
           { queryKey: ["trucks"] },
           (old) => {
             if (!old) return old;
-            
+
             // Replace optimistic truck with real data
             const updatedTrucks = old.trucks.map((truck) =>
               String(truck.id) === String(context.tempId) ? data : truck
             );
-            
+
             return {
               ...old,
               trucks: updatedTrucks,
@@ -134,7 +141,7 @@ export function useCreateTruck() {
           }
         );
       }
-      
+
       // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["trucks"] });
     },

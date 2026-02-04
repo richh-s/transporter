@@ -270,7 +270,13 @@ export function DataTable<TData, TValue>({
     };
 
     return (
-      <div className="bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden">
+      <div
+        onClick={() => onRowClick?.(row.original)}
+        className={cn(
+          "bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden",
+          onRowClick && "cursor-pointer"
+        )}
+      >
         {/* Brand Tint Overlay */}
         <div className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.05] pointer-events-none" />
 
@@ -285,7 +291,7 @@ export function DataTable<TData, TValue>({
           </div>
           {/* Actions Button */}
           {actionsCell && (
-            <div className="flex-shrink-0 -mr-1 -mt-1">
+            <div className="flex-shrink-0 -mr-1 -mt-1" onClick={(e) => e.stopPropagation()}>
               {flexRender(
                 actionsCell.column.columnDef.cell,
                 actionsCell.getContext()
@@ -432,7 +438,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={mobileScrollRef}
         onScroll={handleScroll}
-        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="grid grid-cols-2 gap-2 p-1 pb-2">
@@ -496,7 +502,7 @@ export function DataTable<TData, TValue>({
       {/* Table View - Hidden on mobile, visible on tablet and desktop (>= 768px) */}
       <div className="hidden md:flex bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(75,169,77,0.05)] w-full flex-col h-[200px] sm:h-[450px] overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_40px_rgba(75,169,77,0.1)]">
         {/* Table Container - Single scrollable container for header and body */}
-        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto scrollbar-hide">
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
           <div className="min-w-full">
             <Table className="min-w-full w-full">
               <TableHeader className="bg-muted/30 sticky top-0 z-20">

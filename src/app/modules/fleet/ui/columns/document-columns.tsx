@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Eye, Trash2, File, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import type { TruckDocument } from "@/app/modules/fleet/server/hooks/use-truck-documents";
+import type { TruckDocument } from "@/lib/api/trucks";
 
 export type DocumentTableRow = TruckDocument;
 

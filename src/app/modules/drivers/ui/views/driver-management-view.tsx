@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
@@ -29,11 +30,8 @@ import { driverColumns } from "../columns/driver-columns";
 import { DriverDialog } from "../components/driver-dialog";
 
 import { useDrivers } from "../../server/hooks/use-drivers";
-import { useCreateDriver } from "../../server/hooks/use-create-driver";
-import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 
-import type { CreateDriverInput } from "@/lib/zod/driver";
 import type { Driver } from "../../server/types";
 
 export function DriverManagementView() {
@@ -59,9 +57,6 @@ export function DriverManagementView() {
   );
 
   const { data, isLoading } = useDrivers(listParams);
-
-  const createDriver = useCreateDriver();
-  const updateDriver = useUpdateDriver(selectedDriver?.id ?? 0);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
@@ -140,6 +135,7 @@ export function DriverManagementView() {
       <Card className="p-0 overflow-hidden">
         {/* Table */}
         <DataTable
+          onRowClick={(driver) => router.push(`/drivers/${driver.id}`)}
           columns={driverColumns({
             onView: (driver) => router.push(`/drivers/${driver.id}`),
             onEdit: (driver) => {
@@ -164,20 +160,6 @@ export function DriverManagementView() {
           if (!val) setSelectedDriver(null);
         }}
         driver={selectedDriver}
-        onSubmit={(values: CreateDriverInput) => {
-          if (selectedDriver?.id) {
-            updateDriver.mutate(values, {
-              onSuccess: () => {
-                setOpen(false);
-                setSelectedDriver(null);
-              },
-            });
-          } else {
-            createDriver.mutate(values, {
-              onSuccess: () => setOpen(false),
-            });
-          }
-        }}
       />
 
       {/* Delete Dialog */}
@@ -219,7 +201,11 @@ export function DriverManagementView() {
 
                 setDeleteOpen(false);
                 setDriverToDelete(null);
-                deleteDriver.mutate(driverToDelete.id);
+                deleteDriver.mutate(driverToDelete.id, {
+                  onSuccess: () => {
+                    toast.success("Driver deleted successfully");
+                  },
+                });
               }}
             >
               Delete

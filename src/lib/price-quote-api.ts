@@ -31,7 +31,7 @@ export class PriceQuoteService {
       },
     );
 
-    const { data, error, status, errorCode } = response;
+    const { data, error, status, code } = response;
 
     if (error) {
       // Create an error object that includes the error code if available
@@ -41,7 +41,7 @@ export class PriceQuoteService {
       };
       // Attach status and error code for better error handling
       errorObj.status = status;
-      errorObj.code = errorCode;
+      errorObj.code = code;
       throw errorObj;
     }
 

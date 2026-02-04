@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { TruckDocument } from "@/app/modules/fleet/server/hooks/use-truck-documents";
+import { type TruckDocument } from "@/lib/api/trucks";
+import { ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { XCircle } from "lucide-react";
 
 interface UpdateDocumentModalProps {
   document: TruckDocument | null;
@@ -30,11 +34,7 @@ interface UpdateDocumentModalProps {
   isUpdating: boolean;
 }
 const DOCUMENT_TYPES = [
-  "trade_licence",
-  "authorised_contact_person_company_id",
   "libre",
-  "driver_id",
-  "driver_license",
   "other",
 ];
 
@@ -48,6 +48,7 @@ export function UpdateDocumentModal({
   const [documentType, setDocumentType] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (document && isOpen) {
@@ -69,12 +70,22 @@ export function UpdateDocumentModal({
     e.preventDefault();
     if (!documentType) return;
 
-    await onUpdate(documentType, file || undefined);
-
-    if (!isUpdating) {
+    setError(null);
+    try {
+      await onUpdate(documentType, file || undefined);
       onOpenChange(false);
       setFile(null);
       setFileName("");
+      toast.success("Document updated successfully");
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.fields) {
+        const fieldErrors = Object.entries(err.fields)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(", ");
+        setError(fieldErrors || err.message);
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to update document");
+      }
     }
   };
 
@@ -117,9 +128,6 @@ export function UpdateDocumentModal({
                       {type
                         .replace(/_/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase())}
-                      {type
-                        .replace(/_/g, " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -153,6 +161,14 @@ export function UpdateDocumentModal({
                 </p>
               )}
             </div>
+            {error && (
+              <Alert variant="destructive" className="bg-red-50 border-red-200">
+                <XCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
 

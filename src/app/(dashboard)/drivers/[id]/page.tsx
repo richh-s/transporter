@@ -30,8 +30,8 @@ export default function DriverDetailsPage() {
   }
 
   return (
-   
-    <div className="h-full min-h-0 overflow-y-auto">
+
+    <div className="min-h-full pb-8">
       <div className="space-y-6 p-6 max-w-6xl mx-auto">
         {/* Header */}
         <div>

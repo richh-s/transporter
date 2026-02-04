@@ -42,10 +42,11 @@ export interface UpdateDriverPayload extends Partial<CreateDriverPayload> {
 }
 
 
+
+
 export interface ApiResult<T> {
-    status: boolean;
-    success_message?: string;
-    error_message?: string | null;
-    result: T;
-  }
-  
+  status: boolean;
+  success_message?: string;
+  error_message?: string | null;
+  result: T;
+}
