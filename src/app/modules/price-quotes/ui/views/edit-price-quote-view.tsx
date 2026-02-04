@@ -139,10 +139,13 @@ export function EditPriceQuoteView() {
             truck_type: values.truck_type,
             container_size: values.container_size,
             amount: Number(values.amount),
-            currency: values.currency,
             axle_type: values.axle_type ?? null,
             status: values.status,
         };
+
+        if (values.currency && values.currency !== "ETB") {
+            updateData.currency = values.currency;
+        }
 
         updateMutation.mutate(
             { id, data: updateData },
