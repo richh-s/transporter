@@ -140,7 +140,7 @@ export const shipApi = {
    * Get ship details for transporter
    */
   getShip: async (id: number | string) => {
-    return request<Ship>(`/ship/transporter/${id}/?per_page=100`);
+    return request<Ship>(`/ship/transporter/${id}?per_page=100`);
   },
 
   /**
@@ -198,7 +198,9 @@ export const shipApi = {
    * Get ship documents
    */
   getDocuments: async (shipId: number | string) => {
-    return request<ShipDocumentsResponse>(`/ship/transporter/${shipId}/documents`);
+    return request<ShipDocumentsResponse>(
+      `/ship/transporter/${shipId}/documents`,
+    );
   },
 
   /**
@@ -257,15 +259,23 @@ export const shipApi = {
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         try {
-          const errorData = await response.json() as Record<string, unknown>;
+          const errorData = (await response.json()) as Record<string, unknown>;
           // Throw a structured error with the API error message
-          const error = new Error((errorData.error as string) || (errorData.message as string) || "Failed to fetch invoice");
+          const error = new Error(
+            (errorData.error as string) ||
+              (errorData.message as string) ||
+              "Failed to fetch invoice",
+          );
           (error as Error & { code?: string }).code = errorData.code as string;
-          (error as Error & { status_code?: number }).status_code = (errorData.status_code as number) || response.status;
+          (error as Error & { status_code?: number }).status_code =
+            (errorData.status_code as number) || response.status;
           throw error;
         } catch (parseError) {
           // If JSON parsing fails, throw the original error
-          if (parseError instanceof Error && parseError.message !== "Failed to fetch invoice") {
+          if (
+            parseError instanceof Error &&
+            parseError.message !== "Failed to fetch invoice"
+          ) {
             throw parseError;
           }
         }
@@ -309,7 +319,11 @@ export const shipApi = {
     console.log("📤 POD Upload - FormData contents:");
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
-        console.log(`  ${key}:`, value.name, `(${value.size} bytes, ${value.type})`);
+        console.log(
+          `  ${key}:`,
+          value.name,
+          `(${value.size} bytes, ${value.type})`,
+        );
       } else {
         console.log(`  ${key}:`, value);
       }
@@ -335,7 +349,7 @@ export const shipApi = {
   },
 
   getShipItemDetail: async (shipId: number | string) => {
-    return request<Ship>(`/ship/transporter/${shipId}/?per_page=100`);
+    return request<Ship>(`/ship/transporter/${shipId}?per_page=100`);
   },
 
   /**
@@ -346,6 +360,8 @@ export const shipApi = {
     queryParams.append("ship_id", params.ship_id.toString());
     queryParams.append("payment_id", params.payment_id.toString());
 
-    return request<ShipperInfoResponse>(`/transporter/shipper-info?${queryParams.toString()}`);
+    return request<ShipperInfoResponse>(
+      `/transporter/shipper-info?${queryParams.toString()}`,
+    );
   },
 };

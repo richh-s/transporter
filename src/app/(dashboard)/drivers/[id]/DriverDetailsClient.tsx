@@ -2,21 +2,14 @@
 
 import { Suspense, useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  User,
-  Phone,
-  Mail,
-  CreditCard,
-  AlertCircle,
-  Edit,
-  FileText,
-} from "lucide-react";
+import { User, Phone, CreditCard, AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useDriver } from "@/app/modules/drivers/server/hooks/use-driver";
 import { DriverDocuments } from "@/app/modules/drivers/ui/components/driver-documents";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
@@ -143,13 +136,11 @@ function DriverDetailsContent() {
         <p className="text-sm text-muted-foreground text-center">
           Driver not found
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/drivers")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Drivers
-        </Button>
+        <Link href="/drivers">
+          <Button variant="outline" size="sm">
+            Go to Drivers
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -158,24 +149,18 @@ function DriverDetailsContent() {
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
       {/* Sticky Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl"
-              onClick={() => router.push("/drivers")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold">
-                  {driver.first_name} {driver.last_name}
-                </h1>
-                <StatusBadge status={driver.status} />
-              </div>
-              <p className="text-xs text-muted-foreground">Driver Details</p>
+        <div className="p-4 space-y-2">
+          <CompactBreadcrumb
+            parentLabel="Drivers"
+            parentHref="/drivers"
+            currentLabel={`${driver.first_name} ${driver.last_name}`}
+          />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold">
+                {driver.first_name} {driver.last_name}
+              </h1>
+              <StatusBadge status={driver.status} />
             </div>
           </div>
         </div>

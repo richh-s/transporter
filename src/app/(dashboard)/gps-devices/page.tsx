@@ -490,8 +490,8 @@ export default function GPSDevicesPage() {
                       filters.status === undefined
                         ? "all"
                         : filters.status
-                          ? "active"
-                          : "inactive"
+                        ? "active"
+                        : "inactive"
                     }
                     onValueChange={(value) =>
                       setFilters({

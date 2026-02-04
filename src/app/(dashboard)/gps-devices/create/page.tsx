@@ -4,14 +4,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  ArrowLeft,
-  Loader2,
-  Hash,
-  Truck,
-  Calendar,
-  CalendarIcon,
-} from "lucide-react";
+import { Loader2, Hash, Truck, Calendar, CalendarIcon } from "lucide-react";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -118,19 +112,13 @@ export default function CreateGPSDevicePage() {
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
       {/* Sticky Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-xl"
-            onClick={() => router.push("/gps-devices")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-base font-bold">Create Device</h1>
-            <p className="text-xs text-muted-foreground">Add new GPS device</p>
-          </div>
+        <div className="p-4 space-y-2">
+          <CompactBreadcrumb
+            parentLabel="GPS Devices"
+            parentHref="/gps-devices"
+            currentLabel="Create Device"
+          />
+          <h1 className="text-lg font-bold">Create New GPS Device</h1>
         </div>
       </div>
 

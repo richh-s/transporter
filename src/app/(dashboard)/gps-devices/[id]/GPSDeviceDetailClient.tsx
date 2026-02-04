@@ -3,7 +3,6 @@
 import { useState, Suspense, useEffect, useMemo } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   Edit,
   Power,
   Loader2,
@@ -14,6 +13,8 @@ import {
   Hash,
   AlertCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -194,13 +195,11 @@ function GPSDeviceDetailContent() {
         <p className="text-sm text-muted-foreground text-center">
           Failed to load device
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/gps-devices")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Devices
-        </Button>
+        <Link href="/gps-devices">
+          <Button variant="outline" size="sm">
+            Go to Devices
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -211,28 +210,21 @@ function GPSDeviceDetailContent() {
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
       {/* Sticky Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl"
-              onClick={() => router.push("/gps-devices")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold">
-                  {device.external_device_id}
-                </h1>
-                <StatusBadge active={device.status} />
-              </div>
-              <p className="text-xs text-muted-foreground font-mono">
-                IMEI: {device.imei_number}
-              </p>
+        <div className="p-4 space-y-2">
+          <CompactBreadcrumb
+            parentLabel="GPS Devices"
+            parentHref="/gps-devices"
+            currentLabel={device.external_device_id}
+          />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold">{device.external_device_id}</h1>
+              <StatusBadge active={device.status} />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground font-mono">
+            IMEI: {device.imei_number}
+          </p>
         </div>
       </div>
 

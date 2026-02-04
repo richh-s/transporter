@@ -4,7 +4,8 @@ import { toast } from "sonner";
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
+import { Loader2, Edit2, Trash2, Upload } from "lucide-react";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,6 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
       day: "numeric",
     });
   };
-
 
   const handleUploadDocument = async (file: File, documentType: string) => {
     try {
@@ -165,14 +165,19 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
   return (
     <div className="flex flex-col min-h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden pb-8">
       {/* Header */}
-      <div className="space-y-3 pb-2 border-b shrink-0">
+      <div className="space-y-2 pb-3 border-b shrink-0">
+        <CompactBreadcrumb
+          parentLabel="Fleet"
+          parentHref="/fleet"
+          currentLabel={truck.plate_number || `Truck #${truck.id}`}
+        />
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
-              Truck Details
+              {truck.plate_number || `Truck #${truck.id}`}
             </h2>
-            <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-              View and manage truck information
+            <p className="text-xs text-muted-foreground">
+              {truck.make} {truck.model} {truck.year && `(${truck.year})`}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -196,15 +201,6 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
             </Button>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/fleet")}
-          className="h-8"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-          Back
-        </Button>
       </div>
 
       {/* Main Content - No restrictive nested scroll */}

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  ArrowLeft,
   Loader2,
   AlertCircle,
   MapPin,
@@ -16,6 +15,7 @@ import {
   DollarSign,
   Settings,
 } from "lucide-react";
+import { MobileBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -231,21 +231,21 @@ function EditPriceQuoteContent() {
     return (
       <div className="min-h-screen bg-background animate-in fade-in duration-300">
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-          <div className="flex items-center gap-3 p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl"
-              onClick={() => router.push(`/price-quotes/placeholder?id=${id}`)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-base font-bold">Edit Quote #{id}</h1>
-              <p className="text-xs text-muted-foreground">
-                Cannot edit active quotes
-              </p>
-            </div>
+          <div className="p-4 space-y-2">
+            <MobileBreadcrumb
+              items={[
+                { label: "Price Quotes", href: "/price-quotes" },
+                {
+                  label: `Quote #${id}`,
+                  href: `/price-quotes/placeholder?id=${id}`,
+                },
+                { label: "Edit" },
+              ]}
+            />
+            <h1 className="text-lg font-bold">Edit Quote #{id}</h1>
+            <p className="text-xs text-muted-foreground">
+              Cannot edit active quotes
+            </p>
           </div>
         </div>
         <div className="p-4">
@@ -290,25 +290,20 @@ function EditPriceQuoteContent() {
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
       {/* Sticky Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl"
-              onClick={() => router.push(`/price-quotes/placeholder?id=${id}`)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold">Edit Quote #{id}</h1>
-                {quote?.status && <StatusBadge status={quote.status} />}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Update quote details
-              </p>
-            </div>
+        <div className="p-4 space-y-2">
+          <MobileBreadcrumb
+            items={[
+              { label: "Price Quotes", href: "/price-quotes" },
+              {
+                label: `Quote #${id}`,
+                href: `/price-quotes/placeholder?id=${id}`,
+              },
+              { label: "Edit" },
+            ]}
+          />
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold">Edit Quote #{id}</h1>
+            {quote?.status && <StatusBadge status={quote.status} />}
           </div>
         </div>
       </div>

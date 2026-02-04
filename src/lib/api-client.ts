@@ -184,7 +184,11 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error: result?.error || result?.detail || result?.message || "Something went wrong",
+        error:
+          result?.error ||
+          result?.detail ||
+          result?.message ||
+          "Something went wrong",
         status,
         errorCode: result?.code || undefined, // Extract error code if available
         code: result?.code || result?.status_code?.toString(),

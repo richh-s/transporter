@@ -139,12 +139,13 @@ function TrucksTableContent({
 
   return (
     <DataTable
-      onRowClick={onRowClick}
       columns={truckColumns}
       data={trucks as TruckTableRow[]}
       searchKey="plate_number"
       searchPlaceholder="Search plate, VIN, or make..."
-      onRowClick={(row) => router.push(`/fleet/placeholder?id=${row.id}`)}
+      onRowClick={
+        onRowClick || ((row) => router.push(`/fleet/placeholder?id=${row.id}`))
+      }
       meta={{
         onEdit,
         onDelete,

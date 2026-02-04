@@ -10,7 +10,6 @@ import {
   MapPin,
   Building2,
   FileText,
-  ArrowLeft,
   CreditCard,
   Download,
   Phone,
@@ -21,6 +20,7 @@ import {
   ArrowRight,
   Package,
 } from "lucide-react";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import Link from "next/link";
 import {
   useShip,
@@ -296,7 +296,7 @@ function ShipDetailsContent() {
         <p className="text-sm text-muted-foreground text-center">{error}</p>
         <Link href="/ships">
           <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ships
+            Go to Ships
           </Button>
         </Link>
       </div>
@@ -309,14 +309,13 @@ function ShipDetailsContent() {
     <div className="flex flex-col h-full animate-in fade-in duration-300">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/ships"
-              className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+        <div className="space-y-2">
+          <CompactBreadcrumb
+            parentLabel="Ships"
+            parentHref="/ships"
+            currentLabel={isShipLoading ? "Loading..." : `Ship #${ship?.id}`}
+          />
+          <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-bold">

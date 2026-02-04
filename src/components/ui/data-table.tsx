@@ -291,7 +291,10 @@ export function DataTable<TData, TValue>({
           </div>
           {/* Actions Button */}
           {actionsCell && (
-            <div className="flex-shrink-0 -mr-1 -mt-1" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="flex-shrink-0 -mr-1 -mt-1"
+              onClick={(e) => e.stopPropagation()}
+            >
               {flexRender(
                 actionsCell.column.columnDef.cell,
                 actionsCell.getContext(),
@@ -383,8 +386,8 @@ export function DataTable<TData, TValue>({
   const hasMore = pageCount
     ? page < pageCount
     : calculatedPageCount
-      ? page < calculatedPageCount
-      : false;
+    ? page < calculatedPageCount
+    : false;
 
   // Handle "See More" click - fetch next page from server
   const handleSeeMore = () => {

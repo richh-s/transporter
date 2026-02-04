@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { Driver } from "../../server/types";
-import { createDriverSchema, type CreateDriverInput } from "@/lib/zod/driver/create-driver.schema";
+import { type CreateDriverInput } from "@/lib/zod/driver/create-driver.schema";
 import { useCreateDriver } from "../../server/hooks/use-create-driver";
 import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { ApiError } from "@/lib/api";

@@ -3,7 +3,6 @@
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   Trash2,
   Edit,
   MapPin,
@@ -14,6 +13,8 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -173,13 +174,11 @@ function PriceQuoteDetailContent() {
         <p className="text-sm text-muted-foreground text-center">
           Failed to load quote
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/price-quotes")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Quotes
-        </Button>
+        <Link href="/price-quotes">
+          <Button variant="outline" size="sm">
+            Go to Quotes
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -194,19 +193,16 @@ function PriceQuoteDetailContent() {
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
       {/* Sticky Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl"
-              onClick={() => router.push("/price-quotes")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+        <div className="p-4 space-y-2">
+          <CompactBreadcrumb
+            parentLabel="Price Quotes"
+            parentHref="/price-quotes"
+            currentLabel={`Quote #${quote.id}`}
+          />
+          <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold">Quote #{quote.id}</h1>
+                <h1 className="text-lg font-bold">Quote #{quote.id}</h1>
                 <StatusBadge status={quote.status} />
               </div>
               <p className="text-xs text-muted-foreground">
