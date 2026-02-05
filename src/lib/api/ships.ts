@@ -242,24 +242,40 @@ export const shipApi = {
    */
   getInvoice: async (shipId: number | string): Promise<Blob> => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    const response = await fetch(
-      `${API_URL}/transporter/ship/${shipId}/invoice`,
-      {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          ...getAuthHeaders(),
-          Accept: "application/pdf",
-        },
+    const url = `${API_URL}/transporter/ship/${shipId}/invoice`;
+    console.log("📄 [Invoice API] Fetching invoice from:", url);
+    console.log(
+      "📄 [Invoice API] Auth headers present:",
+      !!getAuthHeaders().Authorization,
+    );
+
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+        Accept: "application/pdf",
       },
+    });
+
+    console.log("📄 [Invoice API] Response status:", response.status);
+    console.log("📄 [Invoice API] Response ok:", response.ok);
+    console.log(
+      "📄 [Invoice API] Content-Type:",
+      response.headers.get("content-type"),
     );
 
     if (!response.ok) {
+      console.error(
+        "📄 [Invoice API] Request failed with status:",
+        response.status,
+      );
       // Try to parse error response as JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         try {
           const errorData = (await response.json()) as Record<string, unknown>;
+          console.error("📄 [Invoice API] Error response:", errorData);
           // Throw a structured error with the API error message
           const error = new Error(
             (errorData.error as string) ||
@@ -283,7 +299,45 @@ export const shipApi = {
       throw new Error(`Failed to fetch invoice: ${response.statusText}`);
     }
 
-    return response.blob();
+    const blob = await response.blob();
+    console.log(
+      "📄 [Invoice API] Got blob, size:",
+      blob.size,
+      "type:",
+      blob.type,
+    );
+    return blob;
+  },
+
+  /**
+   * Get invoice PDF as a viewable data URL (base64)
+   * Fetches the PDF and converts to base64 for viewing in WebViews
+   */
+  getInvoiceForViewing: async (shipId: number | string): Promise<string> => {
+    console.log(
+      "📄 [Invoice API] getInvoiceForViewing called for ship:",
+      shipId,
+    );
+    const blob = await shipApi.getInvoice(shipId);
+    console.log("📄 [Invoice API] Converting blob to base64, size:", blob.size);
+
+    // Convert blob to base64 data URL (works better in WebViews than blob URLs)
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        console.log(
+          "📄 [Invoice API] Created data URL, length:",
+          dataUrl.length,
+        );
+        resolve(dataUrl);
+      };
+      reader.onerror = () => {
+        console.error("📄 [Invoice API] FileReader error:", reader.error);
+        reject(new Error("Failed to convert PDF to data URL"));
+      };
+      reader.readAsDataURL(blob);
+    });
   },
 
   /**

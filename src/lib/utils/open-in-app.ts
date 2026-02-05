@@ -5,20 +5,32 @@ import { Browser } from "@capacitor/browser";
  * Use this for document previews, PDFs, external links, etc.
  */
 export async function openInApp(url: string): Promise<void> {
+  console.log("📄 [openInApp] Called with URL:", url);
+
   if (!url) {
-    console.warn("openInApp called with empty URL");
+    console.warn("📄 [openInApp] Called with empty URL");
     return;
   }
 
   try {
+    console.log("📄 [openInApp] Attempting to open with Capacitor Browser...");
     // Open in Capacitor's in-app browser
     await Browser.open({
       url,
       presentationStyle: "popover",
       toolbarColor: "#4ba94d", // Brand color
     });
-  } catch {
+    console.log("📄 [openInApp] Capacitor Browser opened successfully");
+  } catch (error) {
+    console.log(
+      "📄 [openInApp] Capacitor Browser failed, falling back to window.open:",
+      error,
+    );
     // Fallback to window.open for web or if Browser plugin fails
-    window.open(url, "_blank", "noopener,noreferrer");
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    console.log(
+      "📄 [openInApp] window.open result:",
+      newWindow ? "opened" : "blocked",
+    );
   }
 }

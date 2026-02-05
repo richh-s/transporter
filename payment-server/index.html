@@ -1,0 +1,306 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telebirr Payment</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+        padding: 20px;
+      }
+      .container {
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+      }
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #4ba94d 0%, #3d8c3f 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 28px;
+      }
+      h1 {
+        font-size: 22px;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+      }
+      p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e0e0e0;
+        border-top-color: #4ba94d;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      button {
+        background: linear-gradient(135deg, #4ba94d 0%, #3d8c3f 100%);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 8px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(75, 169, 77, 0.4);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button.secondary {
+        background: #f5f5f5;
+        color: #333;
+        margin-top: 12px;
+      }
+      button.secondary:hover {
+        background: #e8e8e8;
+        box-shadow: none;
+      }
+      .status {
+        font-size: 13px;
+        color: #888;
+        margin-top: 16px;
+      }
+      .status.success {
+        color: #4ba94d;
+      }
+      .status.error {
+        color: #e53935;
+      }
+      .credentials {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: left;
+      }
+      .credentials h3 {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .cred-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+      }
+      .cred-row:last-child {
+        border-bottom: none;
+      }
+      .cred-row span:first-child {
+        color: #666;
+      }
+      .cred-row strong {
+        color: #1a1a1a;
+      }
+      .hidden {
+        display: none;
+      }
+      .logo {
+        font-size: 12px;
+        color: #999;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="icon">💳</div>
+
+        <div id="loading">
+          <div class="spinner"></div>
+          <h1>Preparing Payment</h1>
+          <p>Please wait while we set up your Telebirr payment...</p>
+        </div>
+
+        <div id="ready" class="hidden">
+          <h1>Complete Your Payment</h1>
+          <p>
+            Click the button below to open the Telebirr payment page. Then scan
+            the QR code with your Telebirr app.
+          </p>
+          <button onclick="openPayment()">Open Telebirr Payment</button>
+          <button class="secondary" onclick="goBack()">← Back to App</button>
+        </div>
+
+        <div id="opened" class="hidden">
+          <h1>Payment Page Opened</h1>
+          <p>
+            Scan the QR code in the payment page with your Telebirr app to
+            complete the payment.
+          </p>
+          <button onclick="openPayment()">Open Payment Again</button>
+          <button class="secondary" onclick="goBack()">← Back to App</button>
+          <p class="status success" id="statusText"></p>
+        </div>
+
+        <div id="error" class="hidden">
+          <h1>Error</h1>
+          <p id="errorText">No payment URL provided.</p>
+          <button class="secondary" onclick="goBack()">← Back to App</button>
+        </div>
+      </div>
+
+      <div class="credentials">
+        <h3>Telebirr Test Credentials</h3>
+        <div class="cred-row">
+          <span>Short Code</span>
+          <strong>9000</strong>
+        </div>
+        <div class="cred-row">
+          <span>Operator ID</span>
+          <strong>9000</strong>
+        </div>
+        <div class="cred-row">
+          <span>Password</span>
+          <strong>151515</strong>
+        </div>
+      </div>
+
+      <p class="logo">🚚 WeTruck Transporter</p>
+    </div>
+
+    <script>
+      // Get payment URL from query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentUrl = urlParams.get("url");
+      const returnUrl =
+        urlParams.get("return") || "http://localhost:3000/ships";
+
+      const loadingEl = document.getElementById("loading");
+      const readyEl = document.getElementById("ready");
+      const openedEl = document.getElementById("opened");
+      const errorEl = document.getElementById("error");
+      const statusText = document.getElementById("statusText");
+      const errorText = document.getElementById("errorText");
+
+      function showLoading() {
+        loadingEl.classList.remove("hidden");
+        readyEl.classList.add("hidden");
+        openedEl.classList.add("hidden");
+        errorEl.classList.add("hidden");
+      }
+
+      function showReady() {
+        loadingEl.classList.add("hidden");
+        readyEl.classList.remove("hidden");
+        openedEl.classList.add("hidden");
+        errorEl.classList.add("hidden");
+      }
+
+      function showOpened() {
+        loadingEl.classList.add("hidden");
+        readyEl.classList.add("hidden");
+        openedEl.classList.remove("hidden");
+        errorEl.classList.add("hidden");
+      }
+
+      function showError(message) {
+        loadingEl.classList.add("hidden");
+        readyEl.classList.add("hidden");
+        openedEl.classList.add("hidden");
+        errorEl.classList.remove("hidden");
+        errorText.textContent = message;
+      }
+
+      function openPayment() {
+        if (!paymentUrl) {
+          showError(
+            "No payment URL provided. Please try again from the ship details page.",
+          );
+          return;
+        }
+
+        console.log("💳 [Telebirr] Opening payment URL:", paymentUrl);
+        console.log("💳 [Telebirr] Current origin:", window.location.origin);
+        console.log(
+          "💳 [Telebirr] Referer will be:",
+          document.referrer || window.location.href,
+        );
+
+        // Open in new tab/window - this is the key!
+        // Being served from localhost:8000 makes the request valid for Telebirr
+        const popup = window.open(paymentUrl, "_blank");
+
+        if (popup) {
+          console.log("💳 [Telebirr] Payment popup opened successfully");
+          showOpened();
+          statusText.textContent =
+            "Payment page opened at " + new Date().toLocaleTimeString();
+        } else {
+          console.log("💳 [Telebirr] Popup was blocked, trying location.href");
+          // If popup blocked, try direct navigation
+          window.location.href = paymentUrl;
+        }
+      }
+
+      function goBack() {
+        // Navigate back to the Next.js app
+        window.location.href = returnUrl;
+      }
+
+      // Initialize on page load
+      if (!paymentUrl) {
+        showError(
+          "No payment URL provided. Please try again from the ship details page.",
+        );
+      } else {
+        console.log("💳 [Telebirr] Payment URL ready:", paymentUrl);
+        // Show loading briefly, then ready state
+        showLoading();
+        setTimeout(() => {
+          showReady();
+        }, 500);
+      }
+    </script>
+  </body>
+</html>

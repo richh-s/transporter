@@ -2,6 +2,9 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { FileOpener } from "@capacitor-community/file-opener";
+import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { format } from "date-fns";
 import { Container, Truck, Driver } from "@/types/ship";
@@ -11,11 +14,9 @@ import {
   Building2,
   FileText,
   CreditCard,
-  Download,
   Phone,
   Loader2,
   AlertCircle,
-  ExternalLink,
   Calendar,
   ArrowRight,
   Package,
@@ -204,6 +205,69 @@ function ShipDetailsContent() {
     if (!id) router.replace("/ships");
   }, [id, router]);
 
+  // Navigate to payment page when URL is received
+  useEffect(() => {
+    const paymentUrl = createPaymentOrder.data?.result?.payment_url;
+    if (paymentUrl && createPaymentOrder.isSuccess) {
+      console.log(
+        "💳 [Payment] Navigating to payment page with URL:",
+        paymentUrl,
+      );
+
+      // Close the modal
+      setPaymentModalOpen(false);
+
+      // Telebirr sandbox requires requests from localhost:8000/index.html
+      // For production, Telebirr must whitelist your domain
+      const encodedUrl = encodeURIComponent(paymentUrl);
+      const returnUrl = encodeURIComponent(window.location.href);
+
+      // Get payment server URL from env or use default
+      // For mobile dev: set NEXT_PUBLIC_PAYMENT_SERVER_URL to your computer's IP (e.g., http://192.168.1.100:8000)
+      // For production: set to your hosted payment page URL
+      const paymentServerUrl =
+        process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL ||
+        (process.env.NODE_ENV === "development"
+          ? "http://localhost:8000"
+          : `${window.location.origin}/telebirr-payment.html`);
+
+      const fullPaymentUrl = paymentServerUrl.includes("telebirr-payment.html")
+        ? `${paymentServerUrl}?url=${encodedUrl}`
+        : `${paymentServerUrl}?url=${encodedUrl}&return=${returnUrl}`;
+
+      console.log("💳 [Payment] Opening payment page:", fullPaymentUrl);
+      console.log(
+        "💳 [Payment] Is native platform:",
+        Capacitor.isNativePlatform(),
+      );
+
+      if (Capacitor.isNativePlatform()) {
+        // On mobile, use Capacitor Browser to open in-app browser overlay
+        // Uses SFSafariViewController (iOS) / Chrome Custom Tabs (Android)
+        // This provides a browser context that Telebirr accepts while staying "in-app"
+        Browser.open({
+          url: fullPaymentUrl,
+          presentationStyle: "popover", // Shows as overlay, feels more "in-app"
+          toolbarColor: "#4ba94d", // Match app's brand color
+        }).catch((err) => {
+          console.error("💳 [Payment] Browser.open failed:", err);
+          // Fallback to window.open
+          window.open(fullPaymentUrl, "_blank");
+        });
+
+        // Listen for browser close event to refresh payment status
+        const listener = Browser.addListener("browserFinished", () => {
+          console.log("💳 [Payment] In-app browser closed, refreshing...");
+          listener.remove();
+          // Optionally refresh payment status here
+        });
+      } else {
+        // On web, redirect to the payment page
+        window.location.href = fullPaymentUrl;
+      }
+    }
+  }, [createPaymentOrder.data, createPaymentOrder.isSuccess, router]);
+
   if (!id) return <DetailSkeleton />;
 
   const trucks = Array.isArray(trucksData)
@@ -215,7 +279,6 @@ function ShipDetailsContent() {
   const error = shipError ? (shipError as Error).message : null;
   const unpaidPayment = payments?.find((p) => !p.paid);
   const hasUnpaidPayment = !!unpaidPayment;
-  const paymentUrl = createPaymentOrder.data?.result?.payment_url ?? null;
 
   const handlePayNow = () => {
     if (!unpaidPayment) {
@@ -230,35 +293,68 @@ function ShipDetailsContent() {
     });
   };
 
-  const openPaymentPopup = async () => {
-    if (!paymentUrl) return;
-    try {
-      await Browser.open({
-        url: paymentUrl,
-        presentationStyle: "popover",
-        toolbarColor: "#4ba94d",
-      });
-    } catch {
-      window.open(paymentUrl, "_blank");
-    }
-  };
-
   const handleDownloadInvoice = async () => {
     try {
       setIsDownloadingInvoice(true);
-      toast.loading("Downloading invoice...");
+      toast.loading("Loading invoice...");
+      console.log("📄 [Invoice] Starting for ship:", id);
+
       const blob = await shipApi.getInvoice(id);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `invoice-ship-${id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.dismiss();
-      toast.success("Invoice downloaded");
+      const fileName = `invoice-ship-${id}.pdf`;
+
+      // Check if we're on a native platform (Android/iOS)
+      if (Capacitor.isNativePlatform()) {
+        console.log("📄 [Invoice] Native platform detected, using Filesystem");
+
+        // Convert blob to base64
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            // Remove the data URL prefix to get just the base64 data
+            const base64 = result.split(",")[1];
+            resolve(base64);
+          };
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(blob);
+        });
+
+        console.log("📄 [Invoice] Converted to base64, saving file...");
+
+        // Save file to device cache
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        console.log("📄 [Invoice] File saved:", savedFile.uri);
+        toast.dismiss();
+
+        // Open the file directly with the device's PDF viewer
+        await FileOpener.open({
+          filePath: savedFile.uri,
+          contentType: "application/pdf",
+        });
+
+        console.log("📄 [Invoice] Opened with PDF viewer");
+        toast.success("Invoice opened");
+      } else {
+        console.log("📄 [Invoice] Web platform, using download link");
+        // Web fallback - use traditional download approach
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.dismiss();
+        toast.success("Invoice downloaded");
+      }
     } catch (err) {
+      console.error("📄 [Invoice] Error:", err);
       toast.dismiss();
       toast.error(err instanceof Error ? err.message : "Failed to download");
     } finally {
@@ -347,136 +443,147 @@ function ShipDetailsContent() {
           ) : (
             <>
               {/* Payment Card */}
-              <Card className="border-0 shadow-sm bg-primary/5">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
+              <Card className="border-0 shadow-sm overflow-hidden">
+                <div className="bg-linear-to-r from-primary/10 to-primary/5 p-4">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      <div className="p-2 rounded-xl bg-white/80 text-primary shadow-sm">
                         <CreditCard className="h-4 w-4" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Payment
                       </span>
                     </div>
-                    {hasUnpaidPayment && (
-                      <span className="text-xs font-semibold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                        Pending
-                      </span>
-                    )}
+                    <span
+                      className={cn(
+                        "text-xs font-semibold px-2.5 py-1 rounded-full",
+                        hasUnpaidPayment
+                          ? "text-amber-700 bg-amber-100"
+                          : "text-emerald-700 bg-emerald-100",
+                      )}
+                    >
+                      {hasUnpaidPayment ? "Pending" : "Paid"}
+                    </span>
                   </div>
-                  <div className="flex items-end justify-between">
+                  <div className="space-y-3">
                     <div>
-                      <p className="text-2xl font-bold text-foreground">
-                        {unpaidPayment
-                          ? `${unpaidPayment.total_str} ETB`
-                          : "Paid"}
-                      </p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl font-bold text-foreground tracking-tight">
+                          {unpaidPayment ? unpaidPayment.total_str : "0"}
+                        </span>
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          ETB
+                        </span>
+                      </div>
                       {unpaidPayment && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          VAT: {unpaidPayment.vat_str} ETB
+                          Incl. VAT {unpaidPayment.vat_str} ETB
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="bg-white/80 hover:bg-white"
                         onClick={handleDownloadInvoice}
                         disabled={isDownloadingInvoice}
                       >
-                        <Download className="h-4 w-4" />
+                        {isDownloadingInvoice ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4" />
+                        )}
+                        <span className="ml-1.5">Invoice</span>
                       </Button>
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                        onClick={handlePayNow}
-                        disabled={
-                          !hasUnpaidPayment || createPaymentOrder.isPending
-                        }
-                      >
-                        {hasUnpaidPayment ? "Pay Now" : "Paid"}
-                      </Button>
+                      {hasUnpaidPayment && (
+                        <Button
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90 shadow-sm"
+                          onClick={handlePayNow}
+                          disabled={createPaymentOrder.isPending}
+                        >
+                          Pay Now
+                        </Button>
+                      )}
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
 
-              {/* Dates Row */}
+              {/* Pickup & Delivery */}
               <div className="grid grid-cols-2 gap-3">
+                {/* Pickup Card */}
                 <Card className="border-0 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Pickup
-                      </span>
+                  <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-blue-500/10">
+                          <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Pickup
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm font-bold">
+                    <div className="flex items-center gap-1.5 text-sm font-bold">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                       {ship?.pickup_date
                         ? format(new Date(ship.pickup_date), "MMM d, yyyy")
                         : "—"}
-                    </p>
+                    </div>
+                    <div className="space-y-1 pt-1 border-t border-border/50">
+                      <p className="font-medium text-xs line-clamp-1">
+                        {ship?.pickup_facility?.name || "—"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
+                        {ship?.pickup_facility?.address || "—"}
+                      </p>
+                      {ship?.pickup_facility?.contact_phone_number && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          {ship.pickup_facility.contact_phone_number}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
+
+                {/* Delivery Card */}
                 <Card className="border-0 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-emerald-500" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Delivery
-                      </span>
+                  <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-emerald-500/10">
+                          <Building2 className="h-3.5 w-3.5 text-emerald-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Delivery
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm font-bold">
+                    <div className="flex items-center gap-1.5 text-sm font-bold">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                       {ship?.delivery_date
                         ? format(new Date(ship.delivery_date), "MMM d, yyyy")
                         : "—"}
-                    </p>
+                    </div>
+                    <div className="space-y-1 pt-1 border-t border-border/50">
+                      <p className="font-medium text-xs line-clamp-1">
+                        {ship?.delivery_facility?.name || "—"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
+                        {ship?.delivery_facility?.address || "—"}
+                      </p>
+                      {ship?.delivery_facility?.contact_phone_number && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          {ship.delivery_facility.contact_phone_number}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Facilities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <InfoCard
-                  icon={MapPin}
-                  iconBg="bg-red-500/10 text-red-500"
-                  title="Pickup"
-                >
-                  <div className="space-y-2">
-                    <p className="font-semibold text-sm">
-                      {ship?.pickup_facility?.name || "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {ship?.pickup_facility?.address || "—"}
-                    </p>
-                    {ship?.pickup_facility?.contact_phone_number && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        {ship.pickup_facility.contact_phone_number}
-                      </div>
-                    )}
-                  </div>
-                </InfoCard>
-                <InfoCard
-                  icon={Building2}
-                  iconBg="bg-emerald-500/10 text-emerald-500"
-                  title="Delivery"
-                >
-                  <div className="space-y-2">
-                    <p className="font-semibold text-sm">
-                      {ship?.delivery_facility?.name || "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {ship?.delivery_facility?.address || "—"}
-                    </p>
-                    {ship?.delivery_facility?.contact_phone_number && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        {ship.delivery_facility.contact_phone_number}
-                      </div>
-                    )}
-                  </div>
-                </InfoCard>
               </div>
 
               {/* Shipment Details */}
@@ -566,7 +673,7 @@ function ShipDetailsContent() {
               Payment
             </DialogTitle>
             <DialogDescription>
-              Complete your payment securely
+              Preparing your payment via Telebirr
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -574,53 +681,30 @@ function ShipDetailsContent() {
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Preparing payment...
+                  Preparing payment gateway...
                 </p>
               </div>
             )}
             {createPaymentOrder.isError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {createPaymentOrder.error?.message ?? "Something went wrong"}
-                </AlertDescription>
-              </Alert>
+              <>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {createPaymentOrder.error?.message ??
+                      "Something went wrong"}
+                  </AlertDescription>
+                </Alert>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPaymentModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </>
             )}
-            {!createPaymentOrder.isPending &&
-              !createPaymentOrder.isError &&
-              unpaidPayment && (
-                <div className="rounded-xl bg-muted/50 p-4 space-y-2">
-                  <DetailRow
-                    label="Total"
-                    value={`${unpaidPayment.total_str} ETB`}
-                  />
-                  <DetailRow
-                    label="VAT"
-                    value={`${unpaidPayment.vat_str} ETB`}
-                  />
-                  <DetailRow
-                    label="Method"
-                    value={unpaidPayment.payment_method
-                      .replace("_", " ")
-                      .toUpperCase()}
-                  />
-                </div>
-              )}
           </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPaymentModalOpen(false)}
-            >
-              Close
-            </Button>
-            {paymentUrl && (
-              <Button className="bg-primary" onClick={openPaymentPopup}>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Pay Now
-              </Button>
-            )}
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
