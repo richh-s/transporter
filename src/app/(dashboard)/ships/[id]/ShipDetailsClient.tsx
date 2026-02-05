@@ -256,10 +256,12 @@ function ShipDetailsContent() {
         });
 
         // Listen for browser close event to refresh payment status
-        const listener = Browser.addListener("browserFinished", () => {
+        let listenerHandle: { remove: () => void } | null = null;
+        void Browser.addListener("browserFinished", () => {
           console.log("💳 [Payment] In-app browser closed, refreshing...");
-          listener.remove();
-          // Optionally refresh payment status here
+          listenerHandle?.remove();
+        }).then((handle) => {
+          listenerHandle = handle;
         });
       } else {
         // On web, redirect to the payment page
