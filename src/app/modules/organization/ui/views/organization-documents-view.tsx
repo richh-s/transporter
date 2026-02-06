@@ -211,14 +211,16 @@ export function OrganizationDocumentsView() {
   };
 
   // Filter documents based on active filters
-  const filteredDocuments = (documents || []).filter((doc) => {
-    if (filters.status && doc.status !== filters.status) return false;
-    if (filters.document_type && doc.document_type !== filters.document_type)
-      return false;
-    if (filters.entity_type && doc.entity_type !== filters.entity_type)
-      return false;
-    return true;
-  });
+  const filteredDocuments = React.useMemo(() => {
+    return (documents || []).filter((doc) => {
+      if (filters.status && doc.status !== filters.status) return false;
+      if (filters.document_type && doc.document_type !== filters.document_type)
+        return false;
+      if (filters.entity_type && doc.entity_type !== filters.entity_type)
+        return false;
+      return true;
+    });
+  }, [documents, filters]);
 
   // Reset scroll state when filters or page change
   useEffect(() => {
@@ -256,8 +258,8 @@ export function OrganizationDocumentsView() {
       {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
       <div
         className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
-            ? "hidden md:block"
-            : "block"
+          ? "hidden md:block"
+          : "block"
           }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />

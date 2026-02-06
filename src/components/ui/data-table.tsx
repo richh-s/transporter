@@ -227,7 +227,7 @@ export function DataTable<TData, TValue>({
       (cell) =>
         cell.column.id === "plate_number" ||
         (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
-          "plate_number",
+        "plate_number",
     );
 
     // Find actions cell
@@ -241,7 +241,7 @@ export function DataTable<TData, TValue>({
         cell.column.id !== "plate_number" &&
         cell.column.id !== "actions" &&
         (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
-          "plate_number",
+        "plate_number",
     );
 
     // Get header label for a column
@@ -345,7 +345,7 @@ export function DataTable<TData, TValue>({
     globalFilterFn: "includesString",
     manualPagination,
     manualFiltering,
-    pageCount: pageCount,
+    pageCount: manualPagination ? pageCount : undefined,
     meta,
     state: {
       sorting,
@@ -358,6 +358,20 @@ export function DataTable<TData, TValue>({
         pageSize: perPage,
       },
     },
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({
+          pageIndex: page - 1,
+          pageSize: perPage,
+        });
+        onPageChange?.(newState.pageIndex + 1);
+        onPerPageChange?.(newState.pageSize);
+      } else {
+        onPageChange?.(updater.pageIndex + 1);
+        onPerPageChange?.(updater.pageSize);
+      }
+    },
+    autoResetPageIndex: false,
   });
 
   // Get visible rows for mobile (after table is created)
@@ -386,8 +400,8 @@ export function DataTable<TData, TValue>({
   const hasMore = pageCount
     ? page < pageCount
     : calculatedPageCount
-    ? page < calculatedPageCount
-    : false;
+      ? page < calculatedPageCount
+      : false;
 
   // Handle "See More" click - fetch next page from server
   const handleSeeMore = () => {
@@ -518,7 +532,7 @@ export function DataTable<TData, TValue>({
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
           <div className="min-w-full">
             <Table className="min-w-full w-full">
-              <TableHeader className="bg-muted/30 sticky top-0 z-20">
+              <TableHeader className="bg-background sticky top-0 z-20 shadow-sm">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
                     key={headerGroup.id}
@@ -534,7 +548,7 @@ export function DataTable<TData, TValue>({
                           className={cn(
                             "bg-transparent h-12",
                             isSticky &&
-                              "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
+                            "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
                             index === 0 ? "pl-4 pr-2" : "px-2",
                             "align-middle",
                           )}
@@ -543,9 +557,9 @@ export function DataTable<TData, TValue>({
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
                           </div>
                         </TableHead>
                       );
@@ -573,7 +587,7 @@ export function DataTable<TData, TValue>({
                       className={cn(
                         "group border-b border-border/30 last:border-0 transition-all duration-300",
                         onRowClick &&
-                          "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]",
+                        "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -585,7 +599,7 @@ export function DataTable<TData, TValue>({
                             key={cell.id}
                             className={cn(
                               isSticky &&
-                                "sticky left-0 z-10 bg-background border-r",
+                              "sticky left-0 z-10 bg-background border-r",
                               "align-middle",
                             )}
                           >
@@ -620,9 +634,9 @@ export function DataTable<TData, TValue>({
           <div className="text-muted-foreground hidden sm:block">
             {total !== undefined
               ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(
-                  page * perPage,
-                  total,
-                )} of ${total}`
+                page * perPage,
+                total,
+              )} of ${total}`
               : `${table.getFilteredRowModel().rows.length} total`}
           </div>
           {onPerPageChange && (
@@ -662,7 +676,7 @@ export function DataTable<TData, TValue>({
                             }}
                             className={cn(
                               perPage === value &&
-                                "bg-amber-100 text-amber-700",
+                              "bg-amber-100 text-amber-700",
                             )}
                           >
                             {value}

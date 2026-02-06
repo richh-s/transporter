@@ -101,11 +101,17 @@ export const organizationApi = {
    * DELETE /api/v1/organization/documents/{document_id}/delete
    */
   deleteDocument: async (documentId: string | number) => {
-    return request<{ success: boolean }>(
+    const response = await request<{ success: boolean }>(
       `/organization/documents/${documentId}/delete`,
       {
         method: "DELETE"
       }
     );
+
+    if (response.status === 204) {
+      return { data: { success: true }, status: 204 };
+    }
+
+    return response;
   },
 };
