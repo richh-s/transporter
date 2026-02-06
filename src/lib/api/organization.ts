@@ -1,14 +1,4 @@
-import { tokenStorage } from "@/lib/api-client";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-/**
- * Get authorization headers with Bearer token
- */
-function getAuthHeaders(): HeadersInit {
-  const token = tokenStorage.getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { request } from "@/lib/api-client";
 
 export interface OrganizationDocument {
   id: number;
@@ -50,25 +40,10 @@ export const organizationApi = {
     formData.append("file", file);
     formData.append("document_type", documentType);
 
-    const response = await fetch(`${API_URL}/organization/documents`, {
+    return request<OrganizationDocument>("/organization/documents", {
       method: "POST",
-      headers: getAuthHeaders(),
       body: formData,
-      credentials: "include",
     });
-
-    const status = response.status;
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
-
-    if (!response.ok) {
-      return {
-        error: result?.detail || result?.message || "Failed to upload document",
-        status,
-      };
-    }
-
-    return { data: result as OrganizationDocument, status };
   },
 
   /**
@@ -76,26 +51,15 @@ export const organizationApi = {
    * GET /api/v1/organization/documents/list
    */
   listDocuments: async () => {
-    const response = await fetch(`${API_URL}/organization/documents/list`, {
-      method: "GET",
-      headers: getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await request<OrganizationDocument[] | { items: OrganizationDocument[] }>("/organization/documents/list");
 
-    const status = response.status;
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
-
-    if (!response.ok) {
-      return {
-        error: result?.detail || result?.message || "Failed to get documents",
-        status,
-      };
+    if (response.data) {
+      // API might return array directly or wrapped in object
+      const items = Array.isArray(response.data) ? response.data : response.data.items || [];
+      return { ...response, data: items as OrganizationDocument[] };
     }
 
-    // API might return array directly or wrapped in object
-    const items = Array.isArray(result) ? result : result?.items || [];
-    return { data: items as OrganizationDocument[], status };
+    return response as any;
   },
 
   /**
@@ -103,27 +67,7 @@ export const organizationApi = {
    * GET /api/v1/organization/documents/{document_id}/get
    */
   getDocument: async (documentId: string | number) => {
-    const response = await fetch(
-      `${API_URL}/organization/documents/${documentId}/get`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-        credentials: "include",
-      },
-    );
-
-    const status = response.status;
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
-
-    if (!response.ok) {
-      return {
-        error: result?.detail || result?.message || "Failed to get document",
-        status,
-      };
-    }
-
-    return { data: result as OrganizationDocument, status };
+    return request<OrganizationDocument>(`/organization/documents/${documentId}/get`);
   },
 
   /**
@@ -143,28 +87,13 @@ export const organizationApi = {
       formData.append("file", data.file);
     }
 
-    const response = await fetch(
-      `${API_URL}/organization/documents/${documentId}/update`,
+    return request<OrganizationDocument>(
+      `/organization/documents/${documentId}/update`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
         body: formData,
-        credentials: "include",
-      },
+      }
     );
-
-    const status = response.status;
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
-
-    if (!response.ok) {
-      return {
-        error: result?.detail || result?.message || "Failed to update document",
-        status,
-      };
-    }
-
-    return { data: result as OrganizationDocument, status };
   },
 
   /**
@@ -172,26 +101,11 @@ export const organizationApi = {
    * DELETE /api/v1/organization/documents/{document_id}/delete
    */
   deleteDocument: async (documentId: string | number) => {
-    const response = await fetch(
-      `${API_URL}/organization/documents/${documentId}/delete`,
+    return request<{ success: boolean }>(
+      `/organization/documents/${documentId}/delete`,
       {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-        credentials: "include",
-      },
+        method: "DELETE"
+      }
     );
-
-    const status = response.status;
-
-    if (!response.ok) {
-      const text = await response.text();
-      const result = text ? JSON.parse(text) : undefined;
-      return {
-        error: result?.detail || result?.message || "Failed to delete document",
-        status,
-      };
-    }
-
-    return { data: { success: true }, status };
   },
 };

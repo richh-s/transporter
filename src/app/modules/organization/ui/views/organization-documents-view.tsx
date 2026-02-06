@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import { openInApp } from "@/lib/utils/open-in-app";
 
 export function OrganizationDocumentsView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -224,6 +225,18 @@ export function OrganizationDocumentsView() {
     setIsScrolled(false);
   }, [filters, page]);
 
+  // Handle auto-open upload modal if upload=true is in URL
+  useEffect(() => {
+    if (searchParams.get("upload") === "true") {
+      setIsUploadModalOpen(true);
+      // Clean up the URL after opening the modal
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete("upload");
+      const queryString = newParams.toString();
+      router.replace(`/organization/documents${queryString ? `?${queryString}` : ""}`);
+    }
+  }, [searchParams, router]);
+
   return (
     <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden">
       {/* Header */}
@@ -242,11 +255,10 @@ export function OrganizationDocumentsView() {
 
       {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
       <div
-        className={`shrink-0 transition-all duration-300 md:block ${
-          isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
+        className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
             ? "hidden md:block"
             : "block"
-        }`}
+          }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />
       </div>

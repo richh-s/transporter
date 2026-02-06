@@ -19,6 +19,7 @@ import {
   FileText,
   Lock,
   Anchor,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -53,6 +54,11 @@ const navigation = [
   { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
   // { name: "Payments", href: "/payments", icon: CreditCard }, // Page not implemented yet
   { name: "POD Documents", href: "/transporter/pod-documents", icon: FileText },
+  {
+    name: "Organization Documents",
+    href: "/organization/documents",
+    icon: ShieldCheck,
+  },
 ];
 
 export function Sidebar({
@@ -226,15 +232,6 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/organization/documents"
-                      className="cursor-pointer"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>Organization Documents</span>
-                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
