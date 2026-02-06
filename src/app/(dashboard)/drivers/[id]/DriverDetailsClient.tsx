@@ -13,22 +13,30 @@ import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
-  const isActive = status === "active";
+  const config: Record<string, { bg: string; text: string; dot: string }> = {
+    active: {
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-600",
+      dot: "bg-emerald-500",
+    },
+    suspended: {
+      bg: "bg-amber-500/10",
+      text: "text-amber-600",
+      dot: "bg-amber-500",
+    },
+  };
+
+  const currentConfig = config[status] || config.suspended;
+
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-        isActive
-          ? "bg-emerald-500/10 text-emerald-600"
-          : "bg-gray-500/10 text-gray-500",
+        currentConfig.bg,
+        currentConfig.text,
       )}
     >
-      <span
-        className={cn(
-          "h-1.5 w-1.5 rounded-full",
-          isActive ? "bg-emerald-500" : "bg-gray-400",
-        )}
-      />
+      <span className={cn("h-1.5 w-1.5 rounded-full", currentConfig.dot)} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -115,6 +123,7 @@ function DriverDetailsContent() {
     data: driver,
     isLoading,
     isError,
+    error,
   } = useDriver(isNaN(driverId) ? 0 : driverId);
 
   useEffect(() => {
@@ -133,9 +142,17 @@ function DriverDetailsContent() {
         <div className="p-4 rounded-full bg-red-500/10">
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
-        <p className="text-sm text-muted-foreground text-center">
-          Driver not found
-        </p>
+        <div className="text-center space-y-2">
+          <p className="font-bold text-foreground text-red-600">
+            {error instanceof Error ? error.message : "Driver Not Found"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ID: {driverId || "None"} | Raw: {rawId || "Empty"}
+          </p>
+          <p className="text-xs text-red-500/80 max-w-xs mx-auto">
+            Try searching for this driver in the list.
+          </p>
+        </div>
         <Link href="/drivers">
           <Button variant="outline" size="sm">
             Go to Drivers
@@ -158,9 +175,9 @@ function DriverDetailsContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold">
-                {driver.first_name} {driver.last_name}
+                {driver.first_name || "Unknown"} {driver.last_name || ""}
               </h1>
-              <StatusBadge status={driver.status} />
+              <StatusBadge status={driver.status || "unknown"} />
             </div>
           </div>
         </div>
@@ -175,10 +192,10 @@ function DriverDetailsContent() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-bold text-foreground">
-                {driver.first_name} {driver.last_name}
+                {driver.first_name || "Unknown"} {driver.last_name || ""}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {driver.driver_license_number}
+                {driver.driver_license_number || "No License"}
               </p>
             </div>
           </div>
@@ -191,8 +208,8 @@ function DriverDetailsContent() {
           accent="bg-blue-500/10 text-blue-500"
         >
           <div className="space-y-0">
-            <DetailRow label="Phone Number" value={driver.phone_number} />
-            <DetailRow label="Email" value={driver.email} />
+            <DetailRow label="Phone Number" value={driver.phone_number || "—"} />
+            <DetailRow label="Email" value={driver.email || "—"} />
           </div>
         </InfoCard>
 
@@ -204,7 +221,7 @@ function DriverDetailsContent() {
         >
           <DetailRow
             label="License Number"
-            value={driver.driver_license_number}
+            value={driver.driver_license_number || "—"}
             mono
           />
         </InfoCard>

@@ -11,8 +11,22 @@ export function useDriver(id?: number) {
     enabled: !!id,
     staleTime: 0,
     queryFn: async () => {
-      const res = await driverApi.getDriver(id!);
-      return driverSchema.parse(res.result);
+      try {
+        console.log(`🔍 Fetching driver details for ID: ${id}`);
+        const res = await driverApi.getDriver(id!);
+        console.log("📦 Raw Driver API Response:", res);
+
+        if (!res.status || !res.result) {
+          throw new Error(res.error_message || "Driver not found API returned status false");
+        }
+
+        const parsed = driverSchema.parse(res.result);
+        console.log("✅ Parsed Driver Data:", parsed);
+        return parsed;
+      } catch (error) {
+        console.error("❌ Driver Detail Fetch Error:", error);
+        throw error;
+      }
     },
   });
 }

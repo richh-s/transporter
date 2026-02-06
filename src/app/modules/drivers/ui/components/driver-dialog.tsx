@@ -5,10 +5,18 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, User, X } from "lucide-react";
+import { Loader2, User, X, XCircle } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -30,6 +38,7 @@ const driverSchema = z.object({
   driver_license_number: z.string().min(1, "License number is required"),
   phone_number: z.string().min(1, "Phone number is required"),
   email: z.string().min(1, "Email is required").email("Invalid email address"),
+  status: z.enum(["active", "suspended"]),
 });
 
 type DriverFormValues = z.infer<typeof driverSchema>;
@@ -57,6 +66,7 @@ export function DriverDialog({
       driver_license_number: "",
       phone_number: "",
       email: "",
+      status: "active",
     },
   });
 
@@ -69,6 +79,7 @@ export function DriverDialog({
           driver_license_number: driver.driver_license_number || "",
           phone_number: driver.phone_number || "",
           email: driver.email || "",
+          status: driver.status as "active" | "suspended",
         });
       } else {
         form.reset({
@@ -77,6 +88,7 @@ export function DriverDialog({
           driver_license_number: "",
           phone_number: "",
           email: "",
+          status: "active",
         });
       }
     }
@@ -110,6 +122,14 @@ export function DriverDialog({
             message: translatedMessage,
           });
         });
+      } else if (error instanceof ApiError) {
+        if (error.code === "DRIVER_DUPLICATE") {
+          toast.error("Driver already exists");
+        } else {
+          toast.error(error.message || "Failed to save driver");
+        }
+      } else {
+        toast.error("An unexpected error occurred");
       }
     }
   };
@@ -271,6 +291,39 @@ export function DriverDialog({
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Status Field */}
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">
+                      Status <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="active" className="rounded-lg">
+                          Active
+                        </SelectItem>
+                        <SelectItem value="suspended" className="rounded-lg">
+                          Suspended
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
