@@ -8,7 +8,7 @@ import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { format } from "date-fns";
 import { Container, Truck, Driver } from "@/types/ship";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MapPin,
   Building2,
@@ -20,6 +20,8 @@ import {
   Calendar,
   ArrowRight,
   Package,
+  User,
+  Eye,
 } from "lucide-react";
 import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import Link from "next/link";
@@ -29,6 +31,7 @@ import {
   useAssignDriver,
   useShipPayments,
   useCreatePaymentOrder,
+  useShipDocuments,
 } from "@/hooks/use-ships";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
@@ -51,6 +54,7 @@ import { toast } from "sonner";
 import { shipApi } from "@/lib/api/ships";
 import { cn } from "@/lib/utils";
 import { ShipItem } from "@/types/ship";
+import { useShipperInfo } from "@/hooks/use-shipper-info";
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
@@ -184,6 +188,25 @@ function ShipDetailsContent() {
     isLoading: isShipLoading,
     error: shipError,
   } = useShip(id || "0");
+
+  const { data: documentsResponse, isLoading: isDocsLoading } =
+    useShipDocuments(id || "0");
+  const documents = (documentsResponse as any)?.documents || [];
+
+  useEffect(() => {
+    if (ship) {
+      console.log("📦 [Debug] Full Shipment Data:", ship);
+      console.log("📊 [Debug] Shipment Details:", ship.shipment_details);
+    }
+  }, [ship]);
+
+  useEffect(() => {
+    if (documentsResponse) {
+      console.log("📄 [Debug] Dedicated Documents Response:", documentsResponse);
+      console.log("📑 [Debug] Extracted Documents Array:", documents);
+    }
+  }, [documentsResponse, documents]);
+
   const { data: trucksData } = useTrucksQuery({ per_page: 100 });
   const { data: driversData } = useDrivers({ per_page: 100 });
   const { data: payments } = useShipPayments(id || "0");
@@ -191,6 +214,21 @@ function ShipDetailsContent() {
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
+
+  const paidPayment = payments?.find((p) => p.paid);
+  const { data: shipperInfoResponse, isLoading: isShipperLoading } =
+    useShipperInfo({
+      ship_id: id,
+      payment_id: paidPayment?.id || null,
+      enabled: !!paidPayment,
+    });
+  const shipperInfo = shipperInfoResponse?.result;
+
+  useEffect(() => {
+    if (shipperInfo) {
+      console.log("👤 [Debug] Shipper Info:", shipperInfo);
+    }
+  }, [shipperInfo]);
 
   // State
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -588,30 +626,166 @@ function ShipDetailsContent() {
                 </Card>
               </div>
 
-              {/* Shipment Details */}
-              <InfoCard
-                icon={FileText}
-                iconBg="bg-orange-500/10 text-orange-500"
-                title="Shipment Details"
-              >
-                <div className="space-y-1">
-                  <DetailRow
-                    label="Bill of Lading"
-                    value={ship?.shipment_details?.bill_of_lading_number || ""}
-                    mono
-                  />
-                  <DetailRow
-                    label="Pickup Number"
-                    value={ship?.shipment_details?.pickup_number || ""}
-                    mono
-                  />
-                  <DetailRow
-                    label="Delivery Number"
-                    value={ship?.shipment_details?.delivery_number || ""}
-                    mono
-                  />
-                </div>
-              </InfoCard>
+              {/* Shipment Details Card */}
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-muted/20 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
+                <CardHeader className="relative z-10 pb-2">
+                  <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    Shipment Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5 relative z-10 pt-2">
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Bill of Lading */}
+                    {(ship?.shipment_details?.bill_of_lading_number ||
+                      documents.some((d: any) => d.document_type === "BILL_OF_LADING")) && (
+                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Bill of Lading
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                {ship?.shipment_details?.bill_of_lading_number || "Document Only"}
+                              </p>
+                            </div>
+                            {documents.find((d: any) => d.document_type === "BILL_OF_LADING" && d.presigned_url) && (
+                              <a
+                                href={documents.find((d: any) => d.document_type === "BILL_OF_LADING")?.presigned_url || "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                title="View Bill of Lading"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Packing List */}
+                    {documents.some((d: any) => d.document_type === "PACKING_LIST") && (
+                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                              Packing List
+                            </p>
+                            <p className="font-mono text-sm font-bold text-foreground">
+                              Available
+                            </p>
+                          </div>
+                          {documents.find((d: any) => d.document_type === "PACKING_LIST" && d.presigned_url) && (
+                            <a
+                              href={documents.find((d: any) => d.document_type === "PACKING_LIST")?.presigned_url || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                              title="View Packing List"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pickup Number */}
+                    {ship?.shipment_details?.pickup_number && (
+                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                          Pickup Number
+                        </p>
+                        <p className="font-mono text-sm font-bold text-foreground">
+                          {ship.shipment_details.pickup_number}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Delivery Number */}
+                    {ship?.shipment_details?.delivery_number && (
+                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                          Delivery Number
+                        </p>
+                        <p className="font-mono text-sm font-bold text-foreground">
+                          {ship.shipment_details.delivery_number}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Shipper Details Card - Only show if paid */}
+              {(shipperInfo || isShipperLoading) && (
+                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-500/5 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
+                  <div className="absolute -right-8 -bottom-8 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
+                  <CardHeader className="relative z-10 pb-2">
+                    <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
+                        <User className="h-4 w-4" />
+                      </div>
+                      Shipper Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 relative z-10 pt-2">
+                    {isShipperLoading ? (
+                      <div className="space-y-3">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    ) : shipperInfo ? (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                            Shipper Name
+                          </p>
+                          <p className="font-bold text-foreground text-lg">
+                            {shipperInfo.name}
+                          </p>
+                        </div>
+                        <div className="space-y-3 pt-2">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
+                              <FileText className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                                Email
+                              </p>
+                              <p className="text-sm font-medium">
+                                {shipperInfo.email}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
+                              <User className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                                Phone
+                              </p>
+                              <p className="text-sm font-medium">
+                                {shipperInfo.phone}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        No shipper details available.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Ship Items */}
               {shipItems.length > 0 && (
