@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -56,6 +56,8 @@ import { cn } from "@/lib/utils";
 import { ShipItem } from "@/types/ship";
 import { useShipperInfo } from "@/hooks/use-shipper-info";
 
+import { OrganizationDocument } from "@/lib/api/organization";
+
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
   const getConfig = (s: string) => {
@@ -101,62 +103,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// Info Card Component
-function InfoCard({
-  icon: Icon,
-  iconBg,
-  title,
-  children,
-  className,
-}: {
-  icon: React.ElementType;
-  iconBg: string;
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <Card className={cn("border-0 shadow-sm", className)}>
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className={cn("p-2 rounded-xl", iconBg)}>
-            <Icon className="h-4 w-4" />
-          </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {title}
-          </span>
-        </div>
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
-
-// Detail Row Component
-function DetailRow({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span
-        className={cn(
-          "text-sm font-medium text-foreground",
-          mono && "font-mono",
-        )}
-      >
-        {value || "—"}
-      </span>
-    </div>
-  );
-}
-
 // Loading Skeleton
 function DetailSkeleton() {
   return (
@@ -189,9 +135,13 @@ function ShipDetailsContent() {
     error: shipError,
   } = useShip(id || "0");
 
-  const { data: documentsResponse, isLoading: isDocsLoading } =
-    useShipDocuments(id || "0");
-  const documents = (documentsResponse as any)?.documents || [];
+  const { data: documentsResponse } = useShipDocuments(id || "0");
+  const documents = useMemo(() => {
+    return (
+      (documentsResponse as { documents?: OrganizationDocument[] })
+        ?.documents || []
+    );
+  }, [documentsResponse]);
 
   useEffect(() => {
     if (ship) {
@@ -640,7 +590,9 @@ function ShipDetailsContent() {
                   <div className="grid grid-cols-1 gap-3">
                     {/* Bill of Lading */}
                     {(ship?.shipment_details?.bill_of_lading_number ||
-                      documents.some((d: any) => d.document_type === "BILL_OF_LADING")) && (
+                      documents.some(
+                        (d) => d.document_type === "BILL_OF_LADING",
+                      )) && (
                         <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
                           <div className="flex justify-between items-start">
                             <div>
@@ -648,26 +600,35 @@ function ShipDetailsContent() {
                                 Bill of Lading
                               </p>
                               <p className="font-mono text-sm font-bold text-foreground">
-                                {ship?.shipment_details?.bill_of_lading_number || "Document Only"}
+                                {ship?.shipment_details?.bill_of_lading_number ||
+                                  "Document Only"}
                               </p>
                             </div>
-                            {documents.find((d: any) => d.document_type === "BILL_OF_LADING" && d.presigned_url) && (
-                              <a
-                                href={documents.find((d: any) => d.document_type === "BILL_OF_LADING")?.presigned_url || "#"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                title="View Bill of Lading"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </a>
-                            )}
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "BILL_OF_LADING" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "BILL_OF_LADING",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Bill of Lading"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
                         </div>
                       )}
 
                     {/* Packing List */}
-                    {documents.some((d: any) => d.document_type === "PACKING_LIST") && (
+                    {documents.some((d) => d.document_type === "PACKING_LIST") && (
                       <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div>
@@ -678,17 +639,25 @@ function ShipDetailsContent() {
                               Available
                             </p>
                           </div>
-                          {documents.find((d: any) => d.document_type === "PACKING_LIST" && d.presigned_url) && (
-                            <a
-                              href={documents.find((d: any) => d.document_type === "PACKING_LIST")?.presigned_url || "#"}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                              title="View Packing List"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          )}
+                          {documents.find(
+                            (d) =>
+                              d.document_type === "PACKING_LIST" &&
+                              d.presigned_url,
+                          ) && (
+                              <a
+                                href={
+                                  documents.find(
+                                    (d) => d.document_type === "PACKING_LIST",
+                                  )?.presigned_url || "#"
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                title="View Packing List"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </a>
+                            )}
                         </div>
                       </div>
                     )}

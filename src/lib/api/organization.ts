@@ -1,4 +1,4 @@
-import { request } from "@/lib/api-client";
+import { request, type ApiResponse } from "@/lib/api-client";
 
 export interface OrganizationDocument {
   id: number;
@@ -59,7 +59,7 @@ export const organizationApi = {
       return { ...response, data: items as OrganizationDocument[] };
     }
 
-    return response as any;
+    return response as unknown as ApiResponse<OrganizationDocument[]>;
   },
 
   /**
