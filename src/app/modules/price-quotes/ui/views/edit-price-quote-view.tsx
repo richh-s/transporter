@@ -311,7 +311,7 @@ function EditPriceQuoteContent() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="p-4 space-y-4 pb-28"
+          className="p-4 space-y-4"
         >
           {/* Route Section */}
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
@@ -717,8 +717,8 @@ function EditPriceQuoteContent() {
         </form>
       </Form>
 
-      {/* Fixed Bottom Actions */}
-      <div className="fixed bottom-0 left-0 lg:left-72 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3 z-50">
+      {/* Actions */}
+      <div className="p-4 flex gap-3">
         <Button
           type="button"
           variant="outline"

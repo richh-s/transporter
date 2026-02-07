@@ -214,7 +214,7 @@ function PriceQuoteDetailContent() {
         </div>
       </div>
 
-      <div className="p-4 space-y-4 pb-24">
+      <div className="p-4 space-y-4">
         {/* Price Card */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
           <div className="flex items-center justify-between">
@@ -341,9 +341,9 @@ function PriceQuoteDetailContent() {
         </InfoCard>
       </div>
 
-      {/* Fixed Bottom Actions */}
+      {/* Actions */}
       {canEdit && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3">
+        <div className="p-4 flex gap-3">
           <Button
             variant="outline"
             onClick={() =>

@@ -42,7 +42,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGPSDevice, useUpdateGPSDevice } from "@/hooks/use-gps-devices";
-import { useUnassignedTrucks } from "@/hooks/use-trucks";
+import { useTrucks } from "@/hooks/use-trucks";
 import type { UpdateGPSDeviceRequest } from "@/types/gps-device";
 
 const formSchema = z.object({
@@ -109,9 +109,18 @@ function EditGPSDeviceContent() {
   const id = rawId && rawId !== "placeholder" ? Number(rawId) : NaN;
 
   const { data: device, isLoading } = useGPSDevice(isNaN(id) ? 0 : id);
-  const { data: trucks = [], isLoading: loadingTrucks } = useUnassignedTrucks(
-    device?.truck_id,
-  );
+  const { data: allTrucks = [], isLoading: loadingTrucks } = useTrucks();
+
+  // Filter trucks to show: unassigned trucks + currently assigned truck
+  const trucks = allTrucks.filter((truck) => {
+    const isUnassigned = truck.gps_device_id === null || truck.gps_device_id === undefined;
+    const isCurrentlyAssigned = device && truck.gps_device_id === device.id;
+    return isUnassigned || isCurrentlyAssigned;
+  });
+
+  // Find the currently assigned truck
+  const assignedTruck = device ? allTrucks.find(truck => truck.gps_device_id === device.id) : undefined;
+
   const updateMutation = useUpdateGPSDevice();
   const hasPopulatedForm = useRef(false);
 
@@ -136,7 +145,10 @@ function EditGPSDeviceContent() {
   }, [id, router]);
 
   useEffect(() => {
-    if (device && device.id === id && !hasPopulatedForm.current) {
+    if (device && device.id === id && !hasPopulatedForm.current && allTrucks.length > 0) {
+      // Find the truck that has this GPS device assigned
+      const assignedTruck = allTrucks.find(truck => truck.gps_device_id === device.id);
+
       form.reset({
         external_device_id: device.external_device_id,
         imei_number: device.imei_number,
@@ -144,13 +156,13 @@ function EditGPSDeviceContent() {
         device_model: device.device_model || "",
         expire_date: new Date(device.expire_date),
         status: device.status,
-        truck_id: device.truck_id,
+        truck_id: assignedTruck?.id,
         unlink_truck: false,
       });
       hasPopulatedForm.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [device, id]);
+  }, [device, id, allTrucks]);
 
   useEffect(() => {
     hasPopulatedForm.current = false;
@@ -171,8 +183,8 @@ function EditGPSDeviceContent() {
     };
 
     if (values.unlink_truck) {
-      updateData.truck_id = 0;
-    } else if (values.truck_id) {
+      updateData.truck_id = null;
+    } else if (values.truck_id && values.truck_id !== device?.truck_id) {
       updateData.truck_id = values.truck_id;
       updateData.last_synced_at = new Date().toISOString();
     }
@@ -209,7 +221,7 @@ function EditGPSDeviceContent() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="p-4 space-y-4 pb-28"
+          className="p-4 space-y-4"
         >
           {/* Device Info Section */}
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
@@ -307,41 +319,43 @@ function EditGPSDeviceContent() {
               accent="bg-emerald-500/10 text-emerald-600"
             />
 
-            {device?.truck_id && (
+            {assignedTruck && (
               <div className="p-3 rounded-lg bg-muted/50 mb-3">
                 <p className="text-xs text-muted-foreground">
                   Currently assigned to:{" "}
                   <span className="font-semibold text-foreground">
-                    Truck #{device.truck_id}
+                    Truck #{assignedTruck.id} - {assignedTruck.plate_number || assignedTruck.license_plate || assignedTruck.license_plate_number || "N/A"}
                   </span>
                 </p>
               </div>
             )}
 
             <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="unlink_truck"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="flex-1">
-                      <FormLabel className="text-sm font-medium cursor-pointer">
-                        Unlink from Truck
-                      </FormLabel>
-                      <p className="text-[10px] text-muted-foreground">
-                        Remove truck assignment
-                      </p>
-                    </div>
-                    <Link2Off className="h-4 w-4 text-muted-foreground" />
-                  </FormItem>
-                )}
-              />
+              {assignedTruck && (
+                <FormField
+                  control={form.control}
+                  name="unlink_truck"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="flex-1">
+                        <FormLabel className="text-sm font-medium cursor-pointer">
+                          Unlink from Truck
+                        </FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          Remove truck assignment
+                        </p>
+                      </div>
+                      <Link2Off className="h-4 w-4 text-muted-foreground" />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {!form.watch("unlink_truck") && (
                 <FormField
@@ -350,11 +364,11 @@ function EditGPSDeviceContent() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs">
-                        Reassign to Truck
+                        {assignedTruck ? "Reassign to Truck" : "Assign to Truck"}
                       </FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(Number(value))}
-                        value={field.value?.toString() || undefined}
+                        value={field.value?.toString()}
                         disabled={loadingTrucks}
                       >
                         <FormControl>
@@ -373,7 +387,7 @@ function EditGPSDeviceContent() {
                             <SelectItem value="loading" disabled>
                               Loading...
                             </SelectItem>
-                          ) : trucks.length === 0 ? (
+                          ) : trucks.length === 0 && !device?.truck_id ? (
                             <SelectItem value="no-trucks" disabled>
                               No available trucks
                             </SelectItem>
@@ -491,8 +505,8 @@ function EditGPSDeviceContent() {
         </form>
       </Form>
 
-      {/* Fixed Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3">
+      {/* Actions */}
+      <div className="p-4 flex gap-3">
         <Button
           type="button"
           variant="outline"

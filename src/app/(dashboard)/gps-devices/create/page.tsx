@@ -125,7 +125,7 @@ export default function CreateGPSDevicePage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="p-4 space-y-4 pb-40 lg:pb-28"
+          className="p-4 space-y-4"
         >
           {/* Device Info Section */}
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
@@ -360,8 +360,8 @@ export default function CreateGPSDevicePage() {
         </form>
       </Form>
 
-      {/* Fixed Bottom Actions - above mobile nav */}
-      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/50 flex gap-3">
+      {/* Actions */}
+      <div className="p-4 flex gap-3">
         <Button
           type="button"
           variant="outline"
