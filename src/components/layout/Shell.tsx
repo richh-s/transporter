@@ -11,8 +11,9 @@ import {
   Tag,
   // CreditCard, // Unused - payments page not implemented
   Menu,
-  User,
-  Settings,
+  Users, // For Driver Management
+  // User, // Removed - My Profile menu item removed
+  // Settings, // Removed - Settings menu item removed
   LogOut,
   Bell,
   Satellite,
@@ -48,7 +49,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Shipments", href: "/ships", icon: Anchor },
   { name: "Fleet Management", href: "/fleet", icon: Truck },
-  { name: "Driver Management", href: "/drivers", icon: User },
+  { name: "Driver Management", href: "/drivers", icon: Users },
   { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
   // { name: "Active Orders", href: "/orders", icon: ClipboardList }, // Page not implemented yet
   { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
@@ -146,7 +147,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {/* Mobile sidebar */}
       <div
         className={cn(
-          "fixed inset-0 z-50 lg:hidden",
+          "fixed inset-0 z-[100] lg:hidden",
           sidebarOpen ? "visible" : "invisible",
         )}
       >
@@ -168,12 +169,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col z-50">
         <Sidebar />
       </div>
 
       <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden min-h-screen">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-foreground lg:hidden"
@@ -218,20 +219,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>My Profile</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setPasswordDialogOpen(true)}
                     className="cursor-pointer"
                   >
                     <Lock className="mr-2 h-4 w-4" />
                     <span>Change Password</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -287,7 +280,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
           <div className="flex justify-around items-center h-16">
             {navigation.slice(0, 4).map((item) => {
               // Show only first 4 items on mobile
