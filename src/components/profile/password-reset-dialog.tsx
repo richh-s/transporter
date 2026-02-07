@@ -70,7 +70,7 @@ export function PasswordResetDialog({
 
   async function onSubmit(data: PasswordResetFormValues) {
     try {
-      const { error, status } = await request<{ message: string }>(
+      const { error, status, fields } = await request<{ message: string }>(
         "/auth/password-reset",
         {
           method: "POST",
@@ -78,11 +78,37 @@ export function PasswordResetDialog({
             current_password: data.current_password,
             new_password: data.new_password,
           }),
-        }
+        },
       );
 
       if (error || status !== 200) {
-        // Handle specific error cases
+        // 1. Handle validation errors (422)
+        if (status === 422 && fields) {
+          Object.entries(fields).forEach(([key, value]) => {
+            // Map backend keys to form field names
+            // Backend often returns 'body' for general validation or specific property names
+            if (key === "body" || key === "new_password") {
+              form.setError("new_password", {
+                type: "manual",
+                message: value,
+              });
+            } else if (key === "current_password") {
+              form.setError("current_password", {
+                type: "manual",
+                message: value,
+              });
+            } else {
+              // Fallback for unknown fields: set on new_password or show toast
+              form.setError("new_password", {
+                type: "manual",
+                message: value,
+              });
+            }
+          });
+          return;
+        }
+
+        // 2. Handle specific status cases
         if (status === 403) {
           form.setError("current_password", {
             type: "manual",
@@ -97,7 +123,9 @@ export function PasswordResetDialog({
           return;
         }
 
-        throw new Error(error || "Failed to reset password");
+        // 3. Fallback for other errors
+        toast.error(error || "Failed to reset password");
+        return;
       }
 
       toast.success("Password changed successfully");
@@ -105,12 +133,9 @@ export function PasswordResetDialog({
       // Reset form and close dialog
       form.reset();
       onOpenChange(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to reset password. Please try again."
-      );
+    } catch (err) {
+      console.error("Password reset error:", err);
+      toast.error("Failed to reset password. Please try again.");
     }
   }
 
