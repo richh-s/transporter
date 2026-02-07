@@ -19,7 +19,7 @@ export function formatLocation(location: string): string {
         [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
         [LocationEnum.HAWASSA]: "Hawassa",
         [LocationEnum.SHASHEMENE]: "Shashemene",
-        [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",
+        [LocationEnum.DJIBOUTI_PORT]: "Djibouti",
     };
     return map[location] || location;
 }
@@ -35,7 +35,7 @@ export function locationEnumToDisplayName(location: LocationEnum): string {
         [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
         [LocationEnum.HAWASSA]: "Hawassa",
         [LocationEnum.SHASHEMENE]: "Shashemene",
-        [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",
+        [LocationEnum.DJIBOUTI_PORT]: "Djibouti",
     };
     return map[location] || location;
 }
@@ -102,6 +102,6 @@ export const LOCATION_OPTIONS = [
     { value: LocationEnum.DEBRE_ZEIT, label: "Debre Zeit" },
     { value: LocationEnum.HAWASSA, label: "Hawassa" },
     { value: LocationEnum.SHASHEMENE, label: "Shashemene" },
-    { value: LocationEnum.DJIBOUTI_PORT, label: "Djibouti Port" },
+    { value: LocationEnum.DJIBOUTI_PORT, label: "Djibouti" },
 ];
 
