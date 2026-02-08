@@ -330,15 +330,17 @@ function PriceQuoteDetailContent() {
         </InfoCard>
 
         {/* Timeline */}
-        <InfoCard
-          icon={Calendar}
-          title="Created"
-          accent="bg-gray-500/10 text-gray-600"
-        >
-          <p className="text-sm font-medium">
-            {formatDateTime(quote.created_at)}
-          </p>
-        </InfoCard>
+        {quote.created_at && (
+          <InfoCard
+            icon={Calendar}
+            title="Created"
+            accent="bg-gray-500/10 text-gray-600"
+          >
+            <p className="text-sm font-medium">
+              {formatDateTime(quote.created_at)}
+            </p>
+          </InfoCard>
+        )}
       </div>
 
       {/* Actions */}
