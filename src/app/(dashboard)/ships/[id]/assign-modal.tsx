@@ -62,15 +62,15 @@ export function AssignModal({
       const assignedDriver = shipItem.driver || shipItem.assigned_driver;
       setSelectedTruckId(
         assignedTruck?.id ||
-          shipItem.truck_id ||
-          shipItem.assigned_truck_id ||
-          null,
+        shipItem.truck_id ||
+        shipItem.assigned_truck_id ||
+        null,
       );
       setSelectedDriverId(
         assignedDriver?.id ||
-          shipItem.driver_id ||
-          shipItem.assigned_driver_id ||
-          null,
+        shipItem.driver_id ||
+        shipItem.assigned_driver_id ||
+        null,
       );
     }
   }, [shipItem, open]);
@@ -107,11 +107,17 @@ export function AssignModal({
   );
 
   // Filter available trucks
-  const availableTrucks = trucks.filter((t) => {
-    const isActive = t.status === "active";
+  const availableTrucks = trucks.filter((t: any) => {
+    // Handling backend typo "assigend" and "assigned"
+    const isGloballyAssigned = t.assigned === true || t.assigend === true;
+    const isDeleted = t.deleted === true;
+    const isActive = t.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(t.id) === String(dbTruckId);
-    const isTaken = takenTruckIds.has(Number(t.id));
-    return isCurrentlyAssigned || (isActive && !isTaken);
+    const isTakenLocally = takenTruckIds.has(Number(t.id));
+
+    // Show if it's the one already assigned to this item, 
+    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned truck is in list
@@ -123,11 +129,17 @@ export function AssignModal({
   }
 
   // Filter available drivers
-  const availableDrivers = drivers.filter((d) => {
-    const isActive = d.status === "active";
+  const availableDrivers = drivers.filter((d: any) => {
+    // Handling backend typo "assigend" and "assigned"
+    const isGloballyAssigned = d.assigned === true || d.assigend === true;
+    const isDeleted = d.deleted === true;
+    const isActive = d.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(d.id) === String(dbDriverId);
-    const isTaken = takenDriverIds.has(Number(d.id));
-    return isCurrentlyAssigned || (isActive && !isTaken);
+    const isTakenLocally = takenDriverIds.has(Number(d.id));
+
+    // Show if it's the one already assigned to this item,
+    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned driver is in list

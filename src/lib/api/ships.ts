@@ -279,8 +279,8 @@ export const shipApi = {
           // Throw a structured error with the API error message
           const error = new Error(
             (errorData.error as string) ||
-              (errorData.message as string) ||
-              "Failed to fetch invoice",
+            (errorData.message as string) ||
+            "Failed to fetch invoice",
           );
           (error as Error & { code?: string }).code = errorData.code as string;
           (error as Error & { status_code?: number }).status_code =

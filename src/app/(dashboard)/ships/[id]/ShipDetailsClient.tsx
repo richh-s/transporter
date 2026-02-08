@@ -367,10 +367,29 @@ function ShipDetailsContent() {
     truckId: number | null,
     driverId: number | null,
   ) => {
-    if (truckId)
+    if (!selectedShipItem) return;
+
+    // Get current IDs for comparison
+    const currentTruckId =
+      selectedShipItem.truck_id ||
+      selectedShipItem.assigned_truck_id ||
+      selectedShipItem.assigned_truck?.id ||
+      selectedShipItem.truck?.id;
+    const currentDriverId =
+      selectedShipItem.driver_id ||
+      selectedShipItem.assigned_driver_id ||
+      selectedShipItem.assigned_driver?.id ||
+      selectedShipItem.driver?.id;
+
+    // Only trigger truck assignment if changed
+    if (truckId && Number(truckId) !== Number(currentTruckId)) {
       assignTruck.mutate({ shipItemId, data: { truck_id: truckId } });
-    if (driverId)
+    }
+
+    // Only trigger driver assignment if changed
+    if (driverId && Number(driverId) !== Number(currentDriverId)) {
       assignDriver.mutate({ shipItemId, data: { driver_id: driverId } });
+    }
   };
 
   if (error) {
