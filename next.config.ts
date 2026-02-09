@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Conditional output: 'export' for Capacitor (mobile), undefined for Amplify SSR
-  // Only use static export when building for Capacitor (mobile apps)
-  // For Amplify SSR deployment, leave output undefined
-  ...(process.env.CAPACITOR_BUILD === 'true' ? { output: "export" } : {}),
+  // Removed output: "export" to support Amplify SSR deployment
+  // For Capacitor mobile builds, add output: "export" in capacitor.config.ts or build script
   trailingSlash: true,
   images: {
     unoptimized: true,
