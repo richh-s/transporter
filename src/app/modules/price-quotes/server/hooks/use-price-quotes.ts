@@ -10,7 +10,7 @@ import { priceQuoteKeys } from "./price-quote-keys";
  */
 export function usePriceQuotes(
     page: number = 1,
-    perPage: number = 20,
+    perPage: number = 10,
     filters: PriceQuoteFilters = {}
 ) {
     return useQuery({

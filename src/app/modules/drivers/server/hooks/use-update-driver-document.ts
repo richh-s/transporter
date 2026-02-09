@@ -4,8 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { driverKeys } from "../query-keys";
 import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 import type { DriverDocument } from "../types";
+import { tokenStorage } from "@/lib/api-client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+
+function getAuthHeaders(): Record<string, string> {
+  const token = tokenStorage.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 type UpdateInput = {
   documentId: number;
@@ -27,9 +33,10 @@ export function useUpdateDriverDocument(driverId: number) {
         `${API_BASE}/driver/${driverId}/documents/${documentId}`,
         {
           method: "PATCH",
+          headers: getAuthHeaders(),
           credentials: "include",
           body: formData,
-        }
+        },
       );
 
       if (!res.ok) throw await res.json();
@@ -41,9 +48,7 @@ export function useUpdateDriverDocument(driverId: number) {
       qc.setQueryData(
         driverKeys.documents(driverId),
         (old: DriverDocument[] = []) =>
-          old.map((doc) =>
-            doc.id === updatedDoc.id ? updatedDoc : doc
-          )
+          old.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc)),
       );
     },
   });

@@ -12,32 +12,14 @@ import {
  * Convert API enum values to display names
  */
 export function formatLocation(location: string): string {
-    const map: Record<string, string> = {
-        [LocationEnum.ADDIS_ABABA]: "Addis Ababa",
-        [LocationEnum.ADAMA]: "Adama",
-        [LocationEnum.DUKEM]: "Dukem",
-        [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
-        [LocationEnum.HAWASSA]: "Hawassa",
-        [LocationEnum.SHASHEMENE]: "Shashemene",
-        [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",
-    };
-    return map[location] || location;
+    return location;
 }
 
 /**
  * Convert enum values to API display format (for sending to backend)
  */
 export function locationEnumToDisplayName(location: LocationEnum): string {
-    const map: Record<LocationEnum, string> = {
-        [LocationEnum.ADDIS_ABABA]: "Addis Ababa",
-        [LocationEnum.ADAMA]: "Adama",
-        [LocationEnum.DUKEM]: "Dukem",
-        [LocationEnum.DEBRE_ZEIT]: "debre_zeit",
-        [LocationEnum.HAWASSA]: "Hawassa",
-        [LocationEnum.SHASHEMENE]: "Shashemene",
-        [LocationEnum.DJIBOUTI_PORT]: "Djibouti Port",
-    };
-    return map[location] || location;
+    return location;
 }
 
 export function formatTruckType(truckType: string): string {
@@ -102,6 +84,6 @@ export const LOCATION_OPTIONS = [
     { value: LocationEnum.DEBRE_ZEIT, label: "Debre Zeit" },
     { value: LocationEnum.HAWASSA, label: "Hawassa" },
     { value: LocationEnum.SHASHEMENE, label: "Shashemene" },
-    { value: LocationEnum.DJIBOUTI_PORT, label: "Djibouti Port" },
+    { value: LocationEnum.DJIBOUTI_PORT, label: "Djibouti" },
 ];
 

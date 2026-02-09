@@ -1,16 +1,55 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Debug: Log the API URL in development
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  console.log("🔗 API URL:", API_URL);
+if (!API_URL) {
+  throw new Error(
+    "NEXT_PUBLIC_API_URL is not defined. Check your .env.local file.",
+  );
 }
 
 export type ApiResponse<T> = {
   data?: T;
   error?: string;
+  status: number;
+  errorCode?: string; // Error code from backend (e.g., "MISSING_DOCUMENTS")
   code?: string;
   fields?: Record<string, string>;
-  status: number;
+};
+
+// Token storage keys
+const ACCESS_TOKEN_KEY = "wetruck_access_token";
+const REFRESH_TOKEN_KEY = "wetruck_refresh_token";
+
+/**
+ * Token management utilities for Capacitor app
+ * Uses localStorage instead of cookies for cross-origin compatibility
+ */
+export const tokenStorage = {
+  getAccessToken: (): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  },
+
+  getRefreshToken: (): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  },
+
+  setTokens: (accessToken: string, refreshToken: string) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  },
+
+  setAccessToken: (accessToken: string) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  },
+
+  clearTokens: () => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  },
 };
 
 /**
@@ -18,7 +57,8 @@ export type ApiResponse<T> = {
  */
 async function logout() {
   if (typeof window !== "undefined") {
-    // Clear local user data
+    // Clear tokens and user data
+    tokenStorage.clearTokens();
     localStorage.removeItem("wetruck_user");
 
     // Only redirect if not already on sign-in page (prevent infinite loop)
@@ -29,22 +69,37 @@ async function logout() {
 }
 
 /**
- * Attempts to refresh the access token using the refresh_token cookie
+ * Attempts to refresh the access token using the stored refresh token
  * @returns true if refresh successful, false otherwise
  */
 async function tryRefreshToken(): Promise<boolean> {
   try {
     console.log("🔄 Attempting to refresh access token...");
 
+    const refreshToken = tokenStorage.getRefreshToken();
+
+    if (!refreshToken) {
+      console.warn("❌ No refresh token available");
+      return false;
+    }
+
     const response = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
-      credentials: "include", // Send refresh_token cookie
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ refresh_token: refreshToken }),
     });
 
     if (response.ok) {
+      const data = await response.json();
+      // Store the new access token (and refresh token if provided)
+      if (data.access_token) {
+        tokenStorage.setAccessToken(data.access_token);
+        if (data.refresh_token) {
+          tokenStorage.setTokens(data.access_token, data.refresh_token);
+        }
+      }
       console.log("✅ Token refreshed successfully");
       return true;
     } else {
@@ -59,19 +114,29 @@ async function tryRefreshToken(): Promise<boolean> {
 
 /**
  * Makes an authenticated API request with automatic token refresh
- * Uses HttpOnly cookies for authentication (no Authorization header needed)
+ * Uses Bearer token from localStorage for Capacitor app compatibility
  */
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {},
-  isRetry = false
+  isRetry = false,
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
 
+  // Only set Content-Type for non-FormData requests
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
+  }
+
+  // Add Authorization header if we have a token (except for login/register endpoints)
+  const isPublicEndpoint =
+    endpoint === "/auth/login" || endpoint === "/auth/register";
+  const accessToken = tokenStorage.getAccessToken();
+
+  if (!isPublicEndpoint && accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
   try {
@@ -85,7 +150,7 @@ export async function request<T>(
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: "include", // ✅ Send cookies with every request
+      credentials: "include", // Still include for backwards compatibility
     });
 
     const status = response.status;
@@ -119,10 +184,15 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error: result?.error || result?.detail || result?.message || "Something went wrong",
+        error:
+          result?.error ||
+          result?.detail ||
+          result?.message ||
+          "Something went wrong",
+        status,
+        errorCode: result?.code || undefined, // Extract error code if available
         code: result?.code || result?.status_code?.toString(),
         fields: result?.fields,
-        status,
       };
     }
 

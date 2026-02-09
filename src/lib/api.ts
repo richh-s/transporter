@@ -2,6 +2,8 @@
    API TRANSPORT LAYER (SINGLE SOURCE OF TRUTH)
 ===================================================== */
 
+import { tokenStorage } from "./api-client";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_BASE_URL) {
@@ -31,7 +33,7 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<T> {
   const { requireAuth = true, ...fetchOptions } = options;
 
@@ -41,16 +43,15 @@ export async function apiRequest<T>(
 
   // ✅ Handle JSON vs FormData automatically
   const isFormData =
-    typeof FormData !== "undefined" &&
-    fetchOptions.body instanceof FormData;
+    typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
 
   if (!isFormData) {
     headers["Content-Type"] ??= "application/json";
   }
 
-  // ✅ Auth header
+  // ✅ Auth header - use tokenStorage (localStorage) for consistency
   if (requireAuth && typeof window !== "undefined") {
-    const token = sessionStorage.getItem("access_token");
+    const token = tokenStorage.getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
@@ -79,7 +80,7 @@ export async function apiRequest<T>(
     );
   }
 
-  return isJson ? (await response.json()) : ({} as T);
+  return isJson ? await response.json() : ({} as T);
 }
 
 /* ================= AUTH API =================
