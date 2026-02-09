@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Restored to working configuration from last successful deployment
-  // Removed Capacitor-specific settings (trailingSlash, unoptimized) that conflict with Amplify SSR
+  // Critical for containerized deployment (App Runner, Docker, etc.)
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
