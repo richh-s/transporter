@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Conditional output: 'export' for Capacitor (mobile), undefined for Amplify SSR
+  // Only use static export when building for Capacitor (mobile apps)
+  // For Amplify SSR deployment, leave output undefined
+  ...(process.env.CAPACITOR_BUILD === 'true' ? { output: "export" } : {}),
   trailingSlash: true,
   images: {
     unoptimized: true,
