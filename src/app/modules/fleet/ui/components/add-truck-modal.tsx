@@ -293,7 +293,7 @@ export function AddTruckModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">
-                          VIN <span className="text-red-500">*</span>
+                          Vehicle Identification Number (VIN) <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input

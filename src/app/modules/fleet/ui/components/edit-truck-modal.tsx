@@ -225,7 +225,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        VIN <span className="text-red-500">*</span>
+                        Vehicle Identification Number (VIN) <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -281,8 +281,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_TYPES.find(
-                                    (type) => type.value === field.value,
-                                  )?.label
+                                  (type) => type.value === field.value,
+                                )?.label
                                 : "Select type..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -353,8 +353,8 @@ export function EditTruckModal({
                             >
                               {field.value
                                 ? TRUCK_STATUSES.find(
-                                    (status) => status.value === field.value,
-                                  )?.label
+                                  (status) => status.value === field.value,
+                                )?.label
                                 : "Select status..."}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
