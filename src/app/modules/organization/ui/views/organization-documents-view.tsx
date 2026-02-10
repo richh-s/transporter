@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,17 @@ import {
 } from "../components";
 import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
+import { openInApp } from "@/lib/utils/open-in-app";
 
 export function OrganizationDocumentsView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null,
+  );
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
 
   // Pagination state
@@ -55,13 +59,10 @@ export function OrganizationDocumentsView() {
 
   // Get selected document for editing
   const { data: selectedDocument } = useOrganizationDocument(
-    selectedDocumentId || ""
+    selectedDocumentId || "",
   );
 
-  const handleUploadDocument = async (
-    file: File,
-    documentType: string
-  ) => {
+  const handleUploadDocument = async (file: File, documentType: string) => {
     // Close modal optimistically
     setIsUploadModalOpen(false);
 
@@ -76,16 +77,18 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to upload document"
+            error instanceof Error
+              ? error.message
+              : "Failed to upload document",
           );
         },
-      }
+      },
     );
   };
 
   const handleUpdateDocument = async (
     id: string | number,
-    data: { document_type?: string; file?: File }
+    data: { document_type?: string; file?: File },
   ) => {
     // Close modal optimistically
     setIsEditModalOpen(false);
@@ -99,10 +102,12 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to update document"
+            error instanceof Error
+              ? error.message
+              : "Failed to update document",
           );
         },
-      }
+      },
     );
   };
 
@@ -122,7 +127,7 @@ export function OrganizationDocumentsView() {
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete document"
+          error instanceof Error ? error.message : "Failed to delete document",
         );
       },
     });
@@ -138,13 +143,13 @@ export function OrganizationDocumentsView() {
       }
 
       if (response.data.presigned_url) {
-        window.open(response.data.presigned_url, "_blank");
+        await openInApp(response.data.presigned_url);
       } else {
         toast.error("Document URL not available");
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to view document"
+        error instanceof Error ? error.message : "Failed to view document",
       );
     }
   };
@@ -163,17 +168,17 @@ export function OrganizationDocumentsView() {
     if (!entityId) return;
 
     if (entityType === "truck") {
-      router.push(`/fleet/${entityId}`);
+      router.push(`/fleet/placeholder?id=${entityId}`);
     } else if (entityType === "driver") {
       // Navigate to driver detail page when it's available
       // For now, you can update this route when driver pages are implemented
-      router.push(`/drivers/${entityId}`);
+      router.push(`/drivers/placeholder?id=${entityId}`);
     }
   };
 
   // Filter handlers
   const handleStatusFilter = (
-    status: "pending" | "approved" | "rejected" | "all" | null
+    status: "pending" | "approved" | "rejected" | "all" | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -183,7 +188,7 @@ export function OrganizationDocumentsView() {
   };
 
   const handleDocumentTypeFilter = (
-    type: "trade_licence" | "id" | "other" | "all" | null
+    type: "trade_licence" | "id" | "other" | "all" | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -192,9 +197,7 @@ export function OrganizationDocumentsView() {
     setPage(1);
   };
 
-  const handleEntityTypeFilter = (
-    type: "truck" | "driver" | "all" | null
-  ) => {
+  const handleEntityTypeFilter = (type: "truck" | "driver" | "all" | null) => {
     setFilters((prev) => ({
       ...prev,
       entity_type: type === "all" ? null : type,
@@ -208,19 +211,33 @@ export function OrganizationDocumentsView() {
   };
 
   // Filter documents based on active filters
-  const filteredDocuments = (documents || []).filter((doc) => {
-    if (filters.status && doc.status !== filters.status) return false;
-    if (filters.document_type && doc.document_type !== filters.document_type)
-      return false;
-    if (filters.entity_type && doc.entity_type !== filters.entity_type)
-      return false;
-    return true;
-  });
+  const filteredDocuments = React.useMemo(() => {
+    return (documents || []).filter((doc) => {
+      if (filters.status && doc.status !== filters.status) return false;
+      if (filters.document_type && doc.document_type !== filters.document_type)
+        return false;
+      if (filters.entity_type && doc.entity_type !== filters.entity_type)
+        return false;
+      return true;
+    });
+  }, [documents, filters]);
 
   // Reset scroll state when filters or page change
   useEffect(() => {
     setIsScrolled(false);
   }, [filters, page]);
+
+  // Handle auto-open upload modal if upload=true is in URL
+  useEffect(() => {
+    if (searchParams.get("upload") === "true") {
+      setIsUploadModalOpen(true);
+      // Clean up the URL after opening the modal
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete("upload");
+      const queryString = newParams.toString();
+      router.replace(`/organization/documents${queryString ? `?${queryString}` : ""}`);
+    }
+  }, [searchParams, router]);
 
   return (
     <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden">
@@ -241,8 +258,8 @@ export function OrganizationDocumentsView() {
       {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
       <div
         className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
-            ? "hidden md:block"
-            : "block"
+          ? "hidden md:block"
+          : "block"
           }`}
       >
         <DocumentStatsCards documents={filteredDocuments} />
@@ -256,7 +273,7 @@ export function OrganizationDocumentsView() {
             handleEditDocument,
             handleDeleteDocument,
             deleteDocumentMutation.isPending,
-            handleEntityClick
+            handleEntityClick,
           )}
           data={filteredDocuments as OrganizationDocumentTableRow[]}
           searchKey="document_type"
@@ -337,4 +354,3 @@ export function OrganizationDocumentsView() {
     </div>
   );
 }
-

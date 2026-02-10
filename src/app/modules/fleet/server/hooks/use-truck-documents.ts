@@ -30,12 +30,15 @@ export function useUploadTruckDocument() {
       file: File;
       documentType: string;
     }) => {
-      const response = await truckApi.uploadDocument(truckId, file, documentType);
+      const response = await truckApi.uploadDocument(
+        truckId,
+        file,
+        documentType,
+      );
       if (!response.data) {
         throw new ApiError(
           response.error || "Failed to upload document",
           response.status || 500,
-          response.fields
         );
       }
       return response.data;
@@ -61,12 +64,15 @@ export function useUpdateTruckDocument() {
       documentId: string;
       updateData: { document_type?: string; file?: File };
     }) => {
-      const response = await truckApi.updateDocument(truckId, documentId, updateData);
+      const response = await truckApi.updateDocument(
+        truckId,
+        documentId,
+        updateData,
+      );
       if (!response.data) {
         throw new ApiError(
           response.error || "Failed to update document",
           response.status || 500,
-          response.fields
         );
       }
       return response.data;
@@ -103,4 +109,3 @@ export function useDeleteTruckDocument() {
     },
   });
 }
-

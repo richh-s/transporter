@@ -28,6 +28,9 @@ export function useCreateTruck() {
         registration_date: new Date().toISOString().split("T")[0],
       };
 
+      // Log request data for debugging
+      console.log("🚛 Create truck request data:", submissionData);
+
       const response = await truckApi.createTruck(submissionData);
 
       // Log response for debugging

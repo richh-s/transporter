@@ -119,7 +119,7 @@ export class PriceQuoteService {
     id: number,
     updateData: UpdatePriceQuoteRequest,
   ): Promise<PriceQuote> {
-    const { data, error } = await request<PriceQuoteUpdateResponse>(
+    const response = await request<PriceQuoteUpdateResponse>(
       `${this.BASE_ENDPOINT}/${id}`,
       {
         method: "PATCH",
@@ -127,8 +127,18 @@ export class PriceQuoteService {
       },
     );
 
+    const { data, error, status, code, fields } = response;
+
     if (error) {
-      throw new Error(error);
+      const errorObj = new Error(error) as Error & {
+        status?: number;
+        code?: string;
+        fields?: Record<string, string>;
+      };
+      errorObj.status = status;
+      errorObj.code = code;
+      errorObj.fields = fields;
+      throw errorObj;
     }
 
     if (!data?.result) {

@@ -14,21 +14,22 @@ function toQueryString(params?: Record<string, unknown>) {
   const search = new URLSearchParams(
     Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== "")
-      .map(([k, v]) => [k, String(v)])
+      .map(([k, v]) => [k, String(v)]),
   );
   return search.toString() ? `?${search}` : "";
 }
 // driver api
 export const driverApi = {
-  // drivers
-  getDrivers: (params?: Record<string, unknown>) =>
-    apiRequest<DriversResponse>(`/driver${toQueryString(params)}`),
+  // drivers - GET /api/v1/driver/ (trailing slash per Swagger)
+  getDrivers: (params?: Record<string, unknown>) => {
+    const q = toQueryString(params);
+    return apiRequest<DriversResponse>(q ? `/driver/${q}` : "/driver/");
+  },
 
-  getDriver: (id: number) =>
-    apiRequest<ApiResult<Driver>>(`/driver/${id}`),
+  getDriver: (id: number) => apiRequest<ApiResult<Driver>>(`/driver/${id}`),
 
   createDriver: (payload: CreateDriverPayload) =>
-    apiRequest<ApiResult<Driver>>(`/driver`, {
+    apiRequest<ApiResult<Driver>>(`/driver/`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -48,21 +49,16 @@ export const driverApi = {
 
   // list
   getDriverDocuments: (driverId: number) =>
-    apiRequest<DriverDocument[]>(
-      `/driver/${driverId}/documents`
-    ),
-  
+    apiRequest<DriverDocument[]>(`/driver/${driverId}/documents`),
 
   // get single
   getDriverDocument: (driverId: number, documentId: number) =>
-    apiRequest<DriverDocument>(
-      `/driver/${driverId}/documents/${documentId}`
-    ),
+    apiRequest<DriverDocument>(`/driver/${driverId}/documents/${documentId}`),
 
   //upload
   uploadDriverDocument: (
     driverId: number,
-    payload: { document_type: string; file: File }
+    payload: { document_type: string; file: File },
   ) => {
     const formData = new FormData();
     formData.append("document_type", payload.document_type);
@@ -73,14 +69,13 @@ export const driverApi = {
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
   },
 
   // delete
   deleteDriverDocument: (driverId: number, documentId: number) =>
-    apiRequest<ApiResult<null>>(
-      `/driver/${driverId}/documents/${documentId}`,
-      { method: "DELETE" }
-    ),
+    apiRequest<ApiResult<null>>(`/driver/${driverId}/documents/${documentId}`, {
+      method: "DELETE",
+    }),
 };

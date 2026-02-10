@@ -64,9 +64,7 @@ export function useUploadDriverDocument(driverId: number) {
         qc.setQueryData<DriverDocument[]>(
           driverKeys.documents(driverId),
           (old = []) =>
-            old.filter(
-              (doc) => doc.id !== payload.replace_document_id
-            )
+            old.filter((doc) => doc.id !== payload.replace_document_id),
         );
       }
     },
@@ -77,7 +75,7 @@ export function useUploadDriverDocument(driverId: number) {
         try {
           await driverApi.deleteDriverDocument(
             driverId,
-            vars.replace_document_id
+            vars.replace_document_id,
           );
         } catch (e) {
           console.error("Failed to delete old document", e);

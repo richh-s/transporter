@@ -25,7 +25,7 @@ export const gpsDeviceKeys = {
  */
 export function useGPSDevices(
   page: number = 1,
-  perPage: number = 20,
+  perPage: number = 10,
   filters: GPSDeviceFilters = {}
 ) {
   return useQuery({
@@ -108,11 +108,11 @@ export function useUpdateGPSDevice() {
           // Find and update the device in the items array
           const updatedItems = oldData.items.map((item: GPSDevice) =>
             item.id === device.id
-              ? { 
-                  ...item, 
-                  truck_id: device.truck_id,
-                  status: device.status,
-                }
+              ? {
+                ...item,
+                truck_id: device.truck_id,
+                status: device.status,
+              }
               : item
           );
 
