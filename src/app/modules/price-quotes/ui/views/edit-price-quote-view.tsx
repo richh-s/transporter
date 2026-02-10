@@ -41,6 +41,7 @@ import {
   usePriceQuote,
   useUpdatePriceQuote,
 } from "@/app/modules/price-quotes/server/hooks";
+import { useTrucks } from "@/app/modules/fleet/server/hooks";
 import type { UpdatePriceQuoteRequest } from "@/types/price-quote";
 import {
   LocationEnum,
@@ -170,6 +171,17 @@ function EditPriceQuoteContent() {
   const rawId = searchParams.get("id") || (params.id as string);
   const id = rawId && rawId !== "placeholder" ? Number(rawId) : NaN;
 
+  const { data: trucksData } = useTrucks({ per_page: 100 });
+  const allTrucks = (trucksData?.trucks || []) as any[];
+  const activeTrucks = allTrucks.filter((t: any) => t.status === "active");
+
+  const flatbedCount = activeTrucks.filter(
+    (t: any) => t.truck_type?.toLowerCase() === "flatbed",
+  ).length;
+  const trailerCount = activeTrucks.filter(
+    (t: any) => t.truck_type?.toLowerCase() === "trailer",
+  ).length;
+
   const { data: quote, isLoading } = usePriceQuote(isNaN(id) ? 0 : id);
   const updateMutation = useUpdatePriceQuote();
   const hasPopulatedForm = useRef(false);
@@ -189,6 +201,9 @@ function EditPriceQuoteContent() {
       status: undefined,
     },
   });
+
+  const containerSize = form.watch("container_size");
+  const selectedTruckType = form.watch("truck_type");
 
   useEffect(() => {
     if (isNaN(id)) {
@@ -409,43 +424,95 @@ function EditPriceQuoteContent() {
                       <RadioGroup
                         onValueChange={field.onChange}
                         value={field.value}
-                        className="flex gap-3"
+                        className="flex flex-col gap-3"
                         key={`truck_type-${field.value || "empty"}`}
                       >
-                        <Label
-                          htmlFor="flatbed-edit"
-                          className={cn(
-                            "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all",
-                            field.value === TruckTypeEnum.FLATBED
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50",
+                        <div className="flex gap-3">
+                          <Label
+                            htmlFor="flatbed-edit"
+                            className={cn(
+                              "flex-1 flex flex-col items-center justify-center gap-1 p-3 rounded-xl border cursor-pointer transition-all relative",
+                              field.value === TruckTypeEnum.FLATBED
+                                ? "border-primary bg-primary/5"
+                                : (containerSize === ContainerSizeEnum.FORTY_FEET
+                                  ? "border-amber-200 bg-amber-50/30"
+                                  : "border-border hover:border-primary/50"),
+                            )}
+                          >
+                            <RadioGroupItem
+                              value={TruckTypeEnum.FLATBED}
+                              id="flatbed-edit"
+                              className="sr-only"
+                            />
+                            {containerSize === ContainerSizeEnum.FORTY_FEET && (
+                              <div className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-md bg-amber-500 text-[8px] font-bold text-white uppercase tracking-tighter shadow-sm animate-in zoom-in duration-300">
+                                Recommended
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <Truck className="h-4 w-4" />
+                              <span className="text-sm font-medium">
+                                Flatbed
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground font-normal">
+                              {flatbedCount} Active
+                            </span>
+                          </Label>
+                          <Label
+                            htmlFor="trailer-edit"
+                            className={cn(
+                              "flex-1 flex flex-col items-center justify-center gap-1 p-3 rounded-xl border cursor-pointer transition-all relative",
+                              field.value === TruckTypeEnum.TRAILER
+                                ? (containerSize === ContainerSizeEnum.FORTY_FEET ? "border-red-300 bg-red-50" : "border-primary bg-primary/5")
+                                : (containerSize === ContainerSizeEnum.TWENTY_FEET
+                                  ? "border-amber-200 bg-amber-50/30"
+                                  : "border-border hover:border-primary/50"),
+                            )}
+                          >
+                            <RadioGroupItem
+                              value={TruckTypeEnum.TRAILER}
+                              id="trailer-edit"
+                              className="sr-only"
+                            />
+                            {containerSize === ContainerSizeEnum.TWENTY_FEET && (
+                              <div className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-md bg-amber-500 text-[8px] font-bold text-white uppercase tracking-tighter shadow-sm animate-in zoom-in duration-300">
+                                Recommended
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <Truck className="h-4 w-4" />
+                              <span className="text-sm font-medium">
+                                Trailer
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground font-normal">
+                              {trailerCount} Active
+                            </span>
+                          </Label>
+                        </div>
+
+                        {containerSize === ContainerSizeEnum.FORTY_FEET && field.value === TruckTypeEnum.TRAILER && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 text-red-600 text-[10px] animate-in fade-in slide-in-from-top-1 border border-red-100">
+                            <AlertCircle className="h-3 w-3" />
+                            Warning: 40ft containers typically require Flatbed trucks
+                          </div>
+                        )}
+
+                        {field.value === TruckTypeEnum.FLATBED &&
+                          flatbedCount === 0 && (
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-600 text-[10px] animate-in fade-in slide-in-from-top-1">
+                              <AlertCircle className="h-3 w-3" />
+                              No active Flatbed trucks available for fulfillment
+                            </div>
                           )}
-                        >
-                          <RadioGroupItem
-                            value={TruckTypeEnum.FLATBED}
-                            id="flatbed-edit"
-                            className="sr-only"
-                          />
-                          <Truck className="h-4 w-4" />
-                          <span className="text-sm font-medium">Flatbed</span>
-                        </Label>
-                        <Label
-                          htmlFor="trailer-edit"
-                          className={cn(
-                            "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all",
-                            field.value === TruckTypeEnum.TRAILER
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50",
+                        {field.value === TruckTypeEnum.TRAILER &&
+                          trailerCount === 0 && (
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-600 text-[10px] animate-in fade-in slide-in-from-top-1">
+                              <AlertCircle className="h-3 w-3" />
+                              No active Trailer trucks available for fulfillment
+                            </div>
                           )}
-                        >
-                          <RadioGroupItem
-                            value={TruckTypeEnum.TRAILER}
-                            id="trailer-edit"
-                            className="sr-only"
-                          />
-                          <Truck className="h-4 w-4" />
-                          <span className="text-sm font-medium">Trailer</span>
-                        </Label>
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />

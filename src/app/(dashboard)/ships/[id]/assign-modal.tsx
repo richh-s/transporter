@@ -116,8 +116,8 @@ export function AssignModal({
     const isTakenLocally = takenTruckIds.has(Number(t.id));
 
     // Show if it's the one already assigned to this item, 
-    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
-    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
+    // OR if it's ACTIVE AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (isActive && !isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned truck is in list
@@ -243,6 +243,11 @@ export function AssignModal({
                         <span className="text-muted-foreground text-xs">
                           {truck.make} {truck.model}
                         </span>
+                        {truck.status && truck.status.toLowerCase() !== "active" && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded capitalize">
+                            {truck.status}
+                          </span>
+                        )}
                         {truck.capacity_quintal && (
                           <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
                             {truck.capacity_quintal} Qtl
