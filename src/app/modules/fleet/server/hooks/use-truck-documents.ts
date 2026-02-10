@@ -10,8 +10,27 @@ export function useTruckDocuments(truckId: string) {
       if (!response.data) {
         throw new Error(response.error || "Failed to fetch documents");
       }
-      // API returns an array of TruckDocument objects
-      return response.data as TruckDocument[];
+
+      const documents = response.data as TruckDocument[];
+
+      // Filter to show only the latest document of each type
+      const latestDocs: Record<string, TruckDocument> = {};
+
+      documents.forEach(doc => {
+        const type = doc.document_type;
+        // Use created_at to determine which document is the latest
+        // If created_at is missing, treat it as older than any existing document with a date
+        const docDate = doc.created_at ? new Date(doc.created_at).getTime() : 0;
+        const currentLatestDate = latestDocs[type]?.created_at
+          ? new Date(latestDocs[type].created_at!).getTime()
+          : -1;
+
+        if (docDate > currentLatestDate) {
+          latestDocs[type] = doc;
+        }
+      });
+
+      return Object.values(latestDocs);
     },
     enabled: !!truckId,
   });

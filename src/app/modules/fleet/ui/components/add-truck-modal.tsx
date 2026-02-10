@@ -12,7 +12,9 @@ import {
   Hash,
   Settings,
   FileText,
+  Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +39,13 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useCreateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-create-truck";
+import {
+  useCreateTruck,
+  ApiError,
+  useUploadTruckDocument,
+} from "@/app/modules/fleet/server/hooks";
+import { Label } from "@/components/ui/label";
+import { useRef } from "react";
 
 const truckFormSchema = z.object({
   vin: z
@@ -91,10 +99,8 @@ const TRUCK_STATUSES = [
 ] as const;
 
 const STEPS = [
-  { id: 1, title: "Identification", icon: Hash },
-  { id: 2, title: "Configuration", icon: Settings },
-  { id: 3, title: "Vehicle Details", icon: Truck },
-  { id: 4, title: "Compliance", icon: FileText },
+  { id: 1, title: "Truck Details", icon: Truck },
+  { id: 2, title: "Upload Documents", icon: FileText },
 ];
 
 interface AddTruckModalProps {
@@ -106,10 +112,16 @@ export function AddTruckModal({
   onSuccess,
   variant = "default",
 }: AddTruckModalProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
+  const [createdTruckId, setCreatedTruckId] = useState<number | null>(null);
+  const [documentType, setDocumentType] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createTruckMutation = useCreateTruck();
+  const uploadDocumentMutation = useUploadTruckDocument();
 
   const defaultValues: TruckFormValues = {
     vin: "",
@@ -136,58 +148,40 @@ export function AddTruckModal({
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
+      setCreatedTruckId(null);
       form.reset(defaultValues);
       createTruckMutation.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const validateStep1 = () =>
-    form.trigger(["vin", "plate_number", "registration_date"]);
-  const validateStep2 = () =>
-    form.trigger(["truck_type", "status", "capacity_quintal"]);
-  const validateStep3 = () => form.trigger(["make", "model", "year", "color"]);
-
-  const nextStep = async (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    let isValid = false;
-    if (step === 1) isValid = await validateStep1();
-    else if (step === 2) isValid = await validateStep2();
-    else if (step === 3) isValid = await validateStep3();
-
-    if (isValid) setStep((prev) => prev + 1);
-  };
-
-  const prevStep = () => setStep((prev) => prev - 1);
-
   const onSubmit = async (values: TruckFormValues) => {
-    if (step !== 4) return;
+    if (step !== 1) return;
 
     try {
-      await createTruckMutation.mutateAsync(values);
-      toast.success("Truck created successfully");
-      setIsOpen(false);
-      form.reset();
-      onSuccess?.();
+      const result = await createTruckMutation.mutateAsync(values);
+
+      // Log the result to help debug response structure issues
+      console.log("🚛 Truck creation response:", result);
+
+      // Robust check for the truck ID in the response
+      const newTruckId = (result as any)?.id || (result as any)?.result?.id;
+
+      if (newTruckId) {
+        setCreatedTruckId(newTruckId);
+        setStep(2);
+        toast.success("Truck created successfully. Now upload documents.");
+      } else {
+        console.error("❌ Failed to find truck ID in response:", result);
+        toast.error("Truck created but unexpected response from server.");
+      }
     } catch (err: unknown) {
       if (err instanceof ApiError && err.fields) {
-        // Map backend field errors to React Hook Form
         Object.entries(err.fields).forEach(([field, message]) => {
           form.setError(field as keyof TruckFormValues, {
             type: "manual",
             message: message as string,
           });
-
-          // Determine which step the error belongs to and navigate there
-          if (["vin", "plate_number"].includes(field)) setStep(1);
-          else if (["truck_type", "status", "capacity_quintal"].includes(field))
-            setStep(2);
-          else if (["make", "model", "year", "color"].includes(field))
-            setStep(3);
-          else if (["gov_id", "libre_key", "gps_device_id"].includes(field))
-            setStep(4);
         });
       }
       console.error("Failed to create truck:", err);
@@ -217,8 +211,8 @@ export function AddTruckModal({
         showCloseButton={false}
         className={cn(
           "p-0 gap-0 overflow-hidden rounded-2xl",
-          "w-full max-w-lg",
-          "h-[85vh] max-h-[600px]",
+          "w-[95vw] sm:max-w-lg",
+          "h-[85vh] max-h-[650px]",
           "flex flex-col",
         )}
       >
@@ -232,7 +226,7 @@ export function AddTruckModal({
               <div>
                 <h2 className="text-base font-bold">Add New Truck</h2>
                 <p className="text-xs text-muted-foreground">
-                  Step {step} of 4: {STEPS[step - 1].title}
+                  Step {step} of 2: {STEPS[step - 1].title}
                 </p>
               </div>
             </div>
@@ -250,138 +244,92 @@ export function AddTruckModal({
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-primary h-full transition-all duration-300 ease-out"
-              style={{ width: `${(step / 4) * 100}%` }}
+              style={{ width: `${(step / 2) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Scrollable Content */}
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
-                e.preventDefault();
-              }
-            }}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {createTruckMutation.error && (
-                <Alert
-                  variant="destructive"
-                  className="rounded-xl bg-red-50 border-red-200"
-                >
-                  <XCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
-                    {(() => {
-                      const error = createTruckMutation.error;
-                      if (error instanceof Error) return error.message;
-                      if (typeof error === "string") return error;
-                      return "Failed to create truck. Please try again.";
-                    })()}
-                  </AlertDescription>
-                </Alert>
-              )}
+        {step === 1 ? (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+                  e.preventDefault();
+                }
+              }}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {createTruckMutation.error && (
+                  <Alert
+                    variant="destructive"
+                    className="rounded-xl bg-red-50 border-red-200"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      {(() => {
+                        const error = createTruckMutation.error;
+                        if (error instanceof Error) return error.message;
+                        if (typeof error === "string") return error;
+                        return "Failed to create truck. Please try again.";
+                      })()}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-              {/* Step 1: Identification */}
-              {step === 1 && (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="vin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">
-                          Vehicle Identification Number (VIN) <span className="text-red-500">*</span>
-                        </FormLabel>
+                        <FormLabel className="text-xs">Vehicle Identification Number (VIN) <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g. JTDBR32E720123456"
+                            placeholder="JTDBR32..."
                             maxLength={17}
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
+                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                             className="h-11 rounded-xl"
                           />
                         </FormControl>
-                        <p className="text-[10px] text-muted-foreground">
-                          11–17 characters (letters & numbers)
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="plate_number"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">
-                          Plate Number <span className="text-red-500">*</span>
-                        </FormLabel>
+                        <FormLabel className="text-xs">Plate Number <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="ET-A12345"
-                            {...field}
-                            className="h-11 rounded-xl"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="registration_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          Registration Date{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            className="h-11 rounded-xl"
-                          />
+                          <Input placeholder="ET-A12345" {...field} className="h-11 rounded-xl" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              )}
 
-              {/* Step 2: Configuration */}
-              {step === 2 && (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="truck_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">
-                          Truck Type <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
+                        <FormLabel className="text-xs">Type <span className="text-red-500">*</span></FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-11 rounded-xl">
-                              <SelectValue placeholder="Select truck type" />
+                              <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="rounded-xl">
                             {TRUCK_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
+                              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -389,230 +337,127 @@ export function AddTruckModal({
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          Status <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-11 rounded-xl">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-xl">
-                            {TRUCK_STATUSES.map((status) => (
-                              <SelectItem
-                                key={status.value}
-                                value={status.value}
-                              >
-                                {status.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="capacity_quintal"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">
-                          Capacity (Quintal){" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
+                        <FormLabel className="text-xs">Capacity (Q) <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            min={1}
-                            step={1}
-                            placeholder="Enter capacity"
                             {...field}
                             value={field.value === 0 ? "" : field.value}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : Number(e.target.value),
-                              )
-                            }
+                            onChange={(e) => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))}
                             className="h-11 rounded-xl"
                           />
                         </FormControl>
-                        <p className="text-[10px] text-muted-foreground">
-                          Must be greater than 0
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              )}
 
-              {/* Step 3: Vehicle Details */}
-              {step === 3 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="make"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Make</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g. Volvo"
-                              {...field}
-                              value={field.value ?? ""}
-                              className="h-11 rounded-xl"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Model</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g. FH16"
-                              {...field}
-                              value={field.value ?? ""}
-                              className="h-11 rounded-xl"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="year"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Year</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="2023"
-                              {...field}
-                              value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? null
-                                    : Number(e.target.value),
-                                )
-                              }
-                              className="h-11 rounded-xl"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="color"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Color</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g. White"
-                              {...field}
-                              value={field.value ?? ""}
-                              className="h-11 rounded-xl"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="make"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Make</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Volvo" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Model</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. FH16" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              )}
 
-              {/* Step 4: Compliance & Tracking */}
-              {step === 4 && (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Year</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="2023"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                            className="h-11 rounded-xl"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Status <span className="text-red-500">*</span></FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 rounded-xl">
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-xl">
+                            {TRUCK_STATUSES.map((status) => (
+                              <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="gov_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Government ID</FormLabel>
+                        <FormLabel className="text-xs">Gov ID</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Registration number"
-                            {...field}
-                            value={field.value ?? ""}
-                            className="h-11 rounded-xl"
-                          />
+                          <Input placeholder="Optional" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="libre_key"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Libre Key</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Road permit key"
-                            {...field}
-                            value={field.value ?? ""}
-                            className="h-11 rounded-xl"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="gps_device_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">GPS Device ID</FormLabel>
+                        <FormLabel className="text-xs">GPS ID</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="e.g. 12345678"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? null
-                                  : Number(e.target.value),
-                              )
-                            }
+                            onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                             className="h-11 rounded-xl"
                           />
                         </FormControl>
@@ -621,22 +466,10 @@ export function AddTruckModal({
                     )}
                   />
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Fixed Footer */}
-            <div className="shrink-0 bg-background border-t border-border/50 p-4 flex gap-3">
-              {step > 1 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={prevStep}
-                  className="flex-1 h-11 rounded-xl"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-              ) : (
+              {/* Step 1 Footer */}
+              <div className="shrink-0 bg-background border-t border-border/50 p-4 flex gap-3">
                 <Button
                   type="button"
                   variant="outline"
@@ -645,18 +478,6 @@ export function AddTruckModal({
                 >
                   Cancel
                 </Button>
-              )}
-
-              {step < 4 ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  className="flex-1 h-11 rounded-xl"
-                >
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
                 <Button
                   type="submit"
                   disabled={createTruckMutation.isPending}
@@ -668,13 +489,149 @@ export function AddTruckModal({
                       Creating...
                     </>
                   ) : (
-                    "Add Truck"
+                    <>
+                      Next
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
                   )}
                 </Button>
-              )}
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <Truck className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold">Truck Registered!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Now, upload the necessary documents to complete the profile.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="document-type">Document Type</Label>
+                  <Select value={documentType} onValueChange={setDocumentType}>
+                    <SelectTrigger id="document-type" className="h-11 rounded-xl">
+                      <SelectValue placeholder="Select document type" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="libre">Libre</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="file">File</Label>
+                  <input
+                    ref={fileInputRef}
+                    id="file"
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-20 border-2 border-dashed rounded-xl flex flex-col gap-1"
+                  >
+                    {selectedFile ? (
+                      <>
+                        <FileText className="h-5 w-5 text-primary" />
+                        <span className="text-xs font-medium truncate max-w-[200px]">
+                          {selectedFile.name}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-medium">Click to select file</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  disabled={!selectedFile || !documentType || uploadDocumentMutation.isPending}
+                  onClick={async () => {
+                    if (selectedFile && documentType && createdTruckId) {
+                      try {
+                        await uploadDocumentMutation.mutateAsync({
+                          truckId: String(createdTruckId),
+                          file: selectedFile,
+                          documentType,
+                        });
+                        toast.success("Document uploaded successfully");
+                        setSelectedFile(null);
+                        setDocumentType("");
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      } catch (err) {
+                        toast.error("Failed to upload document");
+                      }
+                    }
+                  }}
+                >
+                  {uploadDocumentMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Document
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-start gap-3">
+                <XCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-amber-900">Required Documents</p>
+                  <p className="text-[10px] text-amber-700 leading-relaxed">
+                    A valid Libre and Insurance certificate are required for the truck to be assigned to active shipments.
+                  </p>
+                </div>
+              </div>
             </div>
-          </form>
-        </Form>
+
+            {/* Step 2 Footer */}
+            <div className="shrink-0 bg-background border-t border-border/50 p-4 flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-11 rounded-xl"
+                onClick={() => {
+                  if (createdTruckId) {
+                    router.push(`/fleet/placeholder?id=${createdTruckId}`);
+                    setIsOpen(false);
+                    onSuccess?.();
+                  }
+                }}
+              >
+                Go to Details
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 h-11 rounded-xl"
+                onClick={() => {
+                  setIsOpen(false);
+                  onSuccess?.();
+                }}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

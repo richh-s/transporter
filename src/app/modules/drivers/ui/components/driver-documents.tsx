@@ -151,7 +151,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const qc = useQueryClient();
 
   const { data: documents = [], isLoading } = useDriverDocuments(driverId);
-  const uploadMutation = useUploadDriverDocument(driverId);
+  const uploadMutation = useUploadDriverDocument();
   const updateMutation = useUpdateDriverDocument(driverId);
   const deleteMutation = useDeleteDriverDocument();
 
@@ -219,7 +219,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       );
     } else {
       uploadMutation.mutate(
-        { document_type: documentType, file: file! },
+        { driverId, document_type: documentType, file: file! },
         {
           onSuccess: () => {
             resetForm();

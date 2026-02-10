@@ -173,7 +173,7 @@ export const FleetView = () => {
       {/* Main Content - Table with Suspense - Takes remaining space */}
       <div className="flex-1 min-h-0 shrink-0">
         <TrucksTable
-          onRowClick={(truck) => router.push(`/fleet/${truck.id}`)}
+          onRowClick={(truck) => router.push(`/fleet/placeholder?id=${truck.id}`)}
           page={page}
           perPage={perPage}
           filters={filters}
