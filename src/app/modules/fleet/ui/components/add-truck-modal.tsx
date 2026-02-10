@@ -5,12 +5,9 @@ import {
   Plus,
   Loader2,
   XCircle,
-  ArrowLeft,
   ArrowRight,
   X,
   Truck,
-  Hash,
-  Settings,
   FileText,
   Upload,
   ChevronDown,
@@ -25,7 +22,6 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -127,13 +123,13 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
         ...values,
         registration_date: new Date().toISOString().split("T")[0],
       };
-      const result = await createTruckMutation.mutateAsync(payload as any);
+      const result = await createTruckMutation.mutateAsync(payload as Parameters<typeof createTruckMutation.mutateAsync>[0]);
 
       // Log the result to help debug response structure issues
       console.log("🚛 Truck creation response:", result);
 
       // Robust check for the truck ID in the response (could be in result.id or result.result.id)
-      const newTruckId = (result as any)?.id || (result as any)?.result?.id;
+      const newTruckId = (result as { id?: number; result?: { id: number } })?.id || (result as { result?: { id: number } })?.result?.id;
 
       if (newTruckId) {
         setCreatedTruckId(newTruckId);
@@ -538,7 +534,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                           setSelectedFile(null);
                           setDocumentType("");
                           if (fileInputRef.current) fileInputRef.current.value = "";
-                        } catch (err) {
+                        } catch {
                           toast.error("Failed to upload document");
                         }
                       }

@@ -107,10 +107,10 @@ export function AssignModal({
   );
 
   // Filter available trucks
-  const availableTrucks = trucks.filter((t: any) => {
+  const availableTrucks = trucks.filter((t) => {
     // Handling backend typo "assigend" and "assigned"
-    const isGloballyAssigned = t.assigned === true || t.assigend === true;
-    const isDeleted = t.deleted === true;
+    const isGloballyAssigned = (t as unknown as Record<string, unknown>).assigned === true || (t as unknown as Record<string, unknown>).assigend === true;
+    const isDeleted = (t as unknown as Record<string, unknown>).deleted === true;
     const isActive = t.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(t.id) === String(dbTruckId);
     const isTakenLocally = takenTruckIds.has(Number(t.id));
@@ -129,11 +129,11 @@ export function AssignModal({
   }
 
   // Filter available drivers
-  const availableDrivers = drivers.filter((d: any) => {
+  const availableDrivers = drivers.filter((d) => {
     // Handling backend typo "assigend" and "assigned"
-    const isGloballyAssigned = d.assigned === true || d.assigend === true;
-    const isDeleted = d.deleted === true;
-    const isActive = d.status?.toLowerCase() === "active";
+    const isGloballyAssigned = (d as unknown as Record<string, unknown>).assigned === true || (d as unknown as Record<string, unknown>).assigend === true;
+    const isDeleted = (d as unknown as Record<string, unknown>).deleted === true;
+    // const isActive = d.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(d.id) === String(dbDriverId);
     const isTakenLocally = takenDriverIds.has(Number(d.id));
 

@@ -128,7 +128,7 @@ export function DriverDialog({
         // Robust check for the driver ID in the response
         // Result might be { result: { id: ... } } (ApiResult pattern) 
         // or just { id: ... } (Direct object pattern)
-        const newDriverId = (result as any)?.result?.id || (result as any)?.id;
+        const newDriverId = (result as { result?: { id: number }; id?: number })?.result?.id || (result as { id?: number })?.id;
 
         if (newDriverId) {
           setCreatedDriverId(newDriverId);
@@ -439,7 +439,7 @@ export function DriverDialog({
                               setSelectedFile(null);
                               setDocumentType("");
                               if (fileInputRef.current) fileInputRef.current.value = "";
-                            } catch (err) {
+                            } catch {
                               toast.error("Failed to upload document");
                             }
                           }

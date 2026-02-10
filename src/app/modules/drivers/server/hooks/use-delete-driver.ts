@@ -48,11 +48,11 @@ export function useDeleteDriver() {
     onSuccess: () => {
       toast.success("Driver deleted successfully");
     },
-    onError: (err: any, _id, ctx) => {
+    onError: (err: unknown, _id, ctx) => {
       ctx?.previous?.forEach(([key, data]) => {
         qc.setQueryData(key, data);
       });
-      toast.error(err?.message || "Failed to delete driver");
+      toast.error((err as Error)?.message || "Failed to delete driver");
     },
 
     onSettled: () => {

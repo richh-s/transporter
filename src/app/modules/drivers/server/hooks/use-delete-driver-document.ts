@@ -46,14 +46,14 @@ export function useDeleteDriverDocument() {
     onSuccess: () => {
       toast.success("Document deleted successfully");
     },
-    onError: (err: any, vars, ctx) => {
+    onError: (err: unknown, vars, ctx) => {
       if (ctx?.previous) {
         qc.setQueryData(
           driverKeys.documents(vars.driverId),
           ctx.previous
         );
       }
-      toast.error(err?.message || "Failed to delete document");
+      toast.error((err as Error)?.message || "Failed to delete document");
     },
 
     onSettled: (_d, _e, vars) => {

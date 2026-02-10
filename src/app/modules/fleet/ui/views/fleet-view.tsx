@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle } from "lucide-react";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
+
 import { Truck as TruckType } from "@/lib/api/trucks";
 import {
   useCreateTruck,
@@ -45,7 +45,6 @@ export const FleetView = () => {
   const deleteTruckMutation = useDeleteTruck();
 
   // UI State
-  const [success, setSuccess] = useState<string | null>(null);
   const [selectedTruck, setSelectedTruck] = useState<TruckType | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

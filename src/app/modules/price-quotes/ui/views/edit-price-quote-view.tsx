@@ -172,14 +172,14 @@ function EditPriceQuoteContent() {
   const id = rawId && rawId !== "placeholder" ? Number(rawId) : NaN;
 
   const { data: trucksData } = useTrucks({ per_page: 100 });
-  const allTrucks = (trucksData?.trucks || []) as any[];
-  const activeTrucks = allTrucks.filter((t: any) => t.status === "active");
+  const allTrucks = (trucksData?.trucks || []) as unknown as Record<string, unknown>[];
+  const activeTrucks = allTrucks.filter((t) => (t as unknown as Record<string, unknown>).status === "active");
 
   const flatbedCount = activeTrucks.filter(
-    (t: any) => t.truck_type?.toLowerCase() === "flatbed",
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "flatbed",
   ).length;
   const trailerCount = activeTrucks.filter(
-    (t: any) => t.truck_type?.toLowerCase() === "trailer",
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "trailer",
   ).length;
 
   const { data: quote, isLoading } = usePriceQuote(isNaN(id) ? 0 : id);
@@ -203,7 +203,6 @@ function EditPriceQuoteContent() {
   });
 
   const containerSize = form.watch("container_size");
-  const selectedTruckType = form.watch("truck_type");
 
   useEffect(() => {
     if (isNaN(id)) {

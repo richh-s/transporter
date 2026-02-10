@@ -36,9 +36,6 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
-  usePriceQuote,
-  useUpdatePriceQuote,
-  usePriceQuotes,
   useCreatePriceQuote,
 } from "@/app/modules/price-quotes/server/hooks";
 import { useTrucks } from "@/app/modules/fleet/server/hooks";
@@ -117,14 +114,14 @@ export function CreatePriceQuoteView() {
   const createMutation = useCreatePriceQuote();
 
   const { data: trucksData } = useTrucks({ per_page: 100 });
-  const allTrucks = (trucksData?.trucks || []) as any[];
+  const allTrucks = (trucksData?.trucks || []) as unknown as Record<string, unknown>[];
   const activeTrucks = allTrucks.filter((t) => t.status === "active");
 
   const flatbedCount = activeTrucks.filter(
-    (t: any) => t.truck_type?.toLowerCase() === "flatbed",
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "flatbed",
   ).length;
   const trailerCount = activeTrucks.filter(
-    (t: any) => t.truck_type?.toLowerCase() === "trailer",
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "trailer",
   ).length;
 
   const form = useForm<FormValues>({
@@ -143,7 +140,6 @@ export function CreatePriceQuoteView() {
   });
 
   const containerSize = form.watch("container_size");
-  const selectedTruckType = form.watch("truck_type");
 
   const onSubmit = async (values: FormValues) => {
     if (

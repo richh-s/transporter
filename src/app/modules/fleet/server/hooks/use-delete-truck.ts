@@ -48,14 +48,14 @@ export function useDeleteTruck() {
       queryClient.invalidateQueries({ queryKey: ["trucks"] });
       toast.success("Truck deleted successfully");
     },
-    onError: (err: any, id, context) => {
+    onError: (err: unknown, id, context) => {
       // Rollback on error
       if (context?.previousQueries) {
         context.previousQueries.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      toast.error(err?.message || "Failed to delete truck");
+      toast.error((err as Error)?.message || "Failed to delete truck");
     },
   });
 }

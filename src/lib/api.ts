@@ -61,18 +61,18 @@ export async function apiRequest<T>(
     credentials: "include",
   });
 
-  const contentType = response.headers.get("content-type");
+
   if (response.status === 204) {
     return { status: true } as T;
   }
 
   const text = await response.text();
-  let result: any;
+  let result: unknown;
 
   if (text) {
     try {
       result = JSON.parse(text);
-    } catch (e) {
+    } catch {
       result = text;
     }
   }
@@ -81,13 +81,13 @@ export async function apiRequest<T>(
     throw new ApiError(
       response.status,
       response.statusText,
-      result?.detail ||
-      result?.error ||
-      result?.message ||
+      ((result as unknown) as Record<string, unknown>)?.detail as string ||
+      ((result as unknown) as Record<string, unknown>)?.error as string ||
+      ((result as unknown) as Record<string, unknown>)?.message as string ||
       (typeof result === "string" ? result : response.statusText) ||
       "Request failed",
-      result?.fields,
-      result?.code || result?.status_code?.toString()
+      ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
+      (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString()
     );
   }
 

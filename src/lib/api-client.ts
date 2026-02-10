@@ -180,12 +180,12 @@ export async function request<T>(
     }
 
     const text = await response.text();
-    let result: any;
+    let result: unknown;
 
     if (text) {
       try {
         result = JSON.parse(text);
-      } catch (e) {
+      } catch {
         result = text;
       }
     }
@@ -193,14 +193,14 @@ export async function request<T>(
     if (!response.ok) {
       return {
         error:
-          result?.error ||
-          result?.detail ||
-          result?.message ||
+          ((result as unknown) as Record<string, unknown>)?.error as string ||
+          ((result as unknown) as Record<string, unknown>)?.detail as string ||
+          ((result as unknown) as Record<string, unknown>)?.message as string ||
           (typeof result === "string" ? result : "Something went wrong"),
         status,
-        errorCode: result?.code || undefined,
-        code: result?.code || result?.status_code?.toString(),
-        fields: result?.fields,
+        errorCode: ((result as unknown) as Record<string, unknown>)?.code as string || undefined,
+        code: (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString(),
+        fields: ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
       };
     }
 

@@ -22,7 +22,7 @@ import { formatCurrency } from "@/lib/utils";
 interface DashboardStat {
   name: string;
   value: string;
-  icon: any;
+  icon: React.ElementType;
   change: string;
   changeType: "positive" | "negative" | "neutral";
 }
@@ -65,10 +65,9 @@ export default function Dashboard() {
       const ships = shipsRes.data?.items || [];
 
       // Extract and flatten all ship items from the ships
-      const allShipItems = ships.flatMap((ship: any) =>
-        (ship.ship_items || []).map((item: any) => ({
+      const allShipItems = ships.flatMap((ship) =>
+        (ship.ship_items || []).map((item) => ({
           ...item,
-          // Inject ship-level data needed for display
           ship_id: ship.id,
           pickup_date: ship.pickup_date,
           origin: ship.origin,
@@ -77,7 +76,7 @@ export default function Dashboard() {
       );
 
       // Calculate revenue from these items
-      const revenue = allShipItems.reduce((acc: number, item: any) => acc + (Number(item.computed_price) || 0), 0);
+      const revenue = allShipItems.reduce((acc: number, item) => acc + (Number(item.computed_price) || 0), 0);
 
       // 3. Fetch Quotes
       const quotesRes = await PriceQuoteService.listQuotes(1, 1);
@@ -116,14 +115,14 @@ export default function Dashboard() {
 
       // 4. Map Recent Activity (Filter for items with at least one assignment)
       const activities: Activity[] = allShipItems
-        .filter((item: any) => {
+        .filter((item) => {
           const hasTruck = item.truck_id || item.assigned_truck_id || item.assigned_truck?.id || item.truck?.id;
           const hasDriver = item.driver_id || item.assigned_driver_id || item.assigned_driver?.id || item.driver?.id;
           return hasTruck || hasDriver;
         })
-        .sort((a: any, b: any) => b.id - a.id) // Show newest first
+        .sort((a, b) => b.id - a.id) // Show newest first
         .slice(0, 5) // Limit to 5
-        .map((item: any) => {
+        .map((item) => {
           const hasTruck = item.truck_id || item.assigned_truck_id || item.assigned_truck?.id || item.truck?.id;
           const hasDriver = item.driver_id || item.assigned_driver_id || item.assigned_driver?.id || item.driver?.id;
           const isFull = hasTruck && hasDriver;
