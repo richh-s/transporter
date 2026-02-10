@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -92,10 +93,9 @@ export const FleetView = () => {
   };
 
   const handleSuccess = () => {
-    setSuccess("Operation completed successfully!");
+    toast.success("Operation completed successfully!");
     // Invalidate and refetch trucks data
     queryClient.invalidateQueries({ queryKey: ["trucks"] });
-    setTimeout(() => setSuccess(null), 3000);
   };
 
 
@@ -143,32 +143,21 @@ export const FleetView = () => {
         <AddTruckModal onSuccess={handleSuccess} />
       </div>
 
-      {/* Success/Error Alerts */}
+      {/* Action Errors */}
       {((createTruckMutation.error as Error | null) ||
         (updateTruckMutation.error as Error | null) ||
         (deleteTruckMutation.error as Error | null)) && (
-          <Alert
-            variant="destructive"
-            className="bg-red-50 border-red-100 shrink-0"
-          >
-            <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              {createTruckMutation.error instanceof Error
-                ? createTruckMutation.error.message
-                : updateTruckMutation.error instanceof Error
-                  ? updateTruckMutation.error.message
-                  : deleteTruckMutation.error instanceof Error
-                    ? deleteTruckMutation.error.message
-                    : "An error occurred"}
-            </AlertDescription>
-          </Alert>
+          <div className="hidden">
+            {/* Keeping the logic to trigger toasts if needed, but the hooks already do it or we can add it to handleSuccess/onError */}
+            {(() => {
+              const error = createTruckMutation.error || updateTruckMutation.error || deleteTruckMutation.error;
+              if (error instanceof Error) {
+                toast.error(error.message);
+              }
+              return null;
+            })()}
+          </div>
         )}
-      {success && (
-        <Alert className="bg-green-50 border-green-100 text-green-700 shrink-0">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
 
       {/* Main Content - Table with Suspense - Takes remaining space */}
       <div className="flex-1 min-h-0 shrink-0">

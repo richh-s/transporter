@@ -62,25 +62,36 @@ export async function apiRequest<T>(
   });
 
   const contentType = response.headers.get("content-type");
-  const isJson = contentType?.includes("application/json");
+  if (response.status === 204) {
+    return { status: true } as T;
+  }
+
+  const text = await response.text();
+  let result: any;
+
+  if (text) {
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      result = text;
+    }
+  }
 
   if (!response.ok) {
-    const errorBody = isJson ? await response.json() : null;
-
     throw new ApiError(
       response.status,
       response.statusText,
-      errorBody?.detail ||
-      errorBody?.error ||
-      errorBody?.message ||
-      response.statusText ||
+      result?.detail ||
+      result?.error ||
+      result?.message ||
+      (typeof result === "string" ? result : response.statusText) ||
       "Request failed",
-      errorBody?.fields,
-      errorBody?.code || errorBody?.status_code?.toString()
+      result?.fields,
+      result?.code || result?.status_code?.toString()
     );
   }
 
-  return isJson ? await response.json() : ({} as T);
+  return (result ?? { status: true }) as T;
 }
 
 /* ================= AUTH API =================

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { driverApi } from "../api/driver.api";
 import type { DriversResponse } from "../types";
 
@@ -44,10 +45,14 @@ export function useDeleteDriver() {
       return { previous };
     },
 
-    onError: (_err, _id, ctx) => {
+    onSuccess: () => {
+      toast.success("Driver deleted successfully");
+    },
+    onError: (err: any, _id, ctx) => {
       ctx?.previous?.forEach(([key, data]) => {
         qc.setQueryData(key, data);
       });
+      toast.error(err?.message || "Failed to delete driver");
     },
 
     onSettled: () => {

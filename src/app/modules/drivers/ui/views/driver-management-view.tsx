@@ -473,7 +473,6 @@ export function DriverManagementView() {
         driver={selectedDriver}
       />
 
-      {/* Delete Dialog */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -508,11 +507,10 @@ export function DriverManagementView() {
               disabled={!driverToDelete || deleteDriver.isPending}
               onClick={() => {
                 if (!driverToDelete) return;
-                setDeleteOpen(false);
-                setDriverToDelete(null);
                 deleteDriver.mutate(driverToDelete.id, {
                   onSuccess: () => {
-                    toast.success("Driver deleted successfully");
+                    setDeleteOpen(false);
+                    setDriverToDelete(null);
                   },
                 });
               }}

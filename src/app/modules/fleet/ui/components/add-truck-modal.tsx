@@ -66,11 +66,8 @@ const truckFormSchema = z.object({
 type TruckFormValues = z.infer<typeof truckFormSchema>;
 
 const TRUCK_TYPES = [
-  { label: "Dry Cargo", value: "dry_cargo" },
-  { label: "Refrigerated", value: "refrigerated" },
   { label: "Flatbed", value: "flatbed" },
-  { label: "Container", value: "container" },
-  { label: "Tanker", value: "tanker" },
+  { label: "Trailer", value: "trailer" },
 ];
 
 const TRUCK_STATUSES = [
@@ -81,9 +78,10 @@ const TRUCK_STATUSES = [
 
 interface AddTruckModalProps {
   onSuccess?: () => void;
+  variant?: "default" | "icon-only";
 }
 
-export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
+export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [createdTruckId, setCreatedTruckId] = useState<number | null>(null);
@@ -124,7 +122,12 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
 
   async function onSubmit(values: TruckFormValues) {
     try {
-      const result = await createTruckMutation.mutateAsync(values);
+      // Add default registration_date to satisfy API requirements
+      const payload = {
+        ...values,
+        registration_date: new Date().toISOString().split("T")[0],
+      };
+      const result = await createTruckMutation.mutateAsync(payload as any);
 
       // Log the result to help debug response structure issues
       console.log("🚛 Truck creation response:", result);
@@ -148,10 +151,16 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="h-10 px-4 rounded-xl gap-2 font-medium">
-          <Plus className="h-4 w-4" />
-          Add Truck
-        </Button>
+        {variant === "icon-only" ? (
+          <Button size="icon" className="rounded-xl h-10 w-10">
+            <Plus className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Button className="h-10 px-4 rounded-xl gap-2 font-medium">
+            <Plus className="h-4 w-4" />
+            Add Truck
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
@@ -514,6 +523,7 @@ export function AddTruckModal({ onSuccess }: AddTruckModalProps) {
                   </div>
 
                   <Button
+                    type="button"
                     className="w-full h-11 rounded-xl"
                     disabled={!selectedFile || !documentType || uploadDocumentMutation.isPending}
                     onClick={async () => {

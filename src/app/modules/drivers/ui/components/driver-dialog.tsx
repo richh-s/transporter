@@ -424,6 +424,7 @@ export function DriverDialog({
                       </div>
 
                       <Button
+                        type="button"
                         className="w-full h-11 rounded-xl"
                         disabled={!selectedFile || !documentType || uploadDocumentMutation.isPending}
                         onClick={async () => {

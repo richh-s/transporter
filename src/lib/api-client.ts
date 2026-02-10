@@ -180,7 +180,15 @@ export async function request<T>(
     }
 
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    let result: any;
+
+    if (text) {
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        result = text;
+      }
+    }
 
     if (!response.ok) {
       return {
@@ -188,15 +196,15 @@ export async function request<T>(
           result?.error ||
           result?.detail ||
           result?.message ||
-          "Something went wrong",
+          (typeof result === "string" ? result : "Something went wrong"),
         status,
-        errorCode: result?.code || undefined, // Extract error code if available
+        errorCode: result?.code || undefined,
         code: result?.code || result?.status_code?.toString(),
         fields: result?.fields,
       };
     }
 
-    return { data: result as T, status };
+    return { data: (result ?? { status: true }) as T, status };
   } catch (error) {
     console.error("❌ API Request Failed:", error);
 
