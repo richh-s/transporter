@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { humanizeError } from "@/lib/utils/error-humanizer";
 import { Driver } from "../../server/types";
 import { type CreateDriverInput } from "@/lib/zod/driver/create-driver.schema";
 import { useCreateDriver } from "../../server/hooks/use-create-driver";
@@ -142,18 +143,13 @@ export function DriverDialog({
     } catch (error) {
       if (error instanceof ApiError && error.fields) {
         Object.entries(error.fields).forEach(([field, message]) => {
-          let translatedMessage = message as string;
-
-          // Customize phone number error message
-          if (field === "phone_number") {
-            translatedMessage = "Must be in format like +251XXXXXXXXX";
-          }
-
           form.setError(field as keyof CreateDriverInput, {
             type: "manual",
-            message: translatedMessage,
+            message: humanizeError(message as string),
           });
         });
+        const firstError = Object.values(error.fields)[0];
+        toast.error(humanizeError(firstError as string));
       } else if (error instanceof ApiError) {
         if (error.code === "DRIVER_DUPLICATE") {
           toast.error("Driver already exists");

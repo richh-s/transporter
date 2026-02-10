@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { humanizeError } from "@/lib/utils/error-humanizer";
 import type { Truck } from "@/lib/api/trucks";
 import { toast } from "sonner";
 import { useUpdateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-update-truck";
@@ -160,11 +161,15 @@ export function EditTruckModal({
         Object.entries(err.fields).forEach(([field, message]) => {
           form.setError(field as keyof TruckFormValues, {
             type: "manual",
-            message: message as string,
+            message: humanizeError(message as string),
           });
         });
+        const firstError = Object.values(err.fields)[0];
+        toast.error(humanizeError(firstError as string));
+      } else {
+        console.error("Failed to update truck:", err);
+        toast.error(err instanceof Error ? err.message : "Failed to update truck");
       }
-      console.error("Failed to update truck:", err);
     }
   };
 
@@ -204,7 +209,7 @@ export function EditTruckModal({
               className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6 pt-2 scrollbar-hide"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-              {updateTruckMutation.error && (
+              {updateTruckMutation.error && !(updateTruckMutation.error instanceof ApiError && updateTruckMutation.error.code === "VALIDATION_ERROR") && (
                 <Alert
                   variant="destructive"
                   className="mb-4 bg-red-50 border-red-200"

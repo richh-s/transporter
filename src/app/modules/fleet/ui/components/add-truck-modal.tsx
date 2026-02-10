@@ -16,9 +16,10 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCreateTruck } from "../../server/hooks/use-create-truck";
+import { useCreateTruck, ApiError } from "../../server/hooks/use-create-truck";
 import { useUploadTruckDocument } from "../../server/hooks/use-truck-documents";
 import { toast } from "sonner";
+import { humanizeError } from "@/lib/utils/error-humanizer";
 import {
   Dialog,
   DialogContent,
@@ -99,7 +100,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
       make: "",
       model: "",
       year: null,
-      status: "active",
+      status: "inactive",
       gov_id: "",
       gps_device_id: null,
     },
@@ -140,7 +141,22 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
         toast.error("Truck created but unexpected response from server.");
       }
     } catch (error) {
-      console.error("Failed to create truck:", error);
+      if (error instanceof ApiError && error.fields) {
+        // Map backend field errors to React Hook Form
+        Object.entries(error.fields).forEach(([field, message]) => {
+          form.setError(field as keyof TruckFormValues, {
+            type: "manual",
+            message: humanizeError(message as string),
+          });
+        });
+        const firstError = Object.values(error.fields)[0];
+        toast.error(humanizeError(firstError as string));
+      } else if (error instanceof ApiError) {
+        toast.error(error.message || "Failed to create truck");
+      } else {
+        console.error("Failed to create truck:", error);
+        toast.error("An unexpected error occurred");
+      }
     }
   }
 
@@ -215,7 +231,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                 className="flex-1 flex flex-col min-h-0"
               >
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {createTruckMutation.error && (
+                  {createTruckMutation.error && !(createTruckMutation.error instanceof ApiError && createTruckMutation.error.code === "VALIDATION_ERROR") && (
                     <Alert
                       variant="destructive"
                       className="rounded-xl bg-red-50 border-red-200"
@@ -367,9 +383,13 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">Status <span className="text-red-500">*</span></FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            disabled={true}
+                          >
                             <FormControl>
-                              <SelectTrigger className="h-11 rounded-xl">
+                              <SelectTrigger className="h-11 rounded-xl bg-muted/50">
                                 <SelectValue placeholder="Status" />
                               </SelectTrigger>
                             </FormControl>
@@ -379,6 +399,9 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                               ))}
                             </SelectContent>
                           </Select>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Set to inactive initially. Will be active after Libre is uploaded.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -559,7 +582,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-amber-900">Required Documents</p>
                     <p className="text-[10px] text-amber-700 leading-relaxed">
-                      A valid Libre and Insurance certificate are required for the truck to be assigned to active shipments.
+                      A valid Libre is required to activate the truck and assign it to shipments. The status will update automatically after upload.
                     </p>
                   </div>
                 </div>

@@ -60,11 +60,31 @@ export function useUploadTruckDocument() {
           response.status || 500,
         );
       }
+
+      // Auto-activate truck if document is libre
+      if (documentType.toLowerCase() === "libre") {
+        try {
+          const updateResponse = await truckApi.updateTruck(truckId, { status: "active" });
+          if (updateResponse.error) {
+            console.error("Failed to auto-activate truck:", updateResponse.error);
+          }
+        } catch (error) {
+          console.error("Failed to auto-activate truck:", error);
+        }
+      }
+
       return response.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["truck-documents", variables.truckId],
+      });
+      // Invalidate truck details to reflect status change
+      queryClient.invalidateQueries({
+        queryKey: ["truck", variables.truckId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["trucks"],
       });
     },
   });

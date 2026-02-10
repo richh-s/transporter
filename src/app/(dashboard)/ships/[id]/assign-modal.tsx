@@ -128,18 +128,17 @@ export function AssignModal({
     availableTrucks.unshift(assignedTruck);
   }
 
-  // Filter available drivers
   const availableDrivers = drivers.filter((d) => {
     // Handling backend typo "assigend" and "assigned"
     const isGloballyAssigned = (d as unknown as Record<string, unknown>).assigned === true || (d as unknown as Record<string, unknown>).assigend === true;
     const isDeleted = (d as unknown as Record<string, unknown>).deleted === true;
-    // const isActive = d.status?.toLowerCase() === "active";
+    const isActive = d.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(d.id) === String(dbDriverId);
     const isTakenLocally = takenDriverIds.has(Number(d.id));
 
     // Show if it's the one already assigned to this item,
-    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
-    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
+    // OR if it's ACTIVE AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (isActive && !isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned driver is in list
