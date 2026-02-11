@@ -38,7 +38,7 @@ export function DriverFilters({
         <SelectContent>
           <SelectItem value="all">All</SelectItem>
           <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="inactive">Inactive</SelectItem>
+          <SelectItem value="suspended">Suspended</SelectItem>
         </SelectContent>
       </Select>
     </div>
