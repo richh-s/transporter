@@ -24,7 +24,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-none bg-background/95 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
+            <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-none bg-background/95 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden shadow-primary/5">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
                 <DialogHeader className="p-6 pb-2 border-b border-border/40 relative z-10">
@@ -99,7 +99,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-4 relative z-10">
+                                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 relative z-10">
                                         <div className="space-y-1">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Truck Type</p>
                                             <div className="flex items-center gap-1.5">
@@ -147,7 +147,7 @@ export function ContainersModal({ containers, open, onOpenChange }: ContainersMo
                                         {(container.container_details?.commodity || container.container_details?.instruction) && (
                                             <div className="col-span-full pt-2">
                                                 <Separator className="mb-4 bg-border/40" />
-                                                <div className="grid md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     {container.container_details?.commodity && (
                                                         <div className="space-y-2">
                                                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 pr-2">Commodities</p>
