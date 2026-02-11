@@ -114,7 +114,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -227,12 +227,12 @@ export function DataTable<TData, TValue>({
       (cell) =>
         cell.column.id === "plate_number" ||
         (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
-        "plate_number"
+        "plate_number",
     );
 
     // Find actions cell
     const actionsCell = visibleCells.find(
-      (cell) => cell.column.id === "actions"
+      (cell) => cell.column.id === "actions",
     );
 
     // Other cells for body
@@ -241,7 +241,7 @@ export function DataTable<TData, TValue>({
         cell.column.id !== "plate_number" &&
         cell.column.id !== "actions" &&
         (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
-        "plate_number"
+        "plate_number",
     );
 
     // Get header label for a column
@@ -270,7 +270,13 @@ export function DataTable<TData, TValue>({
     };
 
     return (
-      <div className="bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden">
+      <div
+        className={cn(
+          "bg-white dark:bg-card/40 border border-primary/5 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col group relative overflow-hidden",
+          onRowClick && "cursor-pointer active:scale-[0.98]",
+        )}
+        onClick={() => onRowClick?.(row.original)}
+      >
         {/* Brand Tint Overlay */}
         <div className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.05] pointer-events-none" />
 
@@ -280,15 +286,18 @@ export function DataTable<TData, TValue>({
             {plateCell &&
               flexRender(
                 plateCell.column.columnDef.cell,
-                plateCell.getContext()
+                plateCell.getContext(),
               )}
           </div>
           {/* Actions Button */}
           {actionsCell && (
-            <div className="flex-shrink-0 -mr-1 -mt-1">
+            <div
+              className="flex-shrink-0 -mr-1 -mt-1"
+              onClick={(e) => e.stopPropagation()}
+            >
               {flexRender(
                 actionsCell.column.columnDef.cell,
-                actionsCell.getContext()
+                actionsCell.getContext(),
               )}
             </div>
           )}
@@ -300,7 +309,7 @@ export function DataTable<TData, TValue>({
             const headerLabel = getHeaderLabel(cell.column);
             const cellValue = flexRender(
               cell.column.columnDef.cell,
-              cell.getContext()
+              cell.getContext(),
             );
 
             return (
@@ -336,7 +345,7 @@ export function DataTable<TData, TValue>({
     globalFilterFn: "includesString",
     manualPagination,
     manualFiltering,
-    pageCount: pageCount,
+    pageCount: manualPagination ? pageCount : undefined,
     meta,
     state: {
       sorting,
@@ -349,6 +358,20 @@ export function DataTable<TData, TValue>({
         pageSize: perPage,
       },
     },
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({
+          pageIndex: page - 1,
+          pageSize: perPage,
+        });
+        onPageChange?.(newState.pageIndex + 1);
+        onPerPageChange?.(newState.pageSize);
+      } else {
+        onPageChange?.(updater.pageIndex + 1);
+        onPerPageChange?.(updater.pageSize);
+      }
+    },
+    autoResetPageIndex: false,
   });
 
   // Get visible rows for mobile (after table is created)
@@ -365,12 +388,20 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     if (onPageCountChange && !manualPagination) {
       onPageCountChange(calculatedPageCount ?? 0);
-    } else if (onPageCountChange && manualPagination && pageCount !== undefined) {
+    } else if (
+      onPageCountChange &&
+      manualPagination &&
+      pageCount !== undefined
+    ) {
       onPageCountChange(pageCount);
     }
   }, [calculatedPageCount, pageCount, manualPagination, onPageCountChange]);
 
-  const hasMore = pageCount ? page < pageCount : calculatedPageCount ? page < calculatedPageCount : false;
+  const hasMore = pageCount
+    ? page < pageCount
+    : calculatedPageCount
+      ? page < calculatedPageCount
+      : false;
 
   // Handle "See More" click - fetch next page from server
   const handleSeeMore = () => {
@@ -432,7 +463,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={mobileScrollRef}
         onScroll={handleScroll}
-        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="grid grid-cols-2 gap-2 p-1 pb-2">
@@ -467,7 +498,9 @@ export function DataTable<TData, TValue>({
                     <span className="text-sm font-bold text-foreground">
                       {page}
                     </span>
-                    <span className="text-xs text-muted-foreground/60 font-medium italic">of</span>
+                    <span className="text-xs text-muted-foreground/60 font-medium italic">
+                      of
+                    </span>
                     <span className="text-sm font-bold text-muted-foreground">
                       {pageCount || 1}
                     </span>
@@ -496,12 +529,15 @@ export function DataTable<TData, TValue>({
       {/* Table View - Hidden on mobile, visible on tablet and desktop (>= 768px) */}
       <div className="hidden md:flex bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(75,169,77,0.05)] w-full flex-col h-[200px] sm:h-[450px] overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_40px_rgba(75,169,77,0.1)]">
         {/* Table Container - Single scrollable container for header and body */}
-        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto scrollbar-hide">
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
           <div className="min-w-full">
             <Table className="min-w-full w-full">
-              <TableHeader className="bg-muted/30 sticky top-0 z-20">
+              <TableHeader className="bg-background sticky top-0 z-20 shadow-sm">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+                  <TableRow
+                    key={headerGroup.id}
+                    className="border-b border-border/40 hover:bg-transparent"
+                  >
                     {headerGroup.headers.map((header, index) => {
                       const isSticky = (
                         header.column.columnDef.meta as { sticky?: boolean }
@@ -513,10 +549,8 @@ export function DataTable<TData, TValue>({
                             "bg-transparent h-12",
                             isSticky &&
                             "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
-                            index === 0
-                              ? "pl-4 pr-2"
-                              : "px-2",
-                            "align-middle"
+                            index === 0 ? "pl-4 pr-2" : "px-2",
+                            "align-middle",
                           )}
                         >
                           <div className="flex items-center h-full">
@@ -524,7 +558,7 @@ export function DataTable<TData, TValue>({
                               ? null
                               : flexRender(
                                 header.column.columnDef.header,
-                                header.getContext()
+                                header.getContext(),
                               )}
                           </div>
                         </TableHead>
@@ -552,7 +586,8 @@ export function DataTable<TData, TValue>({
                       onClick={() => onRowClick?.(row.original)}
                       className={cn(
                         "group border-b border-border/30 last:border-0 transition-all duration-300",
-                        onRowClick && "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]"
+                        onRowClick &&
+                        "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -565,12 +600,12 @@ export function DataTable<TData, TValue>({
                             className={cn(
                               isSticky &&
                               "sticky left-0 z-10 bg-background border-r",
-                              "align-middle"
+                              "align-middle",
                             )}
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </TableCell>
                         );
@@ -600,7 +635,7 @@ export function DataTable<TData, TValue>({
             {total !== undefined
               ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(
                 page * perPage,
-                total
+                total,
               )} of ${total}`
               : `${table.getFilteredRowModel().rows.length} total`}
           </div>
@@ -640,7 +675,8 @@ export function DataTable<TData, TValue>({
                               setIsPerPageOpen(false);
                             }}
                             className={cn(
-                              perPage === value && "bg-amber-100 text-amber-700"
+                              perPage === value &&
+                              "bg-amber-100 text-amber-700",
                             )}
                           >
                             {value}
@@ -735,6 +771,6 @@ export function DataTable<TData, TValue>({
           )}
         </div>
       </div>
-    </div >
+    </div>
   );
 }

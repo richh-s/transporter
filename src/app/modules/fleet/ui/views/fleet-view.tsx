@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
+
 import { Truck as TruckType } from "@/lib/api/trucks";
 import {
   useCreateTruck,
@@ -21,6 +23,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 export const FleetView = () => {
+  const router = useRouter();
   // Pagination state - Use 10 for mobile, 5 for desktop
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -42,7 +45,6 @@ export const FleetView = () => {
   const deleteTruckMutation = useDeleteTruck();
 
   // UI State
-  const [success, setSuccess] = useState<string | null>(null);
   const [selectedTruck, setSelectedTruck] = useState<TruckType | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -90,10 +92,9 @@ export const FleetView = () => {
   };
 
   const handleSuccess = () => {
-    setSuccess("Operation completed successfully!");
+    toast.success("Operation completed successfully!");
     // Invalidate and refetch trucks data
     queryClient.invalidateQueries({ queryKey: ["trucks"] });
-    setTimeout(() => setSuccess(null), 3000);
   };
 
 
@@ -104,7 +105,7 @@ export const FleetView = () => {
   }, [page, filters]);
 
   return (
-    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
+    <div className="flex flex-col min-h-full space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden pb-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
@@ -120,8 +121,8 @@ export const FleetView = () => {
       {/* Stats Cards - Will be updated when data loads - Hide on mobile when scrolled or on last page */}
       <div
         className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount)
-            ? "hidden md:block"
-            : "block"
+          ? "hidden md:block"
+          : "block"
           }`}
       >
         <FleetStatsCardsWrapper
@@ -134,43 +135,33 @@ export const FleetView = () => {
       {/* Add Truck Button - Mobile only - Hide when scrolled or on last page */}
       <div
         className={`block sm:hidden shrink-0 transition-all duration-300 ${isScrolled || (pageCount > 0 && page === pageCount)
-            ? "hidden"
-            : "block"
+          ? "hidden"
+          : "block"
           }`}
       >
         <AddTruckModal onSuccess={handleSuccess} />
       </div>
 
-      {/* Success/Error Alerts */}
+      {/* Action Errors */}
       {((createTruckMutation.error as Error | null) ||
         (updateTruckMutation.error as Error | null) ||
         (deleteTruckMutation.error as Error | null)) && (
-          <Alert
-            variant="destructive"
-            className="bg-red-50 border-red-100 shrink-0"
-          >
-            <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              {createTruckMutation.error instanceof Error
-                ? createTruckMutation.error.message
-                : updateTruckMutation.error instanceof Error
-                  ? updateTruckMutation.error.message
-                  : deleteTruckMutation.error instanceof Error
-                    ? deleteTruckMutation.error.message
-                    : "An error occurred"}
-            </AlertDescription>
-          </Alert>
+          <div className="hidden">
+            {/* Keeping the logic to trigger toasts if needed, but the hooks already do it or we can add it to handleSuccess/onError */}
+            {(() => {
+              const error = createTruckMutation.error || updateTruckMutation.error || deleteTruckMutation.error;
+              if (error instanceof Error) {
+                toast.error(error.message);
+              }
+              return null;
+            })()}
+          </div>
         )}
-      {success && (
-        <Alert className="bg-green-50 border-green-100 text-green-700 shrink-0">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
 
       {/* Main Content - Table with Suspense - Takes remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden shrink-0">
+      <div className="flex-1 min-h-0 shrink-0">
         <TrucksTable
+          onRowClick={(truck) => router.push(`/fleet/placeholder?id=${truck.id}`)}
           page={page}
           perPage={perPage}
           filters={filters}

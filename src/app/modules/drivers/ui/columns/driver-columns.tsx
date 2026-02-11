@@ -44,9 +44,7 @@ export const driverColumns = ({
         </span>
       ),
       cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          {row.original.first_name}
-        </div>
+        <div className="text-sm font-medium">{row.original.first_name}</div>
       ),
     },
     {
@@ -78,8 +76,8 @@ export const driverColumns = ({
               "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
               status === "active" &&
               "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-              status === "inactive" &&
-              "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+              status === "suspended" &&
+              "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
             )}
           >
             {status}
@@ -89,14 +87,12 @@ export const driverColumns = ({
     },
     {
       id: "actions",
-      header: () => (
-        <span className="sr-only">Actions</span>
-      ),
+      header: () => <span className="sr-only">Actions</span>,
       cell: ({ row }) => {
         const driver = row.original;
 
         return (
-          <div className="flex justify-end">
+          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -109,19 +105,32 @@ export const driverColumns = ({
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem onClick={() => onView(driver)}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onView(driver);
+                  }}
+                >
                   <Eye className="mr-2 h-4 w-4" />
                   View
                 </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={() => onEdit(driver)}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(driver);
+                  }}
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(driver)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(driver);
+                  }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete

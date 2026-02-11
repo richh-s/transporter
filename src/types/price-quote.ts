@@ -1,13 +1,13 @@
 // Price Quote Types and Enums
 
 export enum LocationEnum {
-    ADDIS_ABABA = "addis_ababa",
-    ADAMA = "adama",
-    DUKEM = "dukem",
+    ADDIS_ABABA = "Addis Ababa",
+    ADAMA = "Adama",
+    DUKEM = "Dukem",
     DEBRE_ZEIT = "debre_zeit",
-    HAWASSA = "hawassa",
-    SHASHEMENE = "shashemene",
-    DJIBOUTI_PORT = "djibouti_port",
+    HAWASSA = "Hawassa",
+    SHASHEMENE = "Shashemene",
+    DJIBOUTI_PORT = "Djibouti",
 }
 
 export enum TruckTypeEnum {
@@ -52,10 +52,11 @@ export interface PriceQuote {
 }
 
 export interface CreatePriceQuoteRequest {
-    origin: LocationEnum;
-    destination: LocationEnum;
+    origin: string; // Display name like "Addis Ababa" or "Djibouti Port"
+    destination: string; // Display name like "Addis Ababa" or "Djibouti Port"
     gross_weight_min: number;
     gross_weight_max: number;
+    gross_weight_unit: string; // Required field, e.g., "kg"
     truck_type: TruckTypeEnum;
     container_size: ContainerSizeEnum;
     amount: number;
@@ -64,8 +65,8 @@ export interface CreatePriceQuoteRequest {
 }
 
 export interface UpdatePriceQuoteRequest {
-    origin?: LocationEnum;
-    destination?: LocationEnum;
+    origin?: string;
+    destination?: string;
     gross_weight_min?: number;
     gross_weight_max?: number;
     truck_type?: TruckTypeEnum;

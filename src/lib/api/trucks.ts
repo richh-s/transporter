@@ -1,4 +1,12 @@
-import { request } from "../api-client";
+import { request, tokenStorage } from "../api-client";
+
+/**
+ * Get authorization headers with Bearer token
+ */
+function getAuthHeaders(): Record<string, string> {
+  const token = tokenStorage.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface Truck {
   id: number;
@@ -15,6 +23,14 @@ export interface Truck {
   capacity_quintal: number;
   libre_key: string | null;
   gps_device_id: number | null;
+  created_at?: string;
+}
+
+export interface TruckDocument {
+  id: number;
+  document_type: string;
+  file_url?: string;
+  presigned_url?: string;
   created_at?: string;
 }
 
@@ -88,7 +104,7 @@ export const truckApi = {
    * Get a single truck by ID
    */
   getTruck: async (id: string) => {
-    return request<Truck>(`/truck/${id}/`);
+    return request<Truck>(`/truck/${id}`);
   },
 
   /**
@@ -105,7 +121,7 @@ export const truckApi = {
    * Update an existing truck
    */
   updateTruck: async (id: string, data: UpdateTruckRequest) => {
-    return request<Truck>(`/truck/${id}/`, {
+    return request<Truck>(`/truck/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
@@ -115,7 +131,7 @@ export const truckApi = {
    * Delete a truck
    */
   deleteTruck: async (id: string) => {
-    return request<{ message: string }>(`/truck/${id}/`, {
+    return request<{ message: string }>(`/truck/${id}`, {
       method: "DELETE",
     });
   },
@@ -124,15 +140,17 @@ export const truckApi = {
    * Upload a document for a truck
    */
   uploadDocument: async (id: string, file: File, documentType: string) => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const formData = new FormData();
     formData.append("file", file);
     formData.append("document_type", documentType);
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
     const response = await fetch(`${API_URL}/truck/${id}/documents`, {
       method: "POST",
-      body: formData,
+      headers: getAuthHeaders(),
       credentials: "include",
+      body: formData,
     });
 
     const status = response.status;
@@ -146,7 +164,7 @@ export const truckApi = {
       };
     }
 
-    return { data: result as string, status };
+    return { data: result, status };
   },
 
   /**
@@ -157,6 +175,7 @@ export const truckApi = {
 
     const response = await fetch(`${API_URL}/truck/${id}/documents`, {
       method: "GET",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -181,10 +200,14 @@ export const truckApi = {
   getDocument: async (id: string, documentId: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
-      method: "GET",
-      credentials: "include",
-    });
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     const status = response.status;
     const text = await response.text();
@@ -203,7 +226,11 @@ export const truckApi = {
   /**
    * Update a document for a truck
    */
-  updateDocument: async (id: string, documentId: string, updateData: { document_type?: string; file?: File }) => {
+  updateDocument: async (
+    id: string,
+    documentId: string,
+    updateData: { document_type?: string; file?: File },
+  ) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const formData = new FormData();
@@ -214,11 +241,15 @@ export const truckApi = {
       formData.append("file", updateData.file);
     }
 
-    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
-      method: "PATCH",
-      credentials: "include",
-      body: formData,
-    });
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        credentials: "include",
+        body: formData,
+      },
+    );
 
     const status = response.status;
     const text = await response.text();
@@ -240,10 +271,14 @@ export const truckApi = {
   deleteDocument: async (id: string, documentId: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${API_URL}/truck/${id}/documents/${documentId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     const status = response.status;
 
@@ -259,4 +294,3 @@ export const truckApi = {
     return { data: { success: true }, status };
   },
 };
-

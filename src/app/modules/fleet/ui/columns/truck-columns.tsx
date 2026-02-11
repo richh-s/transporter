@@ -30,7 +30,10 @@ function ActionsCell({
   const router = useRouter();
 
   return (
-    <div className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end">
+    <div
+      className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end"
+      onClick={(e) => e.stopPropagation()}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
@@ -39,18 +42,31 @@ function ActionsCell({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => router.push(`/fleet/${truck.id}`)}>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/fleet/placeholder?id=${truck.id}`);
+            }}
+          >
             <Eye className="mr-2 h-4 w-4" /> View Details
           </DropdownMenuItem>
           {meta?.onEdit && (
-            <DropdownMenuItem onClick={() => meta.onEdit?.(truck)}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                meta.onEdit?.(truck);
+              }}
+            >
               <Edit2 className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
           )}
           {meta?.onDelete && (
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
-              onClick={() => meta.onDelete?.(truck)}
+              onClick={(e) => {
+                e.stopPropagation();
+                meta.onDelete?.(truck);
+              }}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
@@ -155,7 +171,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap flex items-center">
-          {row.getValue("capacity_quintal")} Q
+          {row.getValue("capacity_quintal")} Kg
         </div>
       );
     },
@@ -188,13 +204,13 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
             className={cn(
               "font-semibold text-[9px] sm:text-[10px] md:text-xs min-w-[90px] sm:min-w-[100px] whitespace-nowrap",
               status === "active" &&
-                "bg-green-100 text-green-700 hover:bg-green-100",
+              "bg-green-100 text-green-700 hover:bg-green-100",
               status === "maintenance" &&
-                "bg-amber-100 text-amber-700 hover:bg-amber-100",
+              "bg-amber-100 text-amber-700 hover:bg-amber-100",
               status === "inactive" &&
-                "bg-gray-100 text-gray-700 hover:bg-gray-100",
+              "bg-gray-100 text-gray-700 hover:bg-gray-100",
               status === "out_of_service" &&
-                "bg-red-100 text-red-700 hover:bg-red-100"
+              "bg-red-100 text-red-700 hover:bg-red-100",
             )}
           >
             {displayStatus}

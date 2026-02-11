@@ -34,7 +34,7 @@ export interface UpdateGPSDeviceRequest {
   expire_date?: string; // ISO 8601 datetime
   last_synced_at?: string; // ISO 8601 datetime (required, cannot be null - keep existing value if not updating)
   status?: boolean;
-  truck_id?: number; // Use 0 to unlink, or truck_id to assign
+  truck_id?: number | null; // Use null to unlink, or truck_id to assign
 }
 
 export interface GPSDeviceListResponse {

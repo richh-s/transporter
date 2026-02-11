@@ -7,18 +7,20 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Truck,
-  ClipboardList,
+  // ClipboardList, // Unused - orders page not implemented
   Tag,
-  CreditCard,
+  // CreditCard, // Unused - payments page not implemented
   Menu,
-  User,
-  Settings,
+  Users, // For Driver Management
+  // User, // Removed - My Profile menu item removed
+  // Settings, // Removed - Settings menu item removed
   LogOut,
   Bell,
   Satellite,
   FileText,
   Lock,
   Anchor,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -45,14 +47,19 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Ships", href: "/ships", icon: Anchor },
+  { name: "Shipments", href: "/ships", icon: Anchor },
   { name: "Fleet Management", href: "/fleet", icon: Truck },
-  { name: "Driver Management", href: "/drivers", icon: User },
+  { name: "Driver Management", href: "/drivers", icon: Users },
   { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
-  { name: "Active Orders", href: "/orders", icon: ClipboardList },
+  // { name: "Active Orders", href: "/orders", icon: ClipboardList }, // Page not implemented yet
   { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
-  { name: "Payments", href: "/payments", icon: CreditCard },
+  // { name: "Payments", href: "/payments", icon: CreditCard }, // Page not implemented yet
   { name: "POD Documents", href: "/transporter/pod-documents", icon: FileText },
+  {
+    name: "Organization Documents",
+    href: "/organization/documents",
+    icon: ShieldCheck,
+  },
 ];
 
 export function Sidebar({
@@ -68,7 +75,7 @@ export function Sidebar({
     <div
       className={cn(
         "flex h-full flex-col bg-sidebar text-sidebar-foreground pt-16 lg:pt-0 border-r border-sidebar-border",
-        className
+        className,
       )}
     >
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
@@ -96,7 +103,7 @@ export function Sidebar({
                 "group flex items-center rounded-md px-3 py-2 text-sm font-bold transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )}
             >
               <item.icon
@@ -104,7 +111,7 @@ export function Sidebar({
                   "mr-3 h-5 w-5 shrink-0 transition-colors",
                   isActive
                     ? "text-sidebar-primary"
-                    : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
                 )}
                 aria-hidden="true"
               />
@@ -140,21 +147,21 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {/* Mobile sidebar */}
       <div
         className={cn(
-          "fixed inset-0 z-50 lg:hidden",
-          sidebarOpen ? "visible" : "invisible"
+          "fixed inset-0 z-[100] lg:hidden",
+          sidebarOpen ? "visible" : "invisible",
         )}
       >
         <div
           className={cn(
             "fixed inset-0 bg-black/50 transition-opacity duration-300 ease-linear",
-            sidebarOpen ? "opacity-100" : "opacity-0"
+            sidebarOpen ? "opacity-100" : "opacity-0",
           )}
           onClick={() => setSidebarOpen(false)}
         />
         <div
           className={cn(
             "fixed inset-y-0 left-0 w-72 transform transition duration-300 ease-in-out",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
           <Sidebar onClose={() => setSidebarOpen(false)} />
@@ -162,12 +169,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col z-50">
         <Sidebar />
       </div>
 
       <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden min-h-screen">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-foreground lg:hidden"
@@ -212,26 +219,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>My Profile</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setPasswordDialogOpen(true)}
                     className="cursor-pointer"
                   >
                     <Lock className="mr-2 h-4 w-4" />
                     <span>Change Password</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/organization/documents" className="cursor-pointer">
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>Organization Documents</span>
-                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -281,13 +274,16 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         />
 
         <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-auto min-h-0">
-          <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-visible">{children}</div>
+          <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-visible">
+            {children}
+          </div>
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
           <div className="flex justify-around items-center h-16">
-            {navigation.slice(0, 4).map((item) => { // Show only first 4 items on mobile
+            {navigation.slice(0, 4).map((item) => {
+              // Show only first 4 items on mobile
               const isActive =
                 pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
@@ -298,7 +294,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
                     isActive
                       ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <item.icon className="h-6 w-6" />

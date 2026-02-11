@@ -1,6 +1,6 @@
 export type { DriverDocument } from "@/lib/zod/driver";
 
-export type DriverStatus = "active" | "inactive";
+export type DriverStatus = "active" | "suspended";
 
 export interface Driver {
   id: number;
@@ -10,6 +10,7 @@ export interface Driver {
   email: string;
   driver_license_number: string;
   status: DriverStatus;
+  assigend?: boolean;
 }
 
 export interface DriverListResponse {
@@ -42,10 +43,11 @@ export interface UpdateDriverPayload extends Partial<CreateDriverPayload> {
 }
 
 
+
+
 export interface ApiResult<T> {
-    status: boolean;
-    success_message?: string;
-    error_message?: string | null;
-    result: T;
-  }
-  
+  status: boolean;
+  success_message?: string;
+  error_message?: string | null;
+  result: T;
+}

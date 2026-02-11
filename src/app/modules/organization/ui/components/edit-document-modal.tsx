@@ -28,7 +28,7 @@ interface EditDocumentModalProps {
   document: OrganizationDocument | null;
   onUpdate: (
     id: string | number,
-    data: { document_type?: string; file?: File }
+    data: { document_type?: string; file?: File },
   ) => Promise<void>;
   isUpdating: boolean;
 }
@@ -187,12 +187,13 @@ export function EditDocumentModal({
               variant="outline"
               onClick={handleFileSelect}
               disabled={isUpdating}
-              className="w-full"
+              className="w-full min-w-0 justify-start overflow-hidden"
+              title={selectedFile?.name}
             >
               {selectedFile ? (
                 <>
-                  <X className="h-4 w-4 mr-2" />
-                  {selectedFile.name}
+                  <X className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{selectedFile.name}</span>
                 </>
               ) : (
                 <>
@@ -203,14 +204,22 @@ export function EditDocumentModal({
             </Button>
 
             {selectedFile && (
-              <p className="text-xs text-muted-foreground">
+              <p
+                className="text-xs text-muted-foreground truncate"
+                title={selectedFile.name}
+              >
                 New file: {selectedFile.name} (
                 {(selectedFile.size / 1024).toFixed(2)} KB)
               </p>
             )}
 
             {!selectedFile && document.file_path && (
-              <p className="text-xs text-muted-foreground">
+              <p
+                className="text-xs text-muted-foreground truncate min-w-0"
+                title={
+                  document.file_path.split("/").pop() || document.file_path
+                }
+              >
                 Current file:{" "}
                 {document.file_path.split("/").pop() || document.file_path}
               </p>
@@ -225,17 +234,10 @@ export function EditDocumentModal({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isUpdating}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isUpdating}>
             Cancel
           </Button>
-          <Button
-            onClick={handleUpdate}
-            disabled={!documentType || isUpdating}
-          >
+          <Button onClick={handleUpdate} disabled={!documentType || isUpdating}>
             {isUpdating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
