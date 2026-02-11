@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Users, UserCheck, Clock } from "lucide-react";
 
 type Driver = {
-  status: "active" | "inactive";
+  status: "active" | "suspended";
   experience_years: number;
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   Edit,
@@ -162,6 +163,7 @@ function GPSDeviceDetailContent() {
     deactivateMutation.mutate(id, {
       onSuccess: () => {
         setShowDeactivateDialog(false);
+        toast.success("GPS device deactivated successfully");
       },
     });
   };

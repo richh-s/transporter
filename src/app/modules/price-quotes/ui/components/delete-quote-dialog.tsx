@@ -30,7 +30,7 @@ export function DeleteQuoteDialog({
 }: DeleteQuoteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[425px]">
+      <AlertDialogContent className="sm:max-w-[425px] max-w-[95vw] rounded-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Price Quote</AlertDialogTitle>
           <AlertDialogDescription>

@@ -86,4 +86,3 @@ export const LOCATION_OPTIONS = [
     { value: LocationEnum.SHASHEMENE, label: "Shashemene" },
     { value: LocationEnum.DJIBOUTI_PORT, label: "Djibouti" },
 ];
-

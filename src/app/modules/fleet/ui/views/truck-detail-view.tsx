@@ -225,7 +225,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                 </div>
                 <div>
                   <label className="text-[10px] font-medium text-muted-foreground leading-none">
-                    VIN
+                    Vehicle Identification Number (VIN)
                   </label>
                   <p className="text-xs font-mono mt-0 leading-none">
                     {truck.vin}
@@ -245,10 +245,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                     >
                       {truck.status
                         ? truck.status
-                            .replace(/_/g, " ")
-                            .charAt(0)
-                            .toUpperCase() +
-                          truck.status.replace(/_/g, " ").slice(1)
+                          .replace(/_/g, " ")
+                          .charAt(0)
+                          .toUpperCase() +
+                        truck.status.replace(/_/g, " ").slice(1)
                         : "Unknown"}
                     </Badge>
                   </div>
@@ -319,7 +319,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                     Capacity
                   </label>
                   <p className="text-xs font-semibold mt-0 leading-none">
-                    {truck.capacity_quintal} Q
+                    {truck.capacity_quintal} Kg
                   </p>
                 </div>
               </div>

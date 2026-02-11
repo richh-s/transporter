@@ -151,7 +151,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
   const qc = useQueryClient();
 
   const { data: documents = [], isLoading } = useDriverDocuments(driverId);
-  const uploadMutation = useUploadDriverDocument(driverId);
+  const uploadMutation = useUploadDriverDocument();
   const updateMutation = useUpdateDriverDocument(driverId);
   const deleteMutation = useDeleteDriverDocument();
 
@@ -219,7 +219,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       );
     } else {
       uploadMutation.mutate(
-        { document_type: documentType, file: file! },
+        { driverId, document_type: documentType, file: file! },
         {
           onSuccess: () => {
             resetForm();
@@ -322,7 +322,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           showCloseButton={false}
           className={cn(
             "p-0 gap-0 overflow-hidden rounded-2xl",
-            "w-full max-w-md",
+            "sm:max-w-md w-[95vw]",
             "flex flex-col",
           )}
         >
@@ -452,7 +452,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
       {/* Delete Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="max-w-sm rounded-2xl">
+        <DialogContent className="sm:max-w-sm w-[95vw] rounded-2xl">
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>

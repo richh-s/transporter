@@ -35,7 +35,10 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useCreatePriceQuote } from "@/app/modules/price-quotes/server/hooks";
+import {
+  useCreatePriceQuote,
+} from "@/app/modules/price-quotes/server/hooks";
+import { useTrucks } from "@/app/modules/fleet/server/hooks";
 import {
   LocationEnum,
   TruckTypeEnum,
@@ -110,6 +113,17 @@ export function CreatePriceQuoteView() {
   const router = useRouter();
   const createMutation = useCreatePriceQuote();
 
+  const { data: trucksData } = useTrucks({ per_page: 100 });
+  const allTrucks = (trucksData?.trucks || []) as unknown as Record<string, unknown>[];
+  const activeTrucks = allTrucks.filter((t) => t.status === "active");
+
+  const flatbedCount = activeTrucks.filter(
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "flatbed",
+  ).length;
+  const trailerCount = activeTrucks.filter(
+    (t) => (t as Record<string, unknown>).truck_type?.toString().toLowerCase() === "trailer",
+  ).length;
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -124,6 +138,8 @@ export function CreatePriceQuoteView() {
       axle_type: undefined,
     },
   });
+
+  const containerSize = form.watch("container_size");
 
   const onSubmit = async (values: FormValues) => {
     if (
@@ -179,7 +195,7 @@ export function CreatePriceQuoteView() {
       {/* Error Alert */}
       {createMutation.error &&
         (createMutation.error as Error & { code?: string }).code ===
-          "MISSING_DOCUMENTS" && (
+        "MISSING_DOCUMENTS" && (
           <div className="p-4">
             <Alert variant="destructive" className="rounded-xl">
               <AlertCircle className="h-4 w-4" />
@@ -302,15 +318,17 @@ export function CreatePriceQuoteView() {
                       <RadioGroup
                         onValueChange={field.onChange}
                         value={field.value}
-                        className="flex gap-3"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                       >
                         <Label
                           htmlFor="flatbed"
                           className={cn(
-                            "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all",
+                            "group relative flex flex-col gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300",
                             field.value === TruckTypeEnum.FLATBED
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50",
+                              ? "border-primary bg-primary/5 ring-4 ring-primary/10"
+                              : (containerSize === ContainerSizeEnum.FORTY_FEET
+                                ? "border-amber-200 bg-amber-50/50"
+                                : "border-border hover:border-primary/40 hover:bg-muted/50"),
                           )}
                         >
                           <RadioGroupItem
@@ -318,16 +336,45 @@ export function CreatePriceQuoteView() {
                             id="flatbed"
                             className="sr-only"
                           />
-                          <Truck className="h-4 w-4" />
-                          <span className="text-sm font-medium">Flatbed</span>
+
+                          {containerSize === ContainerSizeEnum.FORTY_FEET && (
+                            <div className="absolute -top-3 left-4 px-2.5 py-1 rounded-full bg-amber-500 text-[10px] font-bold text-white uppercase tracking-wider shadow-lg animate-in zoom-in duration-500">
+                              Best Match
+                            </div>
+                          )}
+
+                          <div className="flex items-start justify-between">
+                            <div className={cn(
+                              "p-2.5 rounded-xl transition-colors duration-300",
+                              field.value === TruckTypeEnum.FLATBED ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                            )}>
+                              <Truck className="h-5 w-5" />
+                            </div>
+                            <div className={cn(
+                              "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight",
+                              flatbedCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                            )}>
+                              {flatbedCount} Available
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="font-bold text-sm tracking-tight">Flatbed Truck</p>
+                            <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                              Ideal for heavy loads and 40ft containers.
+                            </p>
+                          </div>
                         </Label>
+
                         <Label
                           htmlFor="trailer"
                           className={cn(
-                            "flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all",
+                            "group relative flex flex-col gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300",
                             field.value === TruckTypeEnum.TRAILER
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50",
+                              ? "border-primary bg-primary/5 ring-4 ring-primary/10"
+                              : (containerSize === ContainerSizeEnum.TWENTY_FEET
+                                ? "border-amber-200 bg-amber-50/50"
+                                : "border-border hover:border-primary/40 hover:bg-muted/50"),
                           )}
                         >
                           <RadioGroupItem
@@ -335,9 +382,56 @@ export function CreatePriceQuoteView() {
                             id="trailer"
                             className="sr-only"
                           />
-                          <Truck className="h-4 w-4" />
-                          <span className="text-sm font-medium">Trailer</span>
+
+                          {containerSize === ContainerSizeEnum.TWENTY_FEET && (
+                            <div className="absolute -top-3 left-4 px-2.5 py-1 rounded-full bg-amber-500 text-[10px] font-bold text-white uppercase tracking-wider shadow-lg animate-in zoom-in duration-500">
+                              Best Match
+                            </div>
+                          )}
+
+                          <div className="flex items-start justify-between">
+                            <div className={cn(
+                              "p-2.5 rounded-xl transition-colors duration-300",
+                              field.value === TruckTypeEnum.TRAILER ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                            )}>
+                              <Truck className="h-5 w-5" />
+                            </div>
+                            <div className={cn(
+                              "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight",
+                              trailerCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                            )}>
+                              {trailerCount} Available
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="font-bold text-sm tracking-tight">Trailer Truck</p>
+                            <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                              Standard transport for 20ft containers.
+                            </p>
+                          </div>
                         </Label>
+
+                        {/* Warnings and Alerts */}
+                        {(containerSize === ContainerSizeEnum.FORTY_FEET && field.value === TruckTypeEnum.TRAILER) && (
+                          <div className="col-span-1 sm:col-span-2 flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-700 text-xs border border-red-100 animate-in slide-in-from-top-2 duration-300">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <p><strong>Capacity Warning:</strong> 40ft containers typically exceed Trailer weight limits and require Flatbed trucks.</p>
+                          </div>
+                        )}
+
+                        {field.value === TruckTypeEnum.FLATBED && flatbedCount === 0 && (
+                          <div className="col-span-1 sm:col-span-2 flex items-center gap-2 p-3 rounded-xl bg-amber-50 text-amber-700 text-xs border border-amber-100 animate-in slide-in-from-top-2 duration-300">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <p>No active <strong>Flatbed</strong> trucks are currently available in your fleet.</p>
+                          </div>
+                        )}
+                        {field.value === TruckTypeEnum.TRAILER && trailerCount === 0 && (
+                          <div className="col-span-1 sm:col-span-2 flex items-center gap-2 p-3 rounded-xl bg-amber-50 text-amber-700 text-xs border border-amber-100 animate-in slide-in-from-top-2 duration-300">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <p>No active <strong>Trailer</strong> trucks are currently available in your fleet.</p>
+                          </div>
+                        )}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />

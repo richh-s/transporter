@@ -107,17 +107,17 @@ export function AssignModal({
   );
 
   // Filter available trucks
-  const availableTrucks = trucks.filter((t: any) => {
+  const availableTrucks = trucks.filter((t) => {
     // Handling backend typo "assigend" and "assigned"
-    const isGloballyAssigned = t.assigned === true || t.assigend === true;
-    const isDeleted = t.deleted === true;
+    const isGloballyAssigned = (t as unknown as Record<string, unknown>).assigned === true || (t as unknown as Record<string, unknown>).assigend === true;
+    const isDeleted = (t as unknown as Record<string, unknown>).deleted === true;
     const isActive = t.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(t.id) === String(dbTruckId);
     const isTakenLocally = takenTruckIds.has(Number(t.id));
 
     // Show if it's the one already assigned to this item, 
-    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
-    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
+    // OR if it's ACTIVE AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (isActive && !isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned truck is in list
@@ -128,18 +128,17 @@ export function AssignModal({
     availableTrucks.unshift(assignedTruck);
   }
 
-  // Filter available drivers
-  const availableDrivers = drivers.filter((d: any) => {
+  const availableDrivers = drivers.filter((d) => {
     // Handling backend typo "assigend" and "assigned"
-    const isGloballyAssigned = d.assigned === true || d.assigend === true;
-    const isDeleted = d.deleted === true;
+    const isGloballyAssigned = (d as unknown as Record<string, unknown>).assigned === true || (d as unknown as Record<string, unknown>).assigend === true;
+    const isDeleted = (d as unknown as Record<string, unknown>).deleted === true;
     const isActive = d.status?.toLowerCase() === "active";
     const isCurrentlyAssigned = String(d.id) === String(dbDriverId);
     const isTakenLocally = takenDriverIds.has(Number(d.id));
 
     // Show if it's the one already assigned to this item,
-    // OR if it's (active or status missing) AND not deleted AND not assigned elsewhere
-    return isCurrentlyAssigned || (!isDeleted && !isGloballyAssigned && !isTakenLocally);
+    // OR if it's ACTIVE AND not deleted AND not assigned elsewhere
+    return isCurrentlyAssigned || (isActive && !isDeleted && !isGloballyAssigned && !isTakenLocally);
   });
 
   // Ensure assigned driver is in list
@@ -166,7 +165,7 @@ export function AssignModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-md rounded-2xl p-0 overflow-hidden"
+        className="w-[95vw] sm:max-w-md rounded-2xl p-0 overflow-hidden bg-background shadow-lg border-none"
       >
         <DialogHeader className="p-4 pb-3 border-b bg-muted/30">
           <DialogTitle className="flex items-center gap-2 text-base">
@@ -178,26 +177,26 @@ export function AssignModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 min-w-0 overflow-hidden">
           {/* Ship Item Summary */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 min-w-0 gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="p-2 rounded-lg bg-primary/10 text-primary">
                 <Package className="h-4 w-4" />
               </div>
-              <div>
-                <p className="text-sm font-semibold">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">
                   {containers.length} Container
                   {containers.length !== 1 ? "s" : ""}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground truncate">
                   {totalWeight.toLocaleString()} kg total
                 </p>
               </div>
             </div>
             <div
               className={cn(
-                "px-2 py-1 rounded-full text-[10px] font-semibold",
+                "px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 whitespace-nowrap",
                 shipItem.status === "DELIVERED"
                   ? "bg-emerald-500/10 text-emerald-600"
                   : shipItem.status === "IN_TRANSIT"
@@ -221,8 +220,10 @@ export function AssignModal({
                 setSelectedTruckId(value ? Number(value) : null)
               }
             >
-              <SelectTrigger className="h-12 rounded-xl">
-                <SelectValue placeholder="Select a truck..." />
+              <SelectTrigger className="h-12 rounded-xl min-w-0 w-full overflow-hidden">
+                <div className="flex-1 text-left truncate min-w-0 pr-4">
+                  <SelectValue placeholder="Select a truck..." />
+                </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {availableTrucks.length === 0 ? (
@@ -236,16 +237,21 @@ export function AssignModal({
                       value={truck.id.toString()}
                       className="rounded-lg"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">
+                      <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                        <span className="font-semibold truncate">
                           {truck.plate_number}
                         </span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-muted-foreground text-xs truncate shrink opacity-70">
                           {truck.make} {truck.model}
                         </span>
+                        {truck.status && truck.status.toLowerCase() !== "active" && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded capitalize">
+                            {truck.status}
+                          </span>
+                        )}
                         {truck.capacity_quintal && (
                           <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
-                            {truck.capacity_quintal} Qtl
+                            {truck.capacity_quintal} Kg
                           </span>
                         )}
                       </div>
@@ -274,8 +280,10 @@ export function AssignModal({
                 setSelectedDriverId(value ? Number(value) : null)
               }
             >
-              <SelectTrigger className="h-12 rounded-xl">
-                <SelectValue placeholder="Select a driver..." />
+              <SelectTrigger className="h-12 rounded-xl min-w-0 w-full overflow-hidden">
+                <div className="flex-1 text-left truncate min-w-0 pr-4">
+                  <SelectValue placeholder="Select a driver..." />
+                </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {availableDrivers.length === 0 ? (
@@ -290,11 +298,11 @@ export function AssignModal({
                       className="rounded-lg"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">
+                        <span className="font-semibold truncate">
                           {driver.first_name} {driver.last_name}
                         </span>
                         {driver.phone_number && (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-muted-foreground text-xs truncate shrink opacity-70">
                             {driver.phone_number}
                           </span>
                         )}
@@ -313,18 +321,18 @@ export function AssignModal({
           </div>
         </div>
 
-        <DialogFooter className="p-4 pt-0 gap-2">
+        <DialogFooter className="p-4 pt-0 flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="flex-1 rounded-xl"
+            className="w-full sm:flex-1 rounded-xl h-11"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAssign}
             disabled={isAssigning || (!selectedTruckId && !selectedDriverId)}
-            className="flex-1 rounded-xl bg-primary"
+            className="w-full sm:flex-1 rounded-xl bg-primary h-11"
           >
             {isAssigning ? (
               <>

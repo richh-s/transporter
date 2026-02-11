@@ -76,13 +76,11 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
   const inTransit = ships.filter(
     (s) => s.status?.toUpperCase() === "IN_TRANSIT",
   ).length;
-  const pending = ships.filter(
-    (s) => s.status?.toUpperCase() === "PENDING",
+  const delivered = ships.filter(
+    (s) => s.status?.toUpperCase() === "DELIVERED",
   ).length;
   const completed = ships.filter(
-    (s) =>
-      s.status?.toUpperCase() === "COMPLETED" ||
-      s.status?.toUpperCase() === "DELIVERED",
+    (s) => s.status?.toUpperCase() === "COMPLETED",
   ).length;
 
   return (
@@ -104,9 +102,9 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
         iconBg="bg-amber-500/10 text-amber-600"
       />
       <StatsCard
-        title="Pending"
-        value={pending}
-        subtitle="Awaiting action"
+        title="Delivered"
+        value={delivered}
+        subtitle="Arrived at destination"
         icon={Package}
         gradient="bg-gradient-to-br from-blue-500 to-blue-500/50"
         iconBg="bg-blue-500/10 text-blue-600"
@@ -114,7 +112,7 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
       <StatsCard
         title="Completed"
         value={completed}
-        subtitle="Delivered"
+        subtitle="Fully processed"
         icon={MapPin}
         gradient="bg-gradient-to-br from-emerald-500 to-emerald-500/50"
         iconBg="bg-emerald-500/10 text-emerald-600"

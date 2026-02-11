@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -148,6 +149,7 @@ export function PriceQuotesListView() {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setQuoteToDelete(null);
+          toast.success("Price quote deleted successfully");
         },
       });
     }

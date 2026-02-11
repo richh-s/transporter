@@ -65,8 +65,8 @@ export interface CreatePriceQuoteRequest {
 }
 
 export interface UpdatePriceQuoteRequest {
-    origin?: LocationEnum;
-    destination?: LocationEnum;
+    origin?: string;
+    destination?: string;
     gross_weight_min?: number;
     gross_weight_max?: number;
     truck_type?: TruckTypeEnum;

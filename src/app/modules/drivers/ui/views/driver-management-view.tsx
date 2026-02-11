@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -242,42 +241,45 @@ export function DriverManagementView() {
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [firstName, setFirstName] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [status, setStatus] = useState<"all" | "active" | "suspended">("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const listParams = useMemo(
     () => ({
-      first_name: search || undefined,
-      driver_license_number: search || undefined,
-      phone_number: search || undefined,
+      first_name: firstName || undefined,
+      driver_license_number: licenseNumber || undefined,
+      phone_number: phoneNumber || undefined,
       status: status === "all" ? undefined : status,
+      page,
+      per_page: pageSize,
     }),
-    [search, status],
+    [firstName, licenseNumber, phoneNumber, status, page, pageSize],
   );
 
   const { data, isLoading } = useDrivers(listParams);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
-  const totalDrivers = drivers.length;
-  const activeDrivers = drivers.filter((d) => d.status === "active").length;
+  const totalDrivers = data?.total ?? drivers.length;
+  const activeCount = status === "active" ? totalDrivers : drivers.filter((d) => d.status === "active").length;
 
   // Pagination
-  const totalPages = Math.ceil(drivers.length / pageSize);
-  const paginatedDrivers = drivers.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+  const totalPages = data?.pages ?? Math.ceil(totalDrivers / pageSize);
+  const paginatedDrivers = drivers; // Assuming backend already paginates
 
   const clearFilters = () => {
-    setSearch("");
+    setFirstName("");
+    setLicenseNumber("");
+    setPhoneNumber("");
     setStatus("all");
     setFilterOpen(false);
   };
 
-  const hasActiveFilters = search || status !== "all";
+  const hasActiveFilters = firstName || licenseNumber || phoneNumber || status !== "all";
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300 pb-6 px-4">
@@ -311,7 +313,7 @@ export function DriverManagementView() {
         <StatsCard
           icon={UserCheck}
           label="Active"
-          value={activeDrivers}
+          value={activeCount}
           accent="bg-emerald-500/10 text-emerald-600"
           isLoading={isLoading}
         />
@@ -345,11 +347,29 @@ export function DriverManagementView() {
           </SheetHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Search</label>
+              <label className="text-xs text-muted-foreground">First Name</label>
               <Input
-                placeholder="Name, license, phone..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Enter first name..."
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground">License Number</label>
+              <Input
+                placeholder="Enter license number..."
+                value={licenseNumber}
+                onChange={(e) => setLicenseNumber(e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground">Phone Number</label>
+              <Input
+                placeholder="Enter phone number..."
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 className="h-11 rounded-xl"
               />
             </div>
@@ -359,13 +379,15 @@ export function DriverManagementView() {
                 value={status}
                 onValueChange={(v) => setStatus(v as typeof status)}
               >
-                <SelectTrigger className="h-11 rounded-xl">
-                  <SelectValue />
+                <SelectTrigger className="h-11 rounded-xl min-w-0 w-full">
+                  <div className="flex-1 text-left truncate min-w-0 pr-2">
+                    <SelectValue />
+                  </div>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -473,7 +495,6 @@ export function DriverManagementView() {
         driver={selectedDriver}
       />
 
-      {/* Delete Dialog */}
       <Dialog
         open={deleteOpen}
         onOpenChange={(val) => {
@@ -508,11 +529,10 @@ export function DriverManagementView() {
               disabled={!driverToDelete || deleteDriver.isPending}
               onClick={() => {
                 if (!driverToDelete) return;
-                setDeleteOpen(false);
-                setDriverToDelete(null);
                 deleteDriver.mutate(driverToDelete.id, {
                   onSuccess: () => {
-                    toast.success("Driver deleted successfully");
+                    setDeleteOpen(false);
+                    setDriverToDelete(null);
                   },
                 });
               }}

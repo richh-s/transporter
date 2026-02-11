@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { truckApi } from "@/lib/api/trucks";
 import type { Truck } from "@/lib/api/trucks";
 
@@ -27,10 +28,10 @@ export function useDeleteTruck() {
         { queryKey: ["trucks"] },
         (old) => {
           if (!old) return old;
-          
+
           // Remove the truck from the list
           const updatedTrucks = old.trucks.filter((truck) => truck.id !== Number(id));
-          
+
           return {
             ...old,
             trucks: updatedTrucks,
@@ -42,17 +43,19 @@ export function useDeleteTruck() {
       // Return context with snapshot for potential rollback
       return { previousQueries };
     },
-    onError: (err, id, context) => {
+    onSuccess: () => {
+      // Invalidate to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["trucks"] });
+      toast.success("Truck deleted successfully");
+    },
+    onError: (err: unknown, id, context) => {
       // Rollback on error
       if (context?.previousQueries) {
         context.previousQueries.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-    },
-    onSuccess: () => {
-      // Invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["trucks"] });
+      toast.error((err as Error)?.message || "Failed to delete truck");
     },
   });
 }

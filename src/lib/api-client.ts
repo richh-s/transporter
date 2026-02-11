@@ -180,23 +180,31 @@ export async function request<T>(
     }
 
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    let result: unknown;
+
+    if (text) {
+      try {
+        result = JSON.parse(text);
+      } catch {
+        result = text;
+      }
+    }
 
     if (!response.ok) {
       return {
         error:
-          result?.error ||
-          result?.detail ||
-          result?.message ||
-          "Something went wrong",
+          ((result as unknown) as Record<string, unknown>)?.error as string ||
+          ((result as unknown) as Record<string, unknown>)?.detail as string ||
+          ((result as unknown) as Record<string, unknown>)?.message as string ||
+          (typeof result === "string" ? result : "Something went wrong"),
         status,
-        errorCode: result?.code || undefined, // Extract error code if available
-        code: result?.code || result?.status_code?.toString(),
-        fields: result?.fields,
+        errorCode: ((result as unknown) as Record<string, unknown>)?.code as string || undefined,
+        code: (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString(),
+        fields: ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
       };
     }
 
-    return { data: result as T, status };
+    return { data: (result ?? { status: true }) as T, status };
   } catch (error) {
     console.error("❌ API Request Failed:", error);
 

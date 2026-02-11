@@ -61,26 +61,37 @@ export async function apiRequest<T>(
     credentials: "include",
   });
 
-  const contentType = response.headers.get("content-type");
-  const isJson = contentType?.includes("application/json");
+
+  if (response.status === 204) {
+    return { status: true } as T;
+  }
+
+  const text = await response.text();
+  let result: unknown;
+
+  if (text) {
+    try {
+      result = JSON.parse(text);
+    } catch {
+      result = text;
+    }
+  }
 
   if (!response.ok) {
-    const errorBody = isJson ? await response.json() : null;
-
     throw new ApiError(
       response.status,
       response.statusText,
-      errorBody?.detail ||
-      errorBody?.error ||
-      errorBody?.message ||
-      response.statusText ||
+      ((result as unknown) as Record<string, unknown>)?.detail as string ||
+      ((result as unknown) as Record<string, unknown>)?.error as string ||
+      ((result as unknown) as Record<string, unknown>)?.message as string ||
+      (typeof result === "string" ? result : response.statusText) ||
       "Request failed",
-      errorBody?.fields,
-      errorBody?.code || errorBody?.status_code?.toString()
+      ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
+      (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString()
     );
   }
 
-  return isJson ? await response.json() : ({} as T);
+  return (result ?? { status: true }) as T;
 }
 
 /* ================= AUTH API =================
