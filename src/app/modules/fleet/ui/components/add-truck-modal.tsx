@@ -311,7 +311,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="capacity_quintal"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Capacity (Q) <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">Capacity (Kg) <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input
                               type="number"

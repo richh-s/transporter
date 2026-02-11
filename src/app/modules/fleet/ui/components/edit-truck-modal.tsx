@@ -413,7 +413,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Capacity (Quintal){" "}
+                        Capacity (Kg){" "}
                         <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>

@@ -251,7 +251,7 @@ export function AssignModal({
                         )}
                         {truck.capacity_quintal && (
                           <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
-                            {truck.capacity_quintal} Qtl
+                            {truck.capacity_quintal} Kg
                           </span>
                         )}
                       </div>

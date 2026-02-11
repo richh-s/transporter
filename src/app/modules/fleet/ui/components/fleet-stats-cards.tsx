@@ -13,11 +13,11 @@ export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
   const avgCapacity =
     trucks.length > 0
       ? (
-          trucks.reduce(
-            (acc: number, t: TruckType) => acc + t.capacity_quintal,
-            0
-          ) / trucks.length
-        ).toFixed(1)
+        trucks.reduce(
+          (acc: number, t: TruckType) => acc + t.capacity_quintal,
+          0
+        ) / trucks.length
+      ).toFixed(1)
       : 0;
 
   return (
@@ -72,7 +72,7 @@ export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
           </h3>
           <p className="text-lg sm:text-2xl font-bold text-amber-500">
             {avgCapacity}{" "}
-            <span className="text-[10px] font-normal opacity-70">Q</span>
+            <span className="text-[10px] font-normal opacity-70">Kg</span>
           </p>
         </div>
       </div>

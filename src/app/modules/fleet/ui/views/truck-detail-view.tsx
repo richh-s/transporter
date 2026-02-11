@@ -319,7 +319,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                     Capacity
                   </label>
                   <p className="text-xs font-semibold mt-0 leading-none">
-                    {truck.capacity_quintal} Q
+                    {truck.capacity_quintal} Kg
                   </p>
                 </div>
               </div>
