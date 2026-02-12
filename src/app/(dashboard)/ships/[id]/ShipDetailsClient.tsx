@@ -213,11 +213,14 @@ function ShipDetailsContent() {
       // Get payment server URL from env or use default
       // For mobile dev: set NEXT_PUBLIC_PAYMENT_SERVER_URL to your computer's IP (e.g., http://192.168.1.100:8000)
       // For production: set to your hosted payment page URL
-      const paymentServerUrl =
-        process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL ||
-        (process.env.NODE_ENV === "development"
-          ? "http://localhost:8000"
-          : `${window.location.origin}/telebirr-payment.html`);
+      // Get payment server URL from env
+      const paymentServerUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL;
+
+      if (!paymentServerUrl) {
+        console.error("❌ [Payment] NEXT_PUBLIC_PAYMENT_SERVER_URL is not defined");
+        toast.error("Payment configuration missing. Please contact support.");
+        return;
+      }
 
       const fullPaymentUrl = paymentServerUrl.includes("telebirr-payment.html")
         ? `${paymentServerUrl}?url=${encodedUrl}`
