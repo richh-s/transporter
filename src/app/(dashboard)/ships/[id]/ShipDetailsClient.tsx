@@ -29,10 +29,12 @@ import {
   useShip,
   useAssignTruck,
   useAssignDriver,
+  useMarkAsDelivered,
   useShipPayments,
   useCreatePaymentOrder,
   useShipDocuments,
 } from "@/hooks/use-ships";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -152,7 +154,10 @@ function ShipDetailsContent() {
 
   useEffect(() => {
     if (documentsResponse) {
-      console.log("📄 [Debug] Dedicated Documents Response:", documentsResponse);
+      console.log(
+        "📄 [Debug] Dedicated Documents Response:",
+        documentsResponse,
+      );
       console.log("📑 [Debug] Extracted Documents Array:", documents);
     }
   }, [documentsResponse, documents]);
@@ -164,6 +169,8 @@ function ShipDetailsContent() {
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
+  const markAsDelivered = useMarkAsDelivered(id || "0");
+  const { user } = useAuth();
 
   const paidPayment = payments?.find((p) => p.paid);
   const { data: shipperInfoResponse, isLoading: isShipperLoading } =
@@ -363,6 +370,10 @@ function ShipDetailsContent() {
   const handleAssignClick = (shipItem: ShipItem) => {
     setSelectedShipItem(shipItem);
     setAssignModalOpen(true);
+  };
+
+  const handleMarkAsDelivered = (shipItem: ShipItem) => {
+    markAsDelivered.mutate(shipItem.id);
   };
 
   const handleAssign = (
@@ -615,42 +626,44 @@ function ShipDetailsContent() {
                       documents.some(
                         (d) => d.document_type === "BILL_OF_LADING",
                       )) && (
-                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                                Bill of Lading
-                              </p>
-                              <p className="font-mono text-sm font-bold text-foreground">
-                                {ship?.shipment_details?.bill_of_lading_number ||
-                                  "Document Only"}
-                              </p>
-                            </div>
-                            {documents.find(
-                              (d) =>
-                                d.document_type === "BILL_OF_LADING" &&
-                                d.presigned_url,
-                            ) && (
-                                <a
-                                  href={
-                                    documents.find(
-                                      (d) => d.document_type === "BILL_OF_LADING",
-                                    )?.presigned_url || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                  title="View Bill of Lading"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </a>
-                              )}
+                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                              Bill of Lading
+                            </p>
+                            <p className="font-mono text-sm font-bold text-foreground">
+                              {ship?.shipment_details?.bill_of_lading_number ||
+                                "Document Only"}
+                            </p>
                           </div>
+                          {documents.find(
+                            (d) =>
+                              d.document_type === "BILL_OF_LADING" &&
+                              d.presigned_url,
+                          ) && (
+                            <a
+                              href={
+                                documents.find(
+                                  (d) => d.document_type === "BILL_OF_LADING",
+                                )?.presigned_url || "#"
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                              title="View Bill of Lading"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {/* Packing List */}
-                    {documents.some((d) => d.document_type === "PACKING_LIST") && (
+                    {documents.some(
+                      (d) => d.document_type === "PACKING_LIST",
+                    ) && (
                       <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div>
@@ -666,20 +679,20 @@ function ShipDetailsContent() {
                               d.document_type === "PACKING_LIST" &&
                               d.presigned_url,
                           ) && (
-                              <a
-                                href={
-                                  documents.find(
-                                    (d) => d.document_type === "PACKING_LIST",
-                                  )?.presigned_url || "#"
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                title="View Packing List"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </a>
-                            )}
+                            <a
+                              href={
+                                documents.find(
+                                  (d) => d.document_type === "PACKING_LIST",
+                                )?.presigned_url || "#"
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                              title="View Packing List"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          )}
                         </div>
                       </div>
                     )}
@@ -800,11 +813,14 @@ function ShipDetailsContent() {
                     meta={{
                       onViewContainers: handleViewShipItemContainers,
                       onAssignClick: handleAssignClick,
+                      onMarkAsDelivered: handleMarkAsDelivered,
                       trucks,
                       drivers,
                       ship,
                       isAssigning:
                         assignTruck.isPending || assignDriver.isPending,
+                      isMarkingDelivered: markAsDelivered.isPending,
+                      isTransporter: user?.role === "transporter",
                     }}
                   />
                 </div>

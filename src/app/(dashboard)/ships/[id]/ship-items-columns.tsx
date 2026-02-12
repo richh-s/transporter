@@ -7,24 +7,21 @@ import {
   Package,
   Truck as TruckIcon,
   User,
-  MoreHorizontal,
   Eye,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export interface ShipItemsTableMeta {
   onViewContainers: (containers: Container[]) => void;
   onAssignClick: (shipItem: ShipItem) => void;
+  onMarkAsDelivered?: (shipItem: ShipItem) => void;
   trucks: Truck[];
   drivers: Driver[];
   ship: Ship;
   isAssigning?: boolean;
+  isMarkingDelivered?: boolean;
+  isTransporter?: boolean;
 }
 
 // Status Badge Component
@@ -201,45 +198,67 @@ export const columns: ColumnDef<ShipItem>[] = [
   {
     id: "actions",
     enableHiding: false,
+    header: () => (
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Actions
+      </span>
+    ),
     cell: ({ row, table }) => {
       const item = row.original;
       const meta = table.options.meta as unknown as ShipItemsTableMeta;
       const containers =
         item.containers || (item.container ? [item.container] : []);
+      const isDelivered = (item.status?.toUpperCase() ?? "") === "DELIVERED";
+      const showMarkDelivered =
+        meta?.isTransporter && meta?.onMarkAsDelivered && !isDelivered;
 
       return (
-        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 rounded-xl">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  meta?.onAssignClick(item);
-                }}
-                className="rounded-lg"
-              >
-                <TruckIcon className="mr-2 h-4 w-4" />
-                Assign
-              </DropdownMenuItem>
-              {containers.length > 0 && (
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    meta?.onViewContainers(containers);
-                  }}
-                  className="rounded-lg"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Containers
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1 rounded-lg text-[10px] font-medium"
+            onClick={(e) => {
+              e.stopPropagation();
+              meta?.onAssignClick(item);
+            }}
+            disabled={meta?.isAssigning}
+          >
+            <TruckIcon className="h-3.5 w-3.5" />
+            Assign
+          </Button>
+          {showMarkDelivered && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 rounded-lg text-[10px] font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                meta.onMarkAsDelivered?.(item);
+              }}
+              disabled={meta?.isMarkingDelivered}
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              Mark delivered
+            </Button>
+          )}
+          {containers.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 rounded-lg text-[10px] font-medium"
+              onClick={(e) => {
+                e.stopPropagation();
+                meta?.onViewContainers(containers);
+              }}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              Containers
+            </Button>
+          )}
         </div>
       );
     },

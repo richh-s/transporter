@@ -148,6 +148,39 @@ export function useAssignDriver(shipId: string | number) {
 }
 
 /**
+ * Hook to mark a ship item as delivered (transporter only).
+ */
+export function useMarkAsDelivered(shipId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (shipItemId: number | string) => {
+      const response = await shipApi.markAsDelivered(shipItemId);
+      if (response.error) throw new Error(response.error);
+      if (response.data) {
+        const data = response.data as unknown as Record<string, unknown>;
+        if (data.status === false) {
+          throw new Error(
+            (data.error as string) ||
+              (data.message as string) ||
+              "Failed to mark as delivered",
+          );
+        }
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
+      queryClient.invalidateQueries({ queryKey: shipKeys.items.all() });
+      toast.success("Ship item marked as delivered");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to mark as delivered");
+    },
+  });
+}
+
+/**
  * Hook to fetch payments for a ship
  */
 export function useShipPayments(shipId: string | number) {
