@@ -112,8 +112,7 @@ export class PriceQuoteService {
   /**
    * Update a price quote
    * Uses PATCH method as per API specification
-   * Allowed for: Draft and inactive (expired) quotes
-   * Not allowed for: Active quotes (returns 400 error)
+   * Allowed for all quote statuses (draft, active, inactive)
    */
   static async updateQuote(
     id: number,

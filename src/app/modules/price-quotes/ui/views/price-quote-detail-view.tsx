@@ -185,9 +185,8 @@ function PriceQuoteDetailContent() {
 
   if (!quote) return null;
 
-  const canEdit =
-    quote.status === PriceQuoteStatusEnum.DRAFT ||
-    quote.status === PriceQuoteStatusEnum.INACTIVE;
+  // Price quotes can be edited regardless of status
+  const canEdit = true;
 
   return (
     <div className="min-h-screen bg-background animate-in fade-in duration-300">
@@ -328,6 +327,35 @@ function PriceQuoteDetailContent() {
             </div>
           </div>
         </InfoCard>
+
+
+        {/* Weekly Validity */}
+        {(quote.valid_from || quote.valid_to) && (
+          <InfoCard
+            icon={Calendar}
+            title="Weekly Validity"
+            accent="bg-indigo-500/10 text-indigo-600"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+                  Valid From
+                </p>
+                <p className="text-sm font-semibold">
+                  {quote.valid_from ? formatDateTime(quote.valid_from) : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+                  Valid To
+                </p>
+                <p className="text-sm font-semibold">
+                  {quote.valid_to ? formatDateTime(quote.valid_to) : "—"}
+                </p>
+              </div>
+            </div>
+          </InfoCard>
+        )}
 
         {/* Timeline */}
         {quote.created_at && (

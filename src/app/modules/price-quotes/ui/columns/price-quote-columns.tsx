@@ -95,19 +95,17 @@ function ActionsCell({
                     >
                         <Eye className="mr-2 h-4 w-4" /> View
                     </DropdownMenuItem>
-                    {(quote.status === PriceQuoteStatusEnum.DRAFT ||
-                        quote.status === PriceQuoteStatusEnum.INACTIVE) &&
-                        meta?.onEdit && (
-                            <DropdownMenuItem
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    meta.onEdit?.(quote);
-                                }}
-                                className="rounded-lg"
-                            >
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                        )}
+                    {meta?.onEdit && (
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                meta.onEdit?.(quote);
+                            }}
+                            className="rounded-lg"
+                        >
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                    )}
                     {quote.status !== PriceQuoteStatusEnum.ACTIVE && meta?.onDelete && (
                         <DropdownMenuItem
                             className="text-destructive focus:text-destructive rounded-lg"
