@@ -36,7 +36,6 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   usePriceQuote,
   useUpdatePriceQuote,
@@ -241,40 +240,6 @@ function EditPriceQuoteContent() {
     return <EditSkeleton />;
   }
 
-  if (quote && quote.status === PriceQuoteStatusEnum.ACTIVE) {
-    return (
-      <div className="min-h-screen bg-background animate-in fade-in duration-300">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-          <div className="p-4 space-y-2">
-            <MobileBreadcrumb
-              items={[
-                { label: "Price Quotes", href: "/price-quotes" },
-                {
-                  label: `Quote #${id}`,
-                  href: `/price-quotes/placeholder?id=${id}`,
-                },
-                { label: "Edit" },
-              ]}
-            />
-            <h1 className="text-lg font-bold">Edit Quote #{id}</h1>
-            <p className="text-xs text-muted-foreground">
-              Cannot edit active quotes
-            </p>
-          </div>
-        </div>
-        <div className="p-4">
-          <Alert className="rounded-xl">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Cannot Edit</AlertTitle>
-            <AlertDescription>
-              Only draft and inactive quotes can be edited. This quote is
-              active.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
 
   const onSubmit = async (values: FormValues) => {
     const updateData: UpdatePriceQuoteRequest = {

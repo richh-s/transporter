@@ -52,50 +52,84 @@ function ActionCell({ ship }: { ship: Ship }) {
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
   const getStatusConfig = (s: string) => {
-    const normalizedStatus = s?.toUpperCase();
+    const normalizedStatus = s?.toLowerCase();
     switch (normalizedStatus) {
-      case "COMPLETED":
-      case "DELIVERED":
+      case "created":
         return {
-          dot: "bg-emerald-500",
-          text: "text-emerald-700 dark:text-emerald-400",
-          bg: "bg-emerald-500/10",
-          label: "Completed",
+          dot: "bg-slate-400",
+          text: "text-slate-700 dark:text-slate-400",
+          bg: "bg-slate-400/10",
+          label: "Created",
         };
-      case "IN_TRANSIT":
+      case "price_requested":
+        return {
+          dot: "bg-orange-500",
+          text: "text-orange-700 dark:text-orange-400",
+          bg: "bg-orange-500/10",
+          label: "Price Requested",
+        };
+      case "priced":
+        return {
+          dot: "bg-purple-500",
+          text: "text-purple-700 dark:text-purple-400",
+          bg: "bg-purple-500/10",
+          label: "Priced",
+        };
+      case "accepted_by_shipper":
+        return {
+          dot: "bg-blue-500",
+          text: "text-blue-700 dark:text-blue-400",
+          bg: "bg-blue-500/10",
+          label: "Accepted by Shipper",
+        };
+      case "rejected_by_shipper":
+        return {
+          dot: "bg-red-500",
+          text: "text-red-700 dark:text-red-400",
+          bg: "bg-red-500/10",
+          label: "Rejected by Shipper",
+        };
+      case "allocated":
+        return {
+          dot: "bg-indigo-500",
+          text: "text-indigo-700 dark:text-indigo-400",
+          bg: "bg-indigo-500/10",
+          label: "Allocated",
+        };
+      case "ready_for_pickup":
+        return {
+          dot: "bg-lime-500",
+          text: "text-lime-700 dark:text-lime-400",
+          bg: "bg-lime-500/10",
+          label: "Ready for Pickup",
+        };
+      case "in_transit":
         return {
           dot: "bg-amber-500",
           text: "text-amber-700 dark:text-amber-400",
           bg: "bg-amber-500/10",
           label: "In Transit",
         };
-      case "PENDING":
+      case "delivered":
         return {
-          dot: "bg-blue-500",
-          text: "text-blue-700 dark:text-blue-400",
-          bg: "bg-blue-500/10",
-          label: "Pending",
+          dot: "bg-cyan-500",
+          text: "text-cyan-700 dark:text-cyan-400",
+          bg: "bg-cyan-500/10",
+          label: "Delivered",
         };
-      case "ASSIGNED":
+      case "completed":
         return {
-          dot: "bg-primary",
-          text: "text-primary",
-          bg: "bg-primary/10",
-          label: "Assigned",
-        };
-      case "CANCELLED":
-        return {
-          dot: "bg-red-500",
-          text: "text-red-700 dark:text-red-400",
-          bg: "bg-red-500/10",
-          label: "Cancelled",
+          dot: "bg-emerald-500",
+          text: "text-emerald-700 dark:text-emerald-400",
+          bg: "bg-emerald-500/10",
+          label: "Completed",
         };
       default:
         return {
           dot: "bg-gray-400",
           text: "text-gray-600 dark:text-gray-400",
           bg: "bg-gray-100 dark:bg-gray-800",
-          label: s || "Unknown",
+          label: s?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) || "Unknown",
         };
     }
   };

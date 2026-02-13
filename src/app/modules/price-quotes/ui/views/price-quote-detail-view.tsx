@@ -185,9 +185,7 @@ function PriceQuoteDetailContent() {
 
   if (!quote) return null;
 
-  const canEdit =
-    quote.status === PriceQuoteStatusEnum.DRAFT ||
-    quote.status === PriceQuoteStatusEnum.INACTIVE;
+  const canEdit = true;
 
   return (
     <div className="min-h-screen bg-background animate-in fade-in duration-300">

@@ -9,8 +9,15 @@ import {
   User,
   Eye,
   CheckCircle,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface ShipItemsTableMeta {
   onViewContainers: (containers: Container[]) => void;
@@ -100,12 +107,10 @@ function AssignmentBadge({ item }: { item: ShipItem }) {
 
 export const columns: ColumnDef<ShipItem>[] = [
   {
-    accessorKey: "id",
-    id: "id",
-    enableHiding: false,
+    id: "details",
     header: () => (
       <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Item
+        Shipment Details
       </span>
     ),
     cell: ({ row }) => {
@@ -118,16 +123,17 @@ export const columns: ColumnDef<ShipItem>[] = [
       );
 
       return (
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+        <div className="flex items-start gap-2.5">
+          <div className="flex-shrink-0 p-1.5 rounded-lg bg-primary/10 text-primary mt-0.5">
             <Package className="h-3.5 w-3.5" />
           </div>
-          <div>
-            <p className="text-xs font-bold">#{row.getValue("id")}</p>
-            <p className="text-[10px] text-muted-foreground">
-              {containers.length} container{containers.length !== 1 ? "s" : ""}{" "}
-              • {totalWeight.toLocaleString()} kg
-            </p>
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-[10px] font-medium text-muted-foreground/90 bg-muted/40 px-2 py-0.5 rounded-md w-fit whitespace-nowrap">
+              {containers.length} {containers.length === 1 ? "Container" : "Containers"}
+            </span>
+            <span className="text-[11px] font-bold text-primary px-0.5">
+              {totalWeight.toLocaleString()} Kg
+            </span>
           </div>
         </div>
       );
@@ -214,51 +220,64 @@ export const columns: ColumnDef<ShipItem>[] = [
 
       return (
         <div
-          className="flex flex-wrap items-center gap-1.5"
+          className="flex items-center justify-start gap-1.5"
           onClick={(e) => e.stopPropagation()}
         >
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 rounded-lg text-[10px] font-medium"
-            onClick={(e) => {
-              e.stopPropagation();
-              meta?.onAssignClick(item);
-            }}
-            disabled={meta?.isAssigning}
-          >
-            <TruckIcon className="h-3.5 w-3.5" />
-            Assign
-          </Button>
           {showMarkDelivered && (
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1 rounded-lg text-[10px] font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600"
+              className="h-7 w-8 min-[391px]:w-auto gap-1 rounded-lg text-[11px] font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600 p-0 min-[391px]:px-2.5"
               onClick={(e) => {
                 e.stopPropagation();
                 meta.onMarkAsDelivered?.(item);
               }}
               disabled={meta?.isMarkingDelivered}
             >
-              <CheckCircle className="h-3.5 w-3.5" />
-              Mark delivered
+              <CheckCircle className="h-3 w-3 min-[391px]:hidden" />
+              <span className="hidden min-[391px]:inline whitespace-nowrap">Mark Delivered</span>
             </Button>
           )}
-          {containers.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 rounded-lg text-[10px] font-medium"
-              onClick={(e) => {
-                e.stopPropagation();
-                meta?.onViewContainers(containers);
-              }}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              Containers
-            </Button>
-          )}
+
+          <div className="flex-shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    meta?.onAssignClick(item);
+                  }}
+                  disabled={meta?.isAssigning}
+                >
+                  <TruckIcon className="mr-2 h-3.5 w-3.5" />
+                  Assign Truck/Driver
+                </DropdownMenuItem>
+
+                {containers.length > 0 && (
+                  <DropdownMenuItem
+                    className="rounded-lg cursor-pointer text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      meta?.onViewContainers(containers);
+                    }}
+                  >
+                    <Eye className="mr-2 h-3.5 w-3.5" />
+                    View Containers
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       );
     },
