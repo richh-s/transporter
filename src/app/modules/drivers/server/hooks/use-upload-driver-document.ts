@@ -9,18 +9,19 @@ import { driverApi } from "../api/driver.api";
 import { ApiError } from "@/lib/api";
 
 type UploadInput = {
+  driverId: number;
   document_type: string;
   file: File;
   replace_document_id?: number;
 };
 
-export function useUploadDriverDocument(driverId: number) {
+export function useUploadDriverDocument() {
   const qc = useQueryClient();
 
   return useMutation<DriverDocument, ApiError, UploadInput>({
     mutationFn: async (payload) => {
       // Use the centralized driverApi instead of raw fetch
-      const response = await driverApi.uploadDriverDocument(driverId, {
+      const response = await driverApi.uploadDriverDocument(payload.driverId, {
         document_type: payload.document_type,
         file: payload.file,
       });
@@ -57,16 +58,14 @@ export function useUploadDriverDocument(driverId: number) {
 
     onMutate: async (payload) => {
       await qc.cancelQueries({
-        queryKey: driverKeys.documents(driverId),
+        queryKey: driverKeys.documents(payload.driverId),
       });
 
       if (payload.replace_document_id) {
         qc.setQueryData<DriverDocument[]>(
-          driverKeys.documents(driverId),
+          driverKeys.documents(payload.driverId),
           (old = []) =>
-            old.filter(
-              (doc) => doc.id !== payload.replace_document_id
-            )
+            old.filter((doc) => doc.id !== payload.replace_document_id),
         );
       }
     },
@@ -76,8 +75,8 @@ export function useUploadDriverDocument(driverId: number) {
       if (vars.replace_document_id) {
         try {
           await driverApi.deleteDriverDocument(
-            driverId,
-            vars.replace_document_id
+            vars.driverId,
+            vars.replace_document_id,
           );
         } catch (e) {
           console.error("Failed to delete old document", e);
@@ -85,7 +84,7 @@ export function useUploadDriverDocument(driverId: number) {
       }
 
       qc.invalidateQueries({
-        queryKey: driverKeys.documents(driverId),
+        queryKey: driverKeys.documents(vars.driverId),
       });
     },
   });

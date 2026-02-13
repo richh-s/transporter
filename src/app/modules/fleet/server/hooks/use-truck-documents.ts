@@ -10,8 +10,27 @@ export function useTruckDocuments(truckId: string) {
       if (!response.data) {
         throw new Error(response.error || "Failed to fetch documents");
       }
-      // API returns an array of TruckDocument objects
-      return response.data as TruckDocument[];
+
+      const documents = response.data as TruckDocument[];
+
+      // Filter to show only the latest document of each type
+      const latestDocs: Record<string, TruckDocument> = {};
+
+      documents.forEach(doc => {
+        const type = doc.document_type;
+        // Use created_at to determine which document is the latest
+        // If created_at is missing, treat it as older than any existing document with a date
+        const docDate = doc.created_at ? new Date(doc.created_at).getTime() : 0;
+        const currentLatestDate = latestDocs[type]?.created_at
+          ? new Date(latestDocs[type].created_at!).getTime()
+          : -1;
+
+        if (docDate > currentLatestDate) {
+          latestDocs[type] = doc;
+        }
+      });
+
+      return Object.values(latestDocs);
     },
     enabled: !!truckId,
   });
@@ -30,19 +49,42 @@ export function useUploadTruckDocument() {
       file: File;
       documentType: string;
     }) => {
-      const response = await truckApi.uploadDocument(truckId, file, documentType);
+      const response = await truckApi.uploadDocument(
+        truckId,
+        file,
+        documentType,
+      );
       if (!response.data) {
         throw new ApiError(
           response.error || "Failed to upload document",
           response.status || 500,
-          response.fields
         );
       }
+
+      // Auto-activate truck if document is libre
+      if (documentType.toLowerCase() === "libre") {
+        try {
+          const updateResponse = await truckApi.updateTruck(truckId, { status: "active" });
+          if (updateResponse.error) {
+            console.error("Failed to auto-activate truck:", updateResponse.error);
+          }
+        } catch (error) {
+          console.error("Failed to auto-activate truck:", error);
+        }
+      }
+
       return response.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["truck-documents", variables.truckId],
+      });
+      // Invalidate truck details to reflect status change
+      queryClient.invalidateQueries({
+        queryKey: ["truck", variables.truckId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["trucks"],
       });
     },
   });
@@ -61,12 +103,15 @@ export function useUpdateTruckDocument() {
       documentId: string;
       updateData: { document_type?: string; file?: File };
     }) => {
-      const response = await truckApi.updateDocument(truckId, documentId, updateData);
+      const response = await truckApi.updateDocument(
+        truckId,
+        documentId,
+        updateData,
+      );
       if (!response.data) {
         throw new ApiError(
           response.error || "Failed to update document",
           response.status || 500,
-          response.fields
         );
       }
       return response.data;
@@ -103,4 +148,3 @@ export function useDeleteTruckDocument() {
     },
   });
 }
-

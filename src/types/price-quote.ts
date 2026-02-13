@@ -1,15 +1,13 @@
 // Price Quote Types and Enums
 
 export enum LocationEnum {
-    ADDIS_ABABA = "addis_ababa",
-    ADAMA = "adama",
-    DUKEM = "dukem",
-    HAWASSA = "hawassa",
-    SHASHEMENE = "shashemene",
-    BISHOFTU = "bishoftu",
-    DJIBOUTI = "djibouti",
+    ADDIS_ABABA = "Addis Ababa",
+    ADAMA = "Adama",
+    DUKEM = "Dukem",
     DEBRE_ZEIT = "debre_zeit",
-    DJIBOUTI_PORT = "djibouti_port",
+    HAWASSA = "Hawassa",
+    SHASHEMENE = "Shashemene",
+    DJIBOUTI_PORT = "Djibouti",
 }
 
 export enum TruckTypeEnum {

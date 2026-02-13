@@ -23,8 +23,14 @@ export function useUpdatePriceQuote() {
             queryClient.invalidateQueries({ queryKey: priceQuoteKeys.lists() });
             toast.success("Price quote updated successfully");
         },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to update price quote");
+        onError: (error: Error & { fields?: Record<string, string> }) => {
+            if (error.fields) {
+                Object.entries(error.fields).forEach(([field, message]) => {
+                    toast.error(`${field}: ${message}`);
+                });
+            } else {
+                toast.error(error.message || "Failed to update price quote");
+            }
         },
     });
 }

@@ -25,7 +25,7 @@ export const gpsDeviceKeys = {
  */
 export function useGPSDevices(
   page: number = 1,
-  perPage: number = 20,
+  perPage: number = 10,
   filters: GPSDeviceFilters = {}
 ) {
   return useQuery({
@@ -74,8 +74,8 @@ export function useCreateGPSDevice() {
       });
       toast.success("GPS device created successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create GPS device");
+    onError: (error: unknown) => {
+      toast.error((error as Error).message || "Failed to create GPS device");
     },
   });
 }
@@ -108,11 +108,11 @@ export function useUpdateGPSDevice() {
           // Find and update the device in the items array
           const updatedItems = oldData.items.map((item: GPSDevice) =>
             item.id === device.id
-              ? { 
-                  ...item, 
-                  truck_id: device.truck_id,
-                  status: device.status,
-                }
+              ? {
+                ...item,
+                truck_id: device.truck_id,
+                status: device.status,
+              }
               : item
           );
 
@@ -143,8 +143,8 @@ export function useUpdateGPSDevice() {
 
       toast.success("GPS device updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update GPS device");
+    onError: (error: unknown) => {
+      toast.error((error as Error).message || "Failed to update GPS device");
     },
   });
 }
@@ -164,8 +164,8 @@ export function useDeactivateGPSDevice() {
       queryClient.invalidateQueries({ queryKey: gpsDeviceKeys.lists() });
       toast.success("GPS device deactivated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to deactivate GPS device");
+    onError: (error: unknown) => {
+      toast.error((error as Error).message || "Failed to deactivate GPS device");
     },
   });
 }

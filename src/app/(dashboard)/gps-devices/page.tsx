@@ -1,19 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+  Plus,
+  Satellite,
+  CheckCircle,
+  XCircle,
+  Filter,
+  Truck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,38 +18,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Skeleton } from "@/components/ui/skeleton";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { DataTable } from "@/components/ui/data-table";
+import { gpsDeviceColumns, type GPSDeviceTableRow } from "@/app/modules/fleet/ui/columns/gps-device-columns";
 import type { GPSDeviceFilters, GPSDevice } from "@/types/gps-device";
-import { format } from "date-fns";
 import {
   useGPSDevices,
   useDeactivateGPSDevice,
   useUpdateGPSDevice,
 } from "@/hooks/use-gps-devices";
 import { useTrucks } from "@/hooks/use-trucks";
-import { Switch } from "@/components/ui/switch";
-import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+
+// Stats Card Component
+function StatsCard({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number | string;
+  accent: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+      <div className={cn("p-2 rounded-lg", accent)}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <p className="text-lg font-bold text-foreground">{value}</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+          {label}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function GPSDevicesPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(10);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState<GPSDeviceFilters>({
@@ -62,19 +78,15 @@ export default function GPSDevicesPage() {
     device_model: "",
     status: undefined,
   });
-
   const [appliedFilters, setAppliedFilters] = useState<GPSDeviceFilters>({});
 
-  // Use TanStack Query hook
-  const {
-    data: devicesResponse,
-    isLoading,
-  } = useGPSDevices(page, perPage, appliedFilters);
-
+  const { data: devicesResponse, isLoading } = useGPSDevices(
+    page,
+    perPage,
+    appliedFilters,
+  );
   const deactivateMutation = useDeactivateGPSDevice();
   const updateMutation = useUpdateGPSDevice();
-
-  // Fetch all trucks to create mapping
   const { data: trucks = [] } = useTrucks();
 
   const devices = devicesResponse?.items || [];
@@ -82,7 +94,6 @@ export default function GPSDevicesPage() {
   const pages = devicesResponse?.pages || 0;
 
   // Create mapping object: { [gps_device_id]: truck_id }
-  // Only include trucks that have a gps_device_id (assigned trucks)
   const gpsDeviceToTruckMap = useMemo(() => {
     const map: Record<number, number> = {};
     trucks.forEach((truck) => {
@@ -90,21 +101,18 @@ export default function GPSDevicesPage() {
         map[truck.gps_device_id] = truck.id;
       }
     });
-    if (process.env.NODE_ENV === "development") {
-      console.log("[GPS Devices Table] GPS Device to Truck Mapping:", map);
-    }
     return map;
   }, [trucks]);
 
-  // Debug: Log device data to check truck_id
-  if (devices.length > 0 && process.env.NODE_ENV === "development") {
-    console.log("GPS Devices in table:", devices);
-    console.log("Device with ID 6:", devices.find((d) => d.id === 6));
-  }
+  // Calculate stats (based on current page/view)
+  const activeCount = devices.filter((d) => d.status).length;
+  const inactiveCount = devices.filter((d) => !d.status).length;
+  const assignedCount = devices.filter((d) => gpsDeviceToTruckMap[d.id]).length;
 
   const handleApplyFilters = () => {
     setAppliedFilters(filters);
     setPage(1);
+    setFilterSheetOpen(false);
   };
 
   const handleClearFilters = () => {
@@ -120,470 +128,225 @@ export default function GPSDevicesPage() {
     setPage(1);
   };
 
-  const handleDeactivate = async (id: number) => {
-    if (!confirm("Are you sure you want to deactivate this GPS device?")) {
+  const handleDeactivate = (id: number) => {
+    if (!confirm("Are you sure you want to deactivate this GPS device?"))
       return;
-    }
-
     deactivateMutation.mutate(id);
   };
 
   const handleStatusChange = (device: GPSDevice, newStatus: boolean) => {
-    updateMutation.mutate({
-      id: device.id,
-      data: {
-        status: newStatus,
-      },
-    });
+    updateMutation.mutate({ id: device.id, data: { status: newStatus } });
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "MMM dd, yyyy");
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatDateTime = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "MMM dd, yyyy HH:mm");
-    } catch {
-      return dateString;
-    }
-  };
+  const hasActiveFilters = Object.values(appliedFilters).some(
+    (v) => v !== undefined && v !== "",
+  );
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 max-w-full overflow-x-hidden px-2 sm:px-0">
+    <div className="space-y-4 animate-in fade-in duration-300 pb-6 px-4 h-full flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-            GPS Devices
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage and monitor your GPS tracking devices
-          </p>
+          <h1 className="text-xl font-bold tracking-tight">GPS Devices</h1>
+          <p className="text-xs text-muted-foreground">{total} total devices</p>
         </div>
         <Button
           onClick={() => router.push("/gps-devices/create")}
-          className="w-full sm:w-auto"
+          size="sm"
+          className="rounded-xl h-9 gap-1.5"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Create New Device</span>
-          <span className="sm:hidden">Create</span>
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">New Device</span>
+          <span className="sm:hidden">New</span>
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card className="w-full">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-            <Input
-              placeholder="External Device ID"
-              value={filters.external_device_id || ""}
-              onChange={(e) =>
-                setFilters({ ...filters, external_device_id: e.target.value })
-              }
-            />
-            <Input
-              placeholder="IMEI Number"
-              value={filters.imei_number || ""}
-              onChange={(e) =>
-                setFilters({ ...filters, imei_number: e.target.value })
-              }
-            />
-            <Input
-              placeholder="Device Name"
-              value={filters.device_name || ""}
-              onChange={(e) =>
-                setFilters({ ...filters, device_name: e.target.value })
-              }
-            />
-            <Input
-              placeholder="Device Model"
-              value={filters.device_model || ""}
-              onChange={(e) =>
-                setFilters({ ...filters, device_model: e.target.value })
-              }
-            />
-            <Select
-              value={
-                filters.status === undefined
-                  ? "all"
-                  : filters.status
-                    ? "active"
-                    : "inactive"
-              }
-              onValueChange={(value) => {
-                setFilters({
-                  ...filters,
-                  status:
-                    value === "all"
-                      ? undefined
-                      : value === "active"
-                        ? true
-                        : false,
-                });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 pt-2">
-            <Button
-              onClick={handleApplyFilters}
-              className="w-full sm:w-auto"
-            >
-              Apply Filters
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleClearFilters}
-              className="w-full sm:w-auto"
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+        <StatsCard
+          icon={Satellite}
+          label="Total"
+          value={total}
+          accent="bg-primary/10 text-primary"
+        />
+        <StatsCard
+          icon={CheckCircle}
+          label="Active"
+          value={activeCount}
+          accent="bg-emerald-500/10 text-emerald-600"
+        />
+        <StatsCard
+          icon={XCircle}
+          label="Inactive"
+          value={inactiveCount}
+          accent="bg-gray-500/10 text-gray-600"
+        />
+        <StatsCard
+          icon={Truck}
+          label="Assigned"
+          value={assignedCount}
+          accent="bg-blue-500/10 text-blue-600"
+        />
+      </div>
 
-      <Card className="w-full overflow-hidden border-none sm:border shadow-none sm:shadow-sm">
-        <CardHeader className="pb-3 sm:pb-6 hidden sm:block">
-          <CardTitle className="text-lg sm:text-xl">GPS Devices</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">ID</TableHead>
-                  <TableHead className="whitespace-nowrap">External Device ID</TableHead>
-                  <TableHead className="whitespace-nowrap">IMEI Number</TableHead>
-                  <TableHead className="whitespace-nowrap">Device Name</TableHead>
-                  <TableHead className="whitespace-nowrap">Device Model</TableHead>
-                  <TableHead className="whitespace-nowrap">Truck</TableHead>
-                  <TableHead className="whitespace-nowrap">Status</TableHead>
-                  <TableHead className="whitespace-nowrap">Expire Date</TableHead>
-                  <TableHead className="whitespace-nowrap">Last Synced</TableHead>
-                  <TableHead className="whitespace-nowrap">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : devices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
-                      No GPS devices found. Create your first device.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  devices.map((device) => (
-                    <TableRow
-                      key={device.id}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        router.push(`/gps-devices/${device.id}`)
-                      }
-                    >
-                      <TableCell className="font-medium whitespace-nowrap text-xs sm:text-sm">
-                        {device.id}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.external_device_id}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{device.imei_number}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                        {device.device_name || (
-                          <span className="text-muted-foreground">
-                            N/A
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                        {device.device_model || (
-                          <span className="text-muted-foreground">
-                            N/A
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
-                        {gpsDeviceToTruckMap[device.id] ? (
-                          <span className="font-medium text-green-600">
-                            Assigned
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Unassigned
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Switch
-                            checked={device.status}
-                            onCheckedChange={(checked) =>
-                              handleStatusChange(device, checked)
-                            }
-                            disabled={updateMutation.isPending}
-                            className="scale-75 sm:scale-100"
-                          />
-                          <Badge
-                            variant={device.status ? "default" : "secondary"}
-                            className={
-                              device.status
-                                ? "bg-green-500 hover:bg-green-600 text-[10px] sm:text-xs"
-                                : "bg-gray-500 hover:bg-gray-600 text-[10px] sm:text-xs"
-                            }
-                          >
-                            {device.status ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{formatDate(device.expire_date)}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                        {formatDateTime(device.last_synced_at)}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                router.push(`/gps-devices/${device.id}`)
-                              }
-                            >
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                router.push(`/gps-devices/${device.id}/edit`)
-                              }
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            {device.status && (
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => handleDeactivate(device.id)}
-                              >
-                                Deactivate
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile Card View */}
-          <div className="sm:hidden flex flex-col divide-y">
-            {isLoading ? (
-              [...Array(3)].map((_, i) => (
-                <div key={i} className="p-4 space-y-3">
-                  <div className="flex justify-between">
-                    <Skeleton className="h-5 w-1/3" />
-                    <Skeleton className="h-5 w-1/4" />
-                  </div>
-                  <Skeleton className="h-4 w-1/2" />
-                  <div className="flex justify-between items-center pt-2">
-                    <Skeleton className="h-8 w-20 rounded-full" />
-                    <Skeleton className="h-8 w-8 rounded-md" />
-                  </div>
-                </div>
-              ))
-            ) : devices.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No GPS devices found.
-              </div>
-            ) : (
-              devices.map((device) => (
-                <div
-                  key={device.id}
-                  className="p-4 space-y-3 active:bg-muted/50 transition-colors"
-                  onClick={() => router.push(`/gps-devices/${device.id}`)}
+      <DataTable
+        columns={gpsDeviceColumns}
+        data={devices as GPSDeviceTableRow[]}
+        isLoading={isLoading}
+        onRowClick={(device) => router.push(`/gps-devices/placeholder?id=${device.id}`)}
+        meta={{
+          onEdit: (device: GPSDevice) => router.push(`/gps-devices/placeholder/edit?id=${device.id}`),
+          onDeactivate: handleDeactivate,
+          onStatusChange: handleStatusChange,
+          isUpdating: updateMutation.isPending,
+          gpsDeviceToTruckMap,
+        }}
+        // Server-side pagination
+        manualPagination={true}
+        page={page}
+        pageCount={pages}
+        total={total}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+        filterControls={
+          <div className="flex items-center gap-2">
+            <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "rounded-xl h-9 gap-2",
+                    hasActiveFilters && "border-primary text-primary",
+                  )}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-muted-foreground">#{device.id}</span>
-                        <h3 className="font-semibold text-brand-primary">
-                          {device.device_name || "Unnamed Device"}
-                        </h3>
-                      </div>
-                      <p className="text-xs font-mono text-muted-foreground">
-                        {device.imei_number}
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/gps-devices/${device.id}`)}>
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push(`/gps-devices/${device.id}/edit`)}>
-                          Edit
-                        </DropdownMenuItem>
-                        {device.status && (
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDeactivate(device.id)}
-                          >
-                            Deactivate
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-y-2 text-xs">
-                    <div>
-                      <p className="text-muted-foreground">Model</p>
-                      <p className="font-medium">{device.device_model || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Truck Assignment</p>
-                      <p className={cn(
-                        "font-medium",
-                        gpsDeviceToTruckMap[device.id] ? "text-green-600" : "text-muted-foreground"
-                      )}>
-                        {gpsDeviceToTruckMap[device.id] ? "Assigned" : "Unassigned"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Expires</p>
-                      <p className="font-medium">{formatDate(device.expire_date)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Last Synced</p>
-                      <p className="font-medium">{formatDateTime(device.last_synced_at)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                      <Switch
-                        checked={device.status}
-                        onCheckedChange={(checked) => handleStatusChange(device, checked)}
-                        disabled={updateMutation.isPending}
-                        className="scale-90"
+                  <Filter className="h-4 w-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {
+                        Object.values(appliedFilters).filter(
+                          (v) => v !== undefined && v !== "",
+                        ).length
+                      }
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-3xl">
+                <SheetHeader className="pb-4">
+                  <SheetTitle>Filter Devices</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        External ID
+                      </label>
+                      <Input
+                        placeholder="Search..."
+                        value={filters.external_device_id || ""}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            external_device_id: e.target.value,
+                          })
+                        }
+                        className="h-10 rounded-xl"
                       />
-                      <Badge
-                        variant={device.status ? "default" : "secondary"}
-                        className={cn(
-                          "px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider",
-                          device.status ? "bg-green-500 hover:bg-green-600" : "bg-gray-500"
-                        )}
-                      >
-                        {device.status ? "Active" : "Inactive"}
-                      </Badge>
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        IMEI
+                      </label>
+                      <Input
+                        placeholder="Search..."
+                        value={filters.imei_number || ""}
+                        onChange={(e) =>
+                          setFilters({ ...filters, imei_number: e.target.value })
+                        }
+                        className="h-10 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Device Name
+                      </label>
+                      <Input
+                        placeholder="Search..."
+                        value={filters.device_name || ""}
+                        onChange={(e) =>
+                          setFilters({ ...filters, device_name: e.target.value })
+                        }
+                        className="h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Status
+                      </label>
+                      <Select
+                        value={
+                          filters.status === undefined
+                            ? "all"
+                            : filters.status
+                              ? "active"
+                              : "inactive"
+                        }
+                        onValueChange={(value) =>
+                          setFilters({
+                            ...filters,
+                            status:
+                              value === "all" ? undefined : value === "active",
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-10 rounded-xl">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      className="flex-1 rounded-xl"
+                    >
+                      Clear
+                    </Button>
+                    <Button
+                      onClick={handleApplyFilters}
+                      className="flex-1 rounded-xl"
+                    >
+                      Apply Filters
+                    </Button>
                   </div>
                 </div>
-              ))
+              </SheetContent>
+            </Sheet>
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="text-xs text-muted-foreground"
+              >
+                Clear all
+              </Button>
             )}
           </div>
-        </CardContent>
-        {!isLoading && devices.length > 0 && (
-          <CardContent className="pt-4 sm:pt-6">
-            {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                Showing {(page - 1) * perPage + 1} to{" "}
-                {Math.min(page * perPage, total)} of {total} devices
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <Select
-                  value={perPage.toString()}
-                  onValueChange={(value) => {
-                    setPerPage(Number(value));
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-full sm:w-[100px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        className={
-                          page === 1 ? "pointer-events-none opacity-50" : ""
-                        }
-                      />
-                    </PaginationItem>
-                    {[...Array(Math.min(pages, 5))].map((_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => setPage(pageNum)}
-                            isActive={page === pageNum}
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setPage(Math.min(pages, page + 1))}
-                        className={
-                          page >= pages ? "pointer-events-none opacity-50" : ""
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+        }
+      />
     </div>
   );
 }
-

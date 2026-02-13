@@ -11,7 +11,7 @@ export const updateDriverSchema = z.object({
     .optional(),
   email: z.string().email().optional(),
   driver_license_number: z.string().min(3).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
+  status: z.enum(["active", "suspended"]).optional(),
 });
 
 export type UpdateDriverInput = z.infer<

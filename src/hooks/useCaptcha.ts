@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { captchaService, CaptchaData } from '@/services/captchaService';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { captchaService, CaptchaData } from "@/services/captchaService";
 
 interface UseCaptchaReturn {
   captchaData: CaptchaData | null;
@@ -15,7 +15,7 @@ interface UseCaptchaReturn {
 export const useCaptcha = (): UseCaptchaReturn => {
   const [captchaData, setCaptchaData] = useState<CaptchaData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -27,14 +27,14 @@ export const useCaptcha = (): UseCaptchaReturn => {
 
     abortControllerRef.current = new AbortController();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await captchaService.getCaptcha();
       setCaptchaData(data);
       setIsVerified(false);
     } catch (err: unknown) {
-      if ((err as Error).name !== 'AbortError') {
+      if ((err as Error).name !== "AbortError") {
         setError((err as Error).message);
       }
     } finally {
@@ -42,33 +42,36 @@ export const useCaptcha = (): UseCaptchaReturn => {
     }
   }, []);
 
-  const verifyCaptcha = useCallback(async (solution: string) => {
-    if (!captchaData?.captchaId) {
-      setError('No CAPTCHA available');
-      return false;
-    }
+  const verifyCaptcha = useCallback(
+    async (solution: string) => {
+      if (!captchaData?.captchaId) {
+        setError("No CAPTCHA available");
+        return false;
+      }
 
-    setIsLoading(true);
-    setError('');
+      setIsLoading(true);
+      setError("");
 
-    try {
-      await captchaService.verifyCaptcha(captchaData.captchaId, solution);
-      setIsVerified(true);
-      return true;
-    } catch (err: unknown) {
-      setError((err as Error).message);
-      // Auto-refresh CAPTCHA on failure
-      setTimeout(fetchCaptcha, 1500);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [captchaData, fetchCaptcha]);
+      try {
+        await captchaService.verifyCaptcha(captchaData.captchaId, solution);
+        setIsVerified(true);
+        return true;
+      } catch (err: unknown) {
+        setError((err as Error).message);
+        // Auto-refresh CAPTCHA on failure
+        setTimeout(fetchCaptcha, 1500);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [captchaData, fetchCaptcha],
+  );
 
   const resetCaptcha = useCallback(() => {
     setCaptchaData(null);
     setIsVerified(false);
-    setError('');
+    setError("");
     fetchCaptcha();
   }, [fetchCaptcha]);
 
@@ -77,8 +80,8 @@ export const useCaptcha = (): UseCaptchaReturn => {
 
   useEffect(() => {
     if (captchaData?.imageUrl) {
-      // Revoke old URL if it exists
-      if (imageUrlRef.current) {
+      // Revoke old blob URL only (data URLs are not created by createObjectURL)
+      if (imageUrlRef.current?.startsWith("blob:")) {
         URL.revokeObjectURL(imageUrlRef.current);
       }
       imageUrlRef.current = captchaData.imageUrl;
@@ -90,12 +93,11 @@ export const useCaptcha = (): UseCaptchaReturn => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    if (imageUrlRef.current) {
+    if (imageUrlRef.current?.startsWith("blob:")) {
       URL.revokeObjectURL(imageUrlRef.current);
-      imageUrlRef.current = null;
     }
+    imageUrlRef.current = null;
   }, []);
-
 
   return {
     captchaData,

@@ -28,6 +28,9 @@ export function useCreateTruck() {
         registration_date: new Date().toISOString().split("T")[0],
       };
 
+      // Log request data for debugging
+      console.log("🚛 Create truck request data:", submissionData);
+
       const response = await truckApi.createTruck(submissionData);
 
       // Log response for debugging
@@ -54,7 +57,7 @@ export function useCreateTruck() {
       // Status 422 means validation error
       if (response.status === 422) {
         throw new ApiError(
-          response.error || "Validation failed. Please check your input.",
+          response.error || "Validation error. Please check your input.",
           422,
           response.fields,
           response.code

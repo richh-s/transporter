@@ -1,17 +1,12 @@
-import { TruckDetailView } from "@/app/modules/fleet/ui/views/truck-detail-view";
-import { Metadata } from "next";
+import FleetTruckDetailClient from "./FleetTruckDetailClient";
 
-export const metadata: Metadata = {
-  title: "Truck Details | WeTruck",
-  description: "View and manage truck information",
-};
+export const dynamic = "force-static";
+export const dynamicParams = false;
 
-interface TruckDetailPageProps {
-  params: Promise<{ id: string }>;
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
 }
 
-export default async function TruckDetailPage({ params }: TruckDetailPageProps) {
-  const { id } = await params;
-  return <TruckDetailView id={id} />;
+export default function TruckDetailPage() {
+  return <FleetTruckDetailClient />;
 }
-

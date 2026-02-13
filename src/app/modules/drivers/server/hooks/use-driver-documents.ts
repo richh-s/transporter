@@ -31,7 +31,25 @@ export function useDriverDocuments(driverId?: number) {
         return [];
       }
 
-      return listSchema.parse(data) as DriverDocument[];
+      const documents = listSchema.parse(data) as DriverDocument[];
+
+      // Filter to show only the latest document of each type
+      const latestDocs: Record<string, DriverDocument> = {};
+
+      documents.forEach((doc) => {
+        const type = doc.document_type;
+        // Use created_at to determine which document is the latest
+        const docDate = doc.created_at ? new Date(doc.created_at).getTime() : 0;
+        const currentLatestDate = latestDocs[type]?.created_at
+          ? new Date(latestDocs[type].created_at!).getTime()
+          : -1;
+
+        if (docDate > currentLatestDate) {
+          latestDocs[type] = doc;
+        }
+      });
+
+      return Object.values(latestDocs);
     },
   });
 }

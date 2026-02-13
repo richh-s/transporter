@@ -1,4 +1,12 @@
-import { request } from "../api-client";
+import { request, tokenStorage } from "../api-client";
+
+/**
+ * Get authorization headers with Bearer token
+ */
+function getAuthHeaders(): Record<string, string> {
+  const token = tokenStorage.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface Truck {
   id: number;
@@ -96,7 +104,7 @@ export const truckApi = {
    * Get a single truck by ID
    */
   getTruck: async (id: string) => {
-    return request<Truck>(`/truck/${id}/`);
+    return request<Truck>(`/truck/${id}`);
   },
 
   /**
@@ -113,7 +121,7 @@ export const truckApi = {
    * Update an existing truck
    */
   updateTruck: async (id: string, data: UpdateTruckRequest) => {
-    return request<Truck>(`/truck/${id}/`, {
+    return request<Truck>(`/truck/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
@@ -123,7 +131,7 @@ export const truckApi = {
    * Delete a truck
    */
   deleteTruck: async (id: string) => {
-    return request<{ message: string }>(`/truck/${id}/`, {
+    return request<{ message: string }>(`/truck/${id}`, {
       method: "DELETE",
     });
   },
@@ -136,30 +144,95 @@ export const truckApi = {
     formData.append("file", file);
     formData.append("document_type", documentType);
 
-    return request<string>(`/truck/${id}/documents`, {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${API_URL}/truck/${id}/documents`, {
       method: "POST",
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: formData,
     });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to upload document",
+        status,
+      };
+    }
+
+    return { data: result, status };
   },
 
   /**
    * Get documents for a truck
    */
   getDocuments: async (id: string) => {
-    return request<TruckDocument[]>(`/truck/${id}/documents`);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${API_URL}/truck/${id}/documents`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to get documents",
+        status,
+      };
+    }
+
+    // API returns an array of documents
+    return { data: Array.isArray(result) ? result : [], status };
   },
 
   /**
    * Get a specific document for a truck
    */
   getDocument: async (id: string, documentId: string) => {
-    return request<TruckDocument>(`/truck/${id}/documents/${documentId}`);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to get document",
+        status,
+      };
+    }
+
+    return { data: result, status };
   },
 
   /**
    * Update a document for a truck
    */
-  updateDocument: async (id: string, documentId: string, updateData: { document_type?: string; file?: File }) => {
+  updateDocument: async (
+    id: string,
+    documentId: string,
+    updateData: { document_type?: string; file?: File },
+  ) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
     const formData = new FormData();
     if (updateData.document_type) {
       formData.append("document_type", updateData.document_type);
@@ -168,20 +241,56 @@ export const truckApi = {
       formData.append("file", updateData.file);
     }
 
-    return request<TruckDocument>(`/truck/${id}/documents/${documentId}`, {
-      method: "PATCH",
-      body: formData,
-    });
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        credentials: "include",
+        body: formData,
+      },
+    );
+
+    const status = response.status;
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : undefined;
+
+    if (!response.ok) {
+      return {
+        error: result?.detail || result?.message || "Failed to update document",
+        status,
+      };
+    }
+
+    return { data: result, status };
   },
 
   /**
    * Delete a document for a truck
    */
   deleteDocument: async (id: string, documentId: string) => {
-    return request<{ success: true }>(`/truck/${id}/documents/${documentId}`, {
-      method: "DELETE",
-    });
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(
+      `${API_URL}/truck/${id}/documents/${documentId}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      },
+    );
+
+    const status = response.status;
+
+    if (!response.ok) {
+      const text = await response.text();
+      const result = text ? JSON.parse(text) : undefined;
+      return {
+        error: result?.detail || result?.message || "Failed to delete document",
+        status,
+      };
+    }
+
+    return { data: { success: true }, status };
   },
 };
-
-

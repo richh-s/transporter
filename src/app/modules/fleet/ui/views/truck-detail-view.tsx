@@ -4,7 +4,8 @@ import { toast } from "sonner";
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Edit2, Trash2, Upload } from "lucide-react";
+import { Loader2, Edit2, Trash2, Upload } from "lucide-react";
+import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { documentColumns } from "../columns/document-columns";
 import type { DocumentTableRow } from "../columns/document-columns";
 import type { TruckDocument } from "@/lib/api/trucks";
+import { openInApp } from "@/lib/utils/open-in-app";
 
 interface TruckDetailContentProps {
   id: string;
@@ -41,9 +43,12 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isUpdateDocumentModalOpen, setIsUpdateDocumentModalOpen] = useState(false);
-  const [isDeleteDocumentModalOpen, setIsDeleteDocumentModalOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<TruckDocument | null>(null);
+  const [isUpdateDocumentModalOpen, setIsUpdateDocumentModalOpen] =
+    useState(false);
+  const [isDeleteDocumentModalOpen, setIsDeleteDocumentModalOpen] =
+    useState(false);
+  const [selectedDocument, setSelectedDocument] =
+    useState<TruckDocument | null>(null);
 
   const { data: documents, isLoading: documentsLoading } =
     useTruckDocuments(id);
@@ -80,7 +85,6 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     });
   };
 
-
   const handleUploadDocument = async (file: File, documentType: string) => {
     try {
       await uploadDocumentMutation.mutateAsync({
@@ -105,7 +109,10 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     }
   };
 
-  const handleUpdateDocumentSubmit = async (documentType: string, file?: File) => {
+  const handleUpdateDocumentSubmit = async (
+    documentType: string,
+    file?: File,
+  ) => {
     if (!selectedDocument) return;
     try {
       await updateDocumentMutation.mutateAsync({
@@ -151,23 +158,26 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
     }
   };
 
-  const handleViewDocument = (url: string) => {
-    window.open(url, "_blank");
+  const handleViewDocument = async (url: string) => {
+    await openInApp(url);
   };
-
-
 
   return (
     <div className="flex flex-col min-h-full space-y-3 sm:space-y-4 md:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden pb-8">
       {/* Header */}
-      <div className="space-y-3 pb-2 border-b shrink-0">
+      <div className="space-y-2 pb-3 border-b shrink-0">
+        <CompactBreadcrumb
+          parentLabel="Fleet"
+          parentHref="/fleet"
+          currentLabel={truck.plate_number || `Truck #${truck.id}`}
+        />
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
-              Truck Details
+              {truck.plate_number || `Truck #${truck.id}`}
             </h2>
-            <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-              View and manage truck information
+            <p className="text-xs text-muted-foreground">
+              {truck.make} {truck.model} {truck.year && `(${truck.year})`}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -191,15 +201,6 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
             </Button>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/fleet")}
-          className="h-8"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-          Back
-        </Button>
       </div>
 
       {/* Main Content - No restrictive nested scroll */}
@@ -224,7 +225,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                 </div>
                 <div>
                   <label className="text-[10px] font-medium text-muted-foreground leading-none">
-                    VIN
+                    Vehicle Identification Number (VIN)
                   </label>
                   <p className="text-xs font-mono mt-0 leading-none">
                     {truck.vin}
@@ -239,7 +240,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                       variant="secondary"
                       className={cn(
                         "font-semibold text-[10px] px-0.5 py-0 h-3.5",
-                        getStatusColor(truck.status)
+                        getStatusColor(truck.status),
                       )}
                     >
                       {truck.status
@@ -318,7 +319,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
                     Capacity
                   </label>
                   <p className="text-xs font-semibold mt-0 leading-none">
-                    {truck.capacity_quintal} Q
+                    {truck.capacity_quintal} Kg
                   </p>
                 </div>
               </div>
@@ -389,7 +390,7 @@ function TruckDetailContent({ id }: TruckDetailContentProps) {
               handleViewDocument,
               handleUpdateDocument,
               handleDeleteDocument,
-              deleteDocumentMutation.isPending
+              deleteDocumentMutation.isPending,
             )}
             data={(documents || []) as DocumentTableRow[]}
             searchKey="document_type"
