@@ -85,8 +85,8 @@ export function useAssignTruck(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign truck",
+            (data.message as string) ||
+            "Failed to assign truck",
           );
         }
       }
@@ -128,8 +128,8 @@ export function useAssignDriver(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign driver",
+            (data.message as string) ||
+            "Failed to assign driver",
           );
         }
       }
@@ -162,8 +162,8 @@ export function useMarkAsDelivered(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to mark as delivered",
+            (data.message as string) ||
+            "Failed to mark as delivered",
           );
         }
       }
@@ -243,6 +243,34 @@ export function useCreatePaymentOrder(shipId: string | number) {
       } else {
         toast.error(errorMsg || "Failed to create payment order");
       }
+    },
+  });
+}
+/**
+ * Hook to request manual payment confirmation
+ */
+export function useManualPaymentConfirmation(shipId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      payment_id: number;
+      ship_id: number;
+      reference_id?: string;
+      reference_url?: string;
+      date?: string;
+      note?: string;
+      reference_doc_file?: File;
+    }) => {
+      return shipApi.requestManualConfirmation(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
+      queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
+      toast.success("Manual confirmation request submitted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to submit manual confirmation request");
     },
   });
 }
