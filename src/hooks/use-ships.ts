@@ -204,9 +204,7 @@ export function useCreatePaymentOrder(shipId: string | number) {
 
   return useMutation({
     mutationFn: async (data: CreateOrderRequest) => {
-      console.log("💳 [Payment] Creating order:", data);
       const response = await shipApi.createPaymentOrder(data);
-      console.log("💳 [Payment] Response:", response);
 
       if (response.error) {
         throw new Error(response.error);
@@ -219,24 +217,17 @@ export function useCreatePaymentOrder(shipId: string | number) {
       return response.data;
     },
     onSuccess: (data) => {
-      console.log("💳 [Payment] Success, data:", data);
       queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
       queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
 
       // Payment URL will be opened from the component using Capacitor Browser
       if (data?.result?.payment_url) {
-        console.log(
-          "💳 [Payment] Payment URL received:",
-          data.result.payment_url,
-        );
         toast.success("Payment ready! Opening payment gateway...");
       } else {
-        console.error("💳 [Payment] No payment URL in response");
         toast.error("Payment URL not received from server");
       }
     },
     onError: (error: Error) => {
-      console.error("💳 [Payment] Error:", error);
       const errorMsg = error.message;
       if (
         errorMsg.includes("NO_UNPAID_PAYMENT") ||

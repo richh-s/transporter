@@ -201,68 +201,42 @@ function ShipDetailsContent() {
 
   // Navigate to payment page when URL is received
   useEffect(() => {
-    const paymentUrl = createPaymentOrder.data?.result?.payment_url;
-    if (paymentUrl && createPaymentOrder.isSuccess) {
-      console.log(
-        "💳 [Payment] Navigating to payment page with URL:",
-        paymentUrl,
-      );
+    const telebirrPaymentUrl = createPaymentOrder.data?.result?.payment_url;
+    if (telebirrPaymentUrl && createPaymentOrder.isSuccess) {
 
       // Close the modal
       setPaymentModalOpen(false);
-
-      // Telebirr sandbox requires requests from localhost:8000/index.html
-      // For production, Telebirr must whitelist your domain
-      const encodedUrl = encodeURIComponent(paymentUrl);
+      const encodedUrl = encodeURIComponent(telebirrPaymentUrl);
       const returnUrl = encodeURIComponent(window.location.href);
+      
 
-      // Get payment server URL from env or use default
-      // For mobile dev: set NEXT_PUBLIC_PAYMENT_SERVER_URL to your computer's IP (e.g., http://192.168.1.100:8000)
-      // For production: set to your hosted payment page URL
-      // Get payment server URL from env
-      const paymentServerUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVER_URL;
-
-      if (!paymentServerUrl) {
-        console.error("❌ [Payment] NEXT_PUBLIC_PAYMENT_SERVER_URL is not defined");
-        toast.error("Payment configuration missing. Please contact support.");
-        return;
-      }
-
-      const fullPaymentUrl = paymentServerUrl.includes("telebirr-payment.html")
-        ? `${paymentServerUrl}?url=${encodedUrl}`
-        : `${paymentServerUrl}?url=${encodedUrl}&return=${returnUrl}`;
-
-      console.log("💳 [Payment] Opening payment page:", fullPaymentUrl);
-      console.log(
-        "💳 [Payment] Is native platform:",
-        Capacitor.isNativePlatform(),
-      );
-
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const baseUrl = API_URL?.replace(/\/api\/v1\/?$/, "/");
+      const paymentUrl = `${baseUrl}pay/index.html?url=${encodedUrl}`;
+      
       if (Capacitor.isNativePlatform()) {
         // On mobile, use Capacitor Browser to open in-app browser overlay
         // Uses SFSafariViewController (iOS) / Chrome Custom Tabs (Android)
         // This provides a browser context that Telebirr accepts while staying "in-app"
         Browser.open({
-          url: fullPaymentUrl,
+          url: paymentUrl,
           presentationStyle: "popover", // Shows as overlay, feels more "in-app"
           toolbarColor: "#4ba94d", // Match app's brand color
         }).catch((err) => {
-          console.error("💳 [Payment] Browser.open failed:", err);
           // Fallback to window.open
-          window.open(fullPaymentUrl, "_blank");
+          window.open(paymentUrl, "_blank");
         });
 
         // Listen for browser close event to refresh payment status
         let listenerHandle: { remove: () => void } | null = null;
         void Browser.addListener("browserFinished", () => {
-          console.log("💳 [Payment] In-app browser closed, refreshing...");
           listenerHandle?.remove();
         }).then((handle) => {
           listenerHandle = handle;
         });
       } else {
         // On web, redirect to the payment page
-        window.location.href = fullPaymentUrl;
+        window.location.href = paymentUrl;
       }
     }
   }, [createPaymentOrder.data, createPaymentOrder.isSuccess, router]);
