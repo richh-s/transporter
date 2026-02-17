@@ -106,7 +106,7 @@ function ActionsCell({
                             <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                     )}
-                    {quote.status !== PriceQuoteStatusEnum.ACTIVE && meta?.onDelete && (
+                    {meta?.onDelete && (
                         <DropdownMenuItem
                             className="text-destructive focus:text-destructive rounded-lg"
                             onClick={(e) => {
@@ -216,9 +216,6 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
                 onStatusChange?: (id: number, status: PriceQuoteStatusEnum) => void;
             };
 
-            if (quote.status === PriceQuoteStatusEnum.ACTIVE) {
-                return <StatusBadge status={quote.status} />;
-            }
 
             return (
                 <div onClick={(e) => e.stopPropagation()}>

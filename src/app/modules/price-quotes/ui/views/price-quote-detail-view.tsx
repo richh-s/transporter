@@ -185,7 +185,6 @@ function PriceQuoteDetailContent() {
 
   if (!quote) return null;
 
-  // Price quotes can be edited regardless of status
   const canEdit = true;
 
   return (

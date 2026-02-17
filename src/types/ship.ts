@@ -13,12 +13,16 @@ export enum LocationEnum {
 }
 
 export enum ShipStatusEnum {
-  CREATED = "Created",
-  ASSIGNED = "Assigned",
-  IN_TRANSIT = "In Transit",
-  DELIVERED = "Delivered",
-  COMPLETED = "Completed",
-  CANCELLED = "Cancelled",
+  CREATED = "created",
+  PRICE_REQUESTED = "price_requested",
+  PRICED = "priced",
+  ACCEPTED_BY_SHIPPER = "accepted_by_shipper",
+  REJECTED_BY_SHIPPER = "rejected_by_shipper",
+  ALLOCATED = "allocated",
+  READY_FOR_PICKUP = "ready_for_pickup",
+  IN_TRANSIT = "in_transit",
+  DELIVERED = "delivered",
+  COMPLETED = "completed",
 }
 
 export enum ShipItemStatusEnum {

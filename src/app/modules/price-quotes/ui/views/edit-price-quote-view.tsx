@@ -240,7 +240,6 @@ function EditPriceQuoteContent() {
     return <EditSkeleton />;
   }
 
-  // Price quotes can be edited regardless of status
 
   const onSubmit = async (values: FormValues) => {
     const updateData: UpdatePriceQuoteRequest = {

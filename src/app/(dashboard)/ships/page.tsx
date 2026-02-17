@@ -154,16 +154,64 @@ function TableLoading() {
   );
 }
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ShipStatusEnum } from "@/types/ship";
+
+// ... existing code ...
+
 // Main content component
 function ShipsContent() {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const { data, isLoading } = useShips({
     per_page: 100,
   });
 
   const ships = data?.items || [];
+
+  const filteredShips = ships.filter((ship) => {
+    if (statusFilter === "ALL") return true;
+    return ship.status?.toLowerCase() === statusFilter.toLowerCase();
+  });
+
+  const filterControls = (
+    <div className="flex items-center gap-2">
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="h-9 w-[150px] sm:w-[180px] bg-background text-xs sm:text-sm">
+          <SelectValue placeholder="All Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All Status</SelectItem>
+          <SelectItem value={ShipStatusEnum.CREATED}>Created</SelectItem>
+          <SelectItem value={ShipStatusEnum.PRICE_REQUESTED}>
+            Price Requested
+          </SelectItem>
+          <SelectItem value={ShipStatusEnum.PRICED}>Priced</SelectItem>
+          <SelectItem value={ShipStatusEnum.ACCEPTED_BY_SHIPPER}>
+            Accepted by Shipper
+          </SelectItem>
+          <SelectItem value={ShipStatusEnum.REJECTED_BY_SHIPPER}>
+            Rejected by Shipper
+          </SelectItem>
+          <SelectItem value={ShipStatusEnum.ALLOCATED}>Allocated</SelectItem>
+          <SelectItem value={ShipStatusEnum.READY_FOR_PICKUP}>
+            Ready for Pickup
+          </SelectItem>
+          <SelectItem value={ShipStatusEnum.IN_TRANSIT}>In Transit</SelectItem>
+          <SelectItem value={ShipStatusEnum.DELIVERED}>Delivered</SelectItem>
+          <SelectItem value={ShipStatusEnum.COMPLETED}>Completed</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full space-y-4 sm:space-y-6 animate-in fade-in duration-500 w-full overflow-x-hidden">
@@ -200,9 +248,10 @@ function ShipsContent() {
         ) : (
           <DataTable
             columns={columns}
-            data={ships}
+            data={filteredShips}
             searchKey="origin"
             searchPlaceholder="Search routes..."
+            filterControls={filterControls}
             onRowClick={(row) => router.push(`/ships/placeholder?id=${row.id}`)}
             onScrollChange={setIsScrolled}
           />

@@ -29,10 +29,12 @@ import {
   useShip,
   useAssignTruck,
   useAssignDriver,
+  useMarkAsDelivered,
   useShipPayments,
   useCreatePaymentOrder,
   useShipDocuments,
 } from "@/hooks/use-ships";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
@@ -61,31 +63,30 @@ import { OrganizationDocument } from "@/lib/api/organization";
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
   const getConfig = (s: string) => {
-    const normalized = s?.toUpperCase();
+    const normalized = s?.toLowerCase();
     switch (normalized) {
-      case "COMPLETED":
-      case "DELIVERED":
-        return {
-          dot: "bg-emerald-500",
-          text: "text-emerald-700",
-          bg: "bg-emerald-500/10",
-        };
-      case "IN_TRANSIT":
-        return {
-          dot: "bg-amber-500",
-          text: "text-amber-700",
-          bg: "bg-amber-500/10",
-        };
-      case "PENDING":
-        return {
-          dot: "bg-blue-500",
-          text: "text-blue-700",
-          bg: "bg-blue-500/10",
-        };
-      case "ASSIGNED":
-        return { dot: "bg-primary", text: "text-primary", bg: "bg-primary/10" };
+      case "created":
+        return { dot: "bg-slate-400", text: "text-slate-700", bg: "bg-slate-400/10" };
+      case "price_requested":
+        return { dot: "bg-orange-500", text: "text-orange-700", bg: "bg-orange-500/10" };
+      case "priced":
+        return { dot: "bg-purple-500", text: "text-purple-700", bg: "bg-purple-500/10" };
+      case "accepted_by_shipper":
+        return { dot: "bg-blue-500", text: "text-blue-700", bg: "bg-blue-500/10" };
+      case "rejected_by_shipper":
+        return { dot: "bg-red-500", text: "text-red-700", bg: "bg-red-500/10" };
+      case "allocated":
+        return { dot: "bg-indigo-500", text: "text-indigo-700", bg: "bg-indigo-500/10" };
+      case "ready_for_pickup":
+        return { dot: "bg-lime-500", text: "text-lime-700", bg: "bg-lime-500/10" };
+      case "in_transit":
+        return { dot: "bg-amber-500", text: "text-amber-700", bg: "bg-amber-500/10" };
+      case "delivered":
+        return { dot: "bg-cyan-500", text: "text-cyan-700", bg: "bg-cyan-500/10" };
+      case "completed":
+        return { dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-500/10" };
       default:
-        return { dot: "bg-gray-400", text: "text-gray-600", bg: "bg-gray-100" };
+        return { dot: "bg-slate-400", text: "text-slate-700", bg: "bg-slate-400/10" };
     }
   };
   const config = getConfig(status);
@@ -152,7 +153,10 @@ function ShipDetailsContent() {
 
   useEffect(() => {
     if (documentsResponse) {
-      console.log("📄 [Debug] Dedicated Documents Response:", documentsResponse);
+      console.log(
+        "📄 [Debug] Dedicated Documents Response:",
+        documentsResponse,
+      );
       console.log("📑 [Debug] Extracted Documents Array:", documents);
     }
   }, [documentsResponse, documents]);
@@ -164,6 +168,8 @@ function ShipDetailsContent() {
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
+  const markAsDelivered = useMarkAsDelivered(id || "0");
+  const { user } = useAuth();
 
   const paidPayment = payments?.find((p) => p.paid);
   const { data: shipperInfoResponse, isLoading: isShipperLoading } =
@@ -365,6 +371,10 @@ function ShipDetailsContent() {
     setAssignModalOpen(true);
   };
 
+  const handleMarkAsDelivered = (shipItem: ShipItem) => {
+    markAsDelivered.mutate(shipItem.id);
+  };
+
   const handleAssign = (
     shipItemId: number,
     truckId: number | null,
@@ -471,55 +481,65 @@ function ShipDetailsContent() {
                         "text-xs font-semibold px-2.5 py-1 rounded-full",
                         hasUnpaidPayment
                           ? "text-amber-700 bg-amber-100"
-                          : "text-emerald-700 bg-emerald-100",
+                          : payments?.length
+                            ? "text-emerald-700 bg-emerald-100"
+                            : "text-slate-500 bg-slate-100",
                       )}
                     >
-                      {hasUnpaidPayment ? "Pending" : "Paid"}
+                      {hasUnpaidPayment
+                        ? "Pending"
+                        : payments?.length
+                          ? "Paid"
+                          : "No Invoice"}
                     </span>
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold text-foreground tracking-tight">
-                          {unpaidPayment ? unpaidPayment.total_str : "0"}
-                        </span>
-                        <span className="text-sm font-semibold text-muted-foreground">
-                          ETB
-                        </span>
-                      </div>
-                      {unpaidPayment && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Incl. VAT {unpaidPayment.vat_str} ETB
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/80 hover:bg-white"
-                        onClick={handleDownloadInvoice}
-                        disabled={isDownloadingInvoice}
-                      >
-                        {isDownloadingInvoice ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <FileText className="h-4 w-4" />
-                        )}
-                        <span className="ml-1.5">Invoice</span>
-                      </Button>
+                  {(hasUnpaidPayment || (payments?.length ?? 0) > 0) && (
+                    <div className="space-y-3">
                       {hasUnpaidPayment && (
-                        <Button
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 shadow-sm"
-                          onClick={handlePayNow}
-                          disabled={createPaymentOrder.isPending}
-                        >
-                          Pay Now
-                        </Button>
+                        <div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-3xl font-bold text-foreground tracking-tight">
+                              {unpaidPayment ? unpaidPayment.total_str : "0"}
+                            </span>
+                            <span className="text-sm font-semibold text-muted-foreground">
+                              ETB
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Incl. VAT {unpaidPayment.vat_str} ETB
+                          </p>
+                        </div>
                       )}
+                      <div className="flex flex-wrap gap-2">
+                        {hasUnpaidPayment && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white/80 hover:bg-white"
+                              onClick={handleDownloadInvoice}
+                              disabled={isDownloadingInvoice}
+                            >
+                              {isDownloadingInvoice ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              <span className="ml-1.5">Invoice</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90 shadow-sm"
+                              onClick={handlePayNow}
+                              disabled={createPaymentOrder.isPending}
+                            >
+                              Pay Now
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </Card>
 
@@ -538,26 +558,28 @@ function ShipDetailsContent() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm font-bold">
-                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                      {ship?.pickup_date
-                        ? format(new Date(ship.pickup_date), "MMM d, yyyy")
-                        : "—"}
-                    </div>
-                    <div className="space-y-1 pt-1 border-t border-border/50">
-                      <p className="font-medium text-xs line-clamp-1">
-                        {ship?.pickup_facility?.name || "—"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">
-                        {ship?.pickup_facility?.address || "—"}
-                      </p>
-                      {ship?.pickup_facility?.contact_phone_number && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          {ship.pickup_facility.contact_phone_number}
-                        </div>
-                      )}
-                    </div>
+                    {ship?.pickup_date && (
+                      <div className="flex items-center gap-1.5 text-sm font-bold">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                        {format(new Date(ship.pickup_date), "MMM d, yyyy")}
+                      </div>
+                    )}
+                    {!hasUnpaidPayment && (payments?.length ?? 0) > 0 && (
+                      <div className="space-y-1 pt-1 border-t border-border/50">
+                        <p className="font-medium text-xs line-clamp-1">
+                          {ship?.pickup_facility?.name || "—"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2">
+                          {ship?.pickup_facility?.address || "—"}
+                        </p>
+                        {ship?.pickup_facility?.contact_phone_number && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <Phone className="h-3 w-3" />
+                            {ship.pickup_facility.contact_phone_number}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -574,26 +596,28 @@ function ShipDetailsContent() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm font-bold">
-                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                      {ship?.delivery_date
-                        ? format(new Date(ship.delivery_date), "MMM d, yyyy")
-                        : "—"}
-                    </div>
-                    <div className="space-y-1 pt-1 border-t border-border/50">
-                      <p className="font-medium text-xs line-clamp-1">
-                        {ship?.delivery_facility?.name || "—"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">
-                        {ship?.delivery_facility?.address || "—"}
-                      </p>
-                      {ship?.delivery_facility?.contact_phone_number && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          {ship.delivery_facility.contact_phone_number}
-                        </div>
-                      )}
-                    </div>
+                    {ship?.delivery_date && (
+                      <div className="flex items-center gap-1.5 text-sm font-bold">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                        {format(new Date(ship.delivery_date), "MMM d, yyyy")}
+                      </div>
+                    )}
+                    {!hasUnpaidPayment && (payments?.length ?? 0) > 0 && (
+                      <div className="space-y-1 pt-1 border-t border-border/50">
+                        <p className="font-medium text-xs line-clamp-1">
+                          {ship?.delivery_facility?.name || "—"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2">
+                          {ship?.delivery_facility?.address || "—"}
+                        </p>
+                        {ship?.delivery_facility?.contact_phone_number && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <Phone className="h-3 w-3" />
+                            {ship.delivery_facility.contact_phone_number}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -650,39 +674,41 @@ function ShipDetailsContent() {
                       )}
 
                     {/* Packing List */}
-                    {documents.some((d) => d.document_type === "PACKING_LIST") && (
-                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                              Packing List
-                            </p>
-                            <p className="font-mono text-sm font-bold text-foreground">
-                              Available
-                            </p>
+                    {documents.some(
+                      (d) => d.document_type === "PACKING_LIST",
+                    ) && (
+                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Packing List
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                Available
+                              </p>
+                            </div>
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "PACKING_LIST" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "PACKING_LIST",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Packing List"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
-                          {documents.find(
-                            (d) =>
-                              d.document_type === "PACKING_LIST" &&
-                              d.presigned_url,
-                          ) && (
-                              <a
-                                href={
-                                  documents.find(
-                                    (d) => d.document_type === "PACKING_LIST",
-                                  )?.presigned_url || "#"
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                title="View Packing List"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </a>
-                            )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Pickup Number */}
                     {ship?.shipment_details?.pickup_number && (
@@ -800,11 +826,14 @@ function ShipDetailsContent() {
                     meta={{
                       onViewContainers: handleViewShipItemContainers,
                       onAssignClick: handleAssignClick,
+                      onMarkAsDelivered: handleMarkAsDelivered,
                       trucks,
                       drivers,
                       ship,
                       isAssigning:
                         assignTruck.isPending || assignDriver.isPending,
+                      isMarkingDelivered: markAsDelivered.isPending,
+                      isTransporter: user?.role === "transporter",
                     }}
                   />
                 </div>

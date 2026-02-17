@@ -181,6 +181,16 @@ export const shipApi = {
   },
 
   /**
+   * Mark ship item as delivered (transporter only).
+   * PATCH /api/v1/ship-item/{ship_item_id}/mark-as-delivered
+   */
+  markAsDelivered: async (shipItemId: number | string) => {
+    return request<BaseResponse>(`/ship-item/${shipItemId}/mark-as-delivered`, {
+      method: "PATCH",
+    });
+  },
+
+  /**
    * @deprecated Use assignTruck and assignDriver instead
    * Assign driver and truck to ship item
    */
@@ -279,8 +289,8 @@ export const shipApi = {
           // Throw a structured error with the API error message
           const error = new Error(
             (errorData.error as string) ||
-            (errorData.message as string) ||
-            "Failed to fetch invoice",
+              (errorData.message as string) ||
+              "Failed to fetch invoice",
           );
           (error as Error & { code?: string }).code = errorData.code as string;
           (error as Error & { status_code?: number }).status_code =
