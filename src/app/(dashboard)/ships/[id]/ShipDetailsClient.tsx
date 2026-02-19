@@ -492,7 +492,7 @@ function ShipDetailsContent() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-white/80 hover:bg-white"
+                              className="bg-white/80 hover:bg-white hover:text-foreground"
                               onClick={handleDownloadInvoice}
                               disabled={isDownloadingInvoice}
                             >
@@ -514,7 +514,7 @@ function ShipDetailsContent() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-white/80 hover:bg-white"
+                              className="bg-white/80 hover:bg-white hover:text-foreground hover:shadow-md hover:scale-105 transition-all duration-200"
                               onClick={() => setManualConfirmModalOpen(true)}
                             >
                               Manual Confirm

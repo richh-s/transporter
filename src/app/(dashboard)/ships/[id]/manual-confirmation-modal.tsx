@@ -94,6 +94,18 @@ export function ManualConfirmationModal({
                 </DialogHeader>
 
                 <div className="grid gap-4 py-2">
+                    {/* Payment ID & Ship ID */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="grid gap-1.5">
+                            <Label>Payment ID</Label>
+                            <Input value={paymentId} disabled />
+                        </div>
+                        <div className="grid gap-1.5">
+                            <Label>Ship ID</Label>
+                            <Input value={shipId} disabled />
+                        </div>
+                    </div>
+
                     {/* Reference ID */}
                     <div className="grid gap-1.5">
                         <Label htmlFor="mc-reference-id">Reference ID</Label>
