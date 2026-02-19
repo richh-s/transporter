@@ -38,6 +38,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
 import { ContainersModal } from "./containers-modal";
+import { ManualConfirmationModal } from "./manual-confirmation-modal";
 import {
   Dialog,
   DialogContent,
@@ -188,6 +189,7 @@ function ShipDetailsContent() {
 
   // State
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [manualConfirmModalOpen, setManualConfirmModalOpen] = useState(false);
   const [showContainersModal, setShowContainersModal] = useState(false);
   const [modalContainers, setModalContainers] = useState<Container[]>([]);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -208,12 +210,12 @@ function ShipDetailsContent() {
       setPaymentModalOpen(false);
       const encodedUrl = encodeURIComponent(telebirrPaymentUrl);
       const returnUrl = encodeURIComponent(window.location.href);
-      
+
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const baseUrl = API_URL?.replace(/\/api\/v1\/?$/, "/");
       const paymentUrl = `${baseUrl}pay/index.html?url=${encodedUrl}`;
-      
+
       if (Capacitor.isNativePlatform()) {
         // On mobile, use Capacitor Browser to open in-app browser overlay
         // Uses SFSafariViewController (iOS) / Chrome Custom Tabs (Android)
@@ -490,7 +492,7 @@ function ShipDetailsContent() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-white/80 hover:bg-white"
+                              className="bg-white/80 hover:bg-white hover:text-foreground"
                               onClick={handleDownloadInvoice}
                               disabled={isDownloadingInvoice}
                             >
@@ -508,6 +510,14 @@ function ShipDetailsContent() {
                               disabled={createPaymentOrder.isPending}
                             >
                               Pay Now
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white/80 hover:bg-white hover:text-foreground hover:shadow-md hover:scale-105 transition-all duration-200"
+                              onClick={() => setManualConfirmModalOpen(true)}
+                            >
+                              Manual Confirm
                             </Button>
                           </>
                         )}
@@ -834,6 +844,15 @@ function ShipDetailsContent() {
         isAssigning={assignTruck.isPending || assignDriver.isPending}
         allShipItems={shipItems}
       />
+
+      {unpaidPayment && (
+        <ManualConfirmationModal
+          open={manualConfirmModalOpen}
+          onOpenChange={setManualConfirmModalOpen}
+          paymentId={unpaidPayment.id}
+          shipId={Number(id)}
+        />
+      )}
 
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
