@@ -98,6 +98,16 @@ export interface GetShipperInfoParams {
   payment_id: number | string;
 }
 
+export interface ManualConfirmationRequest {
+  payment_id: number;
+  ship_id: number;
+  reference_id?: string;
+  reference_url?: string;
+  date?: string; // ISO date string
+  note?: string;
+  reference_doc_file?: File;
+}
+
 export const shipApi = {
   /**
    * Get assigned ships for transporter
@@ -289,8 +299,8 @@ export const shipApi = {
           // Throw a structured error with the API error message
           const error = new Error(
             (errorData.error as string) ||
-              (errorData.message as string) ||
-              "Failed to fetch invoice",
+            (errorData.message as string) ||
+            "Failed to fetch invoice",
           );
           (error as Error & { code?: string }).code = errorData.code as string;
           (error as Error & { status_code?: number }).status_code =
@@ -414,6 +424,27 @@ export const shipApi = {
 
   getShipItemDetail: async (shipId: number | string) => {
     return request<Ship>(`/ship/transporter/${shipId}?per_page=100`);
+  },
+
+  /**
+   * Request manual payment confirmation
+   * PATCH /api/v1/transporter/manual-confirmation-request
+   * Content-Type: multipart/form-data
+   */
+  requestManualConfirmation: async (data: ManualConfirmationRequest) => {
+    const formData = new FormData();
+    formData.append("payment_id", data.payment_id.toString());
+    formData.append("ship_id", data.ship_id.toString());
+    if (data.reference_id) formData.append("reference_id", data.reference_id);
+    if (data.reference_url) formData.append("reference_url", data.reference_url);
+    if (data.date) formData.append("date", data.date);
+    if (data.note) formData.append("note", data.note);
+    if (data.reference_doc_file) formData.append("reference_doc_file", data.reference_doc_file);
+
+    return apiRequest<Record<string, unknown>>(`/transporter/manual-confirmation-request`, {
+      method: "PATCH",
+      body: formData,
+    });
   },
 
   /**

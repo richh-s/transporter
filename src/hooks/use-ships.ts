@@ -85,8 +85,8 @@ export function useAssignTruck(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign truck",
+            (data.message as string) ||
+            "Failed to assign truck",
           );
         }
       }
@@ -128,8 +128,8 @@ export function useAssignDriver(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign driver",
+            (data.message as string) ||
+            "Failed to assign driver",
           );
         }
       }
@@ -162,8 +162,8 @@ export function useMarkAsDelivered(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to mark as delivered",
+            (data.message as string) ||
+            "Failed to mark as delivered",
           );
         }
       }
@@ -204,9 +204,7 @@ export function useCreatePaymentOrder(shipId: string | number) {
 
   return useMutation({
     mutationFn: async (data: CreateOrderRequest) => {
-      console.log("💳 [Payment] Creating order:", data);
       const response = await shipApi.createPaymentOrder(data);
-      console.log("💳 [Payment] Response:", response);
 
       if (response.error) {
         throw new Error(response.error);
@@ -219,24 +217,17 @@ export function useCreatePaymentOrder(shipId: string | number) {
       return response.data;
     },
     onSuccess: (data) => {
-      console.log("💳 [Payment] Success, data:", data);
       queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
       queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
 
       // Payment URL will be opened from the component using Capacitor Browser
       if (data?.result?.payment_url) {
-        console.log(
-          "💳 [Payment] Payment URL received:",
-          data.result.payment_url,
-        );
         toast.success("Payment ready! Opening payment gateway...");
       } else {
-        console.error("💳 [Payment] No payment URL in response");
         toast.error("Payment URL not received from server");
       }
     },
     onError: (error: Error) => {
-      console.error("💳 [Payment] Error:", error);
       const errorMsg = error.message;
       if (
         errorMsg.includes("NO_UNPAID_PAYMENT") ||
@@ -252,6 +243,34 @@ export function useCreatePaymentOrder(shipId: string | number) {
       } else {
         toast.error(errorMsg || "Failed to create payment order");
       }
+    },
+  });
+}
+/**
+ * Hook to request manual payment confirmation
+ */
+export function useManualPaymentConfirmation(shipId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      payment_id: number;
+      ship_id: number;
+      reference_id?: string;
+      reference_url?: string;
+      date?: string;
+      note?: string;
+      reference_doc_file?: File;
+    }) => {
+      return shipApi.requestManualConfirmation(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: shipKeys.payments(shipId) });
+      queryClient.invalidateQueries({ queryKey: shipKeys.detail(shipId) });
+      toast.success("Manual confirmation request submitted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to submit manual confirmation request");
     },
   });
 }
