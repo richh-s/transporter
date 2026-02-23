@@ -20,7 +20,8 @@ import {
   EditDocumentModal,
   DeleteDocumentModal,
   DocumentStatsCards,
-  DocumentFilterControls,
+  DocumentStatusTabs,
+  OrganizationDocumentMobileCard,
 } from "../components";
 import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
@@ -213,7 +214,15 @@ export function OrganizationDocumentsView() {
   // Filter documents based on active filters
   const filteredDocuments = React.useMemo(() => {
     return (documents || []).filter((doc) => {
-      if (filters.status && doc.status !== filters.status) return false;
+      if (filters.status) {
+        // Rejected tab shows rejected and inactive documents (handles both "inactive" and "in_active")
+        if (filters.status === "rejected") {
+          const status = (doc.status || "").toLowerCase().replace(/_/g, "");
+          if (status !== "rejected" && status !== "inactive") return false;
+        } else if ((doc.status || "").toLowerCase() !== filters.status) {
+          return false;
+        }
+      }
       if (filters.document_type && doc.document_type !== filters.document_type)
         return false;
       if (filters.entity_type && doc.entity_type !== filters.entity_type)
@@ -235,18 +244,20 @@ export function OrganizationDocumentsView() {
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete("upload");
       const queryString = newParams.toString();
-      router.replace(`/organization/documents${queryString ? `?${queryString}` : ""}`);
+      router.replace(
+        `/organization/documents${queryString ? `?${queryString}` : ""}`,
+      );
     }
   }, [searchParams, router]);
 
   return (
-    <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden">
+    <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden relative">
       {/* Header */}
       <div className="space-y-3 pb-2 border-b shrink-0">
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
-              Organization Documents
+              Documents
             </h2>
             <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
               Upload and manage organization-related documents securely
@@ -255,18 +266,13 @@ export function OrganizationDocumentsView() {
         </div>
       </div>
 
-      {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
-      <div
-        className={`shrink-0 transition-all duration-300 md:block ${isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
-          ? "hidden md:block"
-          : "block"
-          }`}
-      >
+      {/* Stats cards first */}
+      <div className="shrink-0">
         <DocumentStatsCards documents={filteredDocuments} />
       </div>
 
-      {/* Main Content - Table - Takes remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden shrink-0">
+      {/* Main Content - Search below cards, then full-width filter tabs, then Table/Cards */}
+      <div className="flex-1 min-h-0 overflow-hidden shrink-0 flex flex-col">
         <DataTable
           columns={organizationDocumentColumns(
             handleViewDocument,
@@ -291,14 +297,14 @@ export function OrganizationDocumentsView() {
           onPageCountChange={setPageCount}
           onSearchFocus={setIsSearchFocused}
           isLoading={documentsLoading}
-          filterControls={
-            <DocumentFilterControls
-              filters={filters}
-              onStatusFilter={handleStatusFilter}
-              onDocumentTypeFilter={handleDocumentTypeFilter}
-              onEntityTypeFilter={handleEntityTypeFilter}
-              onClearFilters={clearFilters}
-            />
+          topSection={
+            <div className="-mt-1">
+              <DocumentStatusTabs
+                current={filters.status ?? null}
+                onSelect={handleStatusFilter}
+                className="w-full"
+              />
+            </div>
           }
           headerActions={
             <div className="hidden sm:block">
@@ -311,15 +317,28 @@ export function OrganizationDocumentsView() {
               </Button>
             </div>
           }
-          mobileAddButton={
-            <Button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="h-9 text-xs bg-brand-primary hover:bg-brand-secondary text-white"
-            >
-              Upload
-            </Button>
-          }
+          mobileAddButton={null}
+          renderMobileCard={(doc) => (
+            <OrganizationDocumentMobileCard
+              document={doc as OrganizationDocumentTableRow}
+              onView={handleViewDocument}
+              onEdit={handleEditDocument}
+              onDelete={handleDeleteDocument}
+              isDeleting={deleteDocumentMutation.isPending}
+            />
+          )}
         />
+      </div>
+
+      {/* FAB - Mobile only */}
+      <div className="md:hidden fixed bottom-20 right-4 z-30">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full bg-brand-primary hover:bg-brand-secondary text-white shadow-lg"
+          onClick={() => setIsUploadModalOpen(true)}
+        >
+          <Upload className="h-6 w-6" />
+        </Button>
       </div>
 
       {/* Upload Document Modal */}

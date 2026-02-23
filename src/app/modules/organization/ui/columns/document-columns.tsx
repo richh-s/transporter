@@ -1,14 +1,16 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Eye, Trash2, File, Edit, Truck, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ArrowUpDown,
+  Eye,
+  Trash2,
+  File,
+  Edit,
+  Truck,
+  User,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { OrganizationDocument } from "@/lib/api/organization";
@@ -20,7 +22,7 @@ export const organizationDocumentColumns = (
   onEdit: (id: string) => void,
   onDelete: (id: number) => void,
   isDeleting: boolean,
-  onEntityClick?: (entityType: string, entityId: number | null) => void
+  onEntityClick?: (entityType: string, entityId: number | null) => void,
 ): ColumnDef<OrganizationDocumentTableRow>[] => [
   {
     accessorKey: "document_type",
@@ -72,24 +74,24 @@ export const organizationDocumentColumns = (
       const doc = row.original;
       const entityType = doc.entity_type;
       const entityId = entityType === "truck" ? doc.truck_id : doc.driver_id;
-      
+
       if (!entityType) {
         return <div className="text-xs sm:text-sm">—</div>;
       }
-      
+
       const handleClick = () => {
         if (entityId && onEntityClick) {
           onEntityClick(entityType, entityId);
         }
       };
-      
+
       return (
         <div className="min-w-[80px] sm:min-w-[100px]">
           <Badge
             variant="outline"
             className={cn(
               "font-medium text-xs px-2 py-0.5 h-6 capitalize cursor-pointer hover:bg-accent transition-colors",
-              entityId ? "" : "opacity-50 cursor-not-allowed"
+              entityId ? "" : "opacity-50 cursor-not-allowed",
             )}
             onClick={entityId ? handleClick : undefined}
           >
@@ -123,12 +125,14 @@ export const organizationDocumentColumns = (
     cell: ({ row }) => {
       const doc = row.original;
       const status = doc.status || "pending";
-      
+
       const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
+        const normalizedStatus = status.toLowerCase().replace(/_/g, "");
+        switch (normalizedStatus) {
           case "approved":
             return "bg-green-100 text-green-700 hover:bg-green-100";
           case "rejected":
+          case "inactive":
             return "bg-red-100 text-red-700 hover:bg-red-100";
           case "pending":
             return "bg-amber-100 text-amber-700 hover:bg-amber-100";
@@ -136,14 +140,14 @@ export const organizationDocumentColumns = (
             return "bg-gray-100 text-gray-700 hover:bg-gray-100";
         }
       };
-      
+
       return (
         <div className="min-w-[80px]">
           <Badge
             variant="secondary"
             className={cn(
               "font-semibold text-[10px] px-1.5 py-0.5 h-5 capitalize",
-              getStatusColor(status)
+              getStatusColor(status),
             )}
           >
             {status}
@@ -189,33 +193,37 @@ export const organizationDocumentColumns = (
       const doc = row.original;
 
       return (
-        <div className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onView(String(doc.id))}>
-                <Eye className="mr-2 h-4 w-4" /> View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(doc.id)}
-                disabled={isDeleting}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center justify-end gap-0.5 min-w-[100px]">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => onView(String(doc.id))}
+            title="View"
+          >
+            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => onEdit(String(doc.id))}
+            title="Edit"
+          >
+            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => onDelete(doc.id)}
+            disabled={isDeleting}
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
         </div>
       );
     },
   },
 ];
-

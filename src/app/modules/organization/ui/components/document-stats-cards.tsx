@@ -9,80 +9,90 @@ interface DocumentStatsCardsProps {
 
 export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
   const total = documents.length;
-  const pending = documents.filter((doc) => doc.status === "pending").length;
-  const approved = documents.filter((doc) => doc.status === "approved").length;
-  const rejected = documents.filter((doc) => doc.status === "rejected").length;
+  const pending = documents.filter(
+    (doc) => (doc.status || "").toLowerCase() === "pending",
+  ).length;
+  const approved = documents.filter(
+    (doc) => (doc.status || "").toLowerCase() === "approved",
+  ).length;
+  const rejected = documents.filter((doc) => {
+    const s = (doc.status || "").toLowerCase().replace(/_/g, "");
+    return s === "rejected" || s === "inactive";
+  }).length;
+
+  const cardClass =
+    "shrink-0 w-[72%] min-w-[140px] sm:shrink sm:w-auto sm:min-w-0 p-3 bg-card border border-border rounded-xl shadow-sm";
 
   return (
-    <div className="grid gap-2 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-      <div className="p-2 sm:p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl shadow-none">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:overflow-visible sm:pb-0 sm:grid sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <div className="p-1 bg-brand-primary/10 rounded-lg text-brand-primary">
-            <FileText className="h-3.5 w-3.5" />
+          <div className="p-1.5 bg-brand-primary/10 rounded-lg text-brand-primary">
+            <FileText className="h-4 w-4" />
           </div>
         </div>
-        <div className="mt-1.5 sm:mt-2">
-          <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+        <div className="mt-2">
+          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Total Documents
           </h3>
-          <p className="text-lg sm:text-2xl font-bold text-brand-primary">
+          <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {total}
           </p>
         </div>
       </div>
 
-      <div className="p-2 sm:p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl shadow-none">
+      <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <div className="p-1 bg-amber-500/10 rounded-lg text-amber-500">
-            <Clock className="h-3.5 w-3.5" />
+          <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-600">
+            <Clock className="h-4 w-4" />
           </div>
-          <span className="hidden sm:inline-block text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
             Pending
           </span>
         </div>
-        <div className="mt-1.5 sm:mt-2">
-          <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+        <div className="mt-2">
+          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Pending
           </h3>
-          <p className="text-lg sm:text-2xl font-bold text-amber-500">
+          <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {pending}
           </p>
         </div>
       </div>
 
-      <div className="p-2 sm:p-3 bg-green-500/5 border border-green-500/10 rounded-xl shadow-none">
+      <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <div className="p-1 bg-green-500/10 rounded-lg text-green-500">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div className="p-1.5 bg-green-500/10 rounded-lg text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
           </div>
-          <span className="hidden sm:inline-block text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
             Approved
           </span>
         </div>
-        <div className="mt-1.5 sm:mt-2">
-          <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+        <div className="mt-2">
+          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Approved
           </h3>
-          <p className="text-lg sm:text-2xl font-bold text-green-500">
+          <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {approved}
           </p>
         </div>
       </div>
 
-      <div className="p-2 sm:p-3 bg-red-500/5 border border-red-500/10 rounded-xl shadow-none">
+      <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <div className="p-1 bg-red-500/10 rounded-lg text-red-500">
-            <AlertCircle className="h-3.5 w-3.5" />
+          <div className="p-1.5 bg-red-500/10 rounded-lg text-red-600">
+            <AlertCircle className="h-4 w-4" />
           </div>
-          <span className="hidden sm:inline-block text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full">
             Rejected
           </span>
         </div>
-        <div className="mt-1.5 sm:mt-2">
-          <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+        <div className="mt-2">
+          <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Rejected
           </h3>
-          <p className="text-lg sm:text-2xl font-bold text-red-500">
+          <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {rejected}
           </p>
         </div>
@@ -90,4 +100,3 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
     </div>
   );
 }
-

@@ -1,25 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users,
   UserCheck,
   Plus,
-  Search,
-  Filter,
   MoreHorizontal,
   Eye,
   Edit,
   Trash2,
   Phone,
   Mail,
-  ChevronLeft,
-  ChevronRight,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -41,23 +36,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 
 import { DriverDialog } from "../components/driver-dialog";
 import { useDrivers } from "../../server/hooks/use-drivers";
 import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
+import { driverColumns } from "../columns/driver-columns";
 
 import type { Driver } from "../../server/types";
 
-// Stats Card Component
+// Stats Card (scrollable on mobile, equal gap)
 function StatsCard({
   icon: Icon,
   label,
@@ -72,7 +62,7 @@ function StatsCard({
   isLoading?: boolean;
 }) {
   return (
-    <div className="p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+    <div className="p-3 sm:p-4 rounded-xl bg-card border border-border/50 shadow-sm h-full">
       <div className="flex items-center gap-3">
         <div className={cn("p-2 rounded-lg", accent)}>
           <Icon className="h-4 w-4" />
@@ -92,6 +82,52 @@ function StatsCard({
   );
 }
 
+// Table loading skeleton (desktop, same as ships/fleet)
+function TableLoadingSkeleton() {
+  const rows = 8;
+  const cols = 5;
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-4 border-b border-border flex items-center justify-between gap-4">
+        <Skeleton className="h-9 w-48 sm:w-64" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-9" />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              {[...Array(cols)].map((_, i) => (
+                <th key={i} className="px-4 py-3 text-left">
+                  <Skeleton className="h-4 w-16 sm:w-24" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {[...Array(rows)].map((_, rowIdx) => (
+              <tr key={rowIdx}>
+                {[...Array(cols)].map((_, colIdx) => (
+                  <td key={colIdx} className="px-4 py-3">
+                    <Skeleton
+                      className={cn(
+                        "h-4",
+                        colIdx === 0 ? "w-20 sm:w-28" : "w-16 sm:w-24",
+                      )}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
   const isActive = status === "active";
@@ -100,14 +136,14 @@ function StatusBadge({ status }: { status: string }) {
       className={cn(
         "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase",
         isActive
-          ? "bg-emerald-500/10 text-emerald-600"
+          ? "bg-primary/10 text-primary"
           : "bg-gray-500/10 text-gray-500",
       )}
     >
       <span
         className={cn(
           "h-1.5 w-1.5 rounded-full",
-          isActive ? "bg-emerald-500" : "bg-gray-400",
+          isActive ? "bg-primary" : "bg-gray-400",
         )}
       />
       {status}
@@ -211,27 +247,6 @@ function DriverCard({
   );
 }
 
-// Loading Skeleton
-function DriverCardSkeleton() {
-  return (
-    <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm space-y-3">
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-10 w-10 rounded-xl" />
-        <div className="space-y-1.5 flex-1">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-3 w-24" />
-        </div>
-        <Skeleton className="h-5 w-14 rounded-full" />
-      </div>
-      <Skeleton className="h-px w-full" />
-      <div className="grid grid-cols-2 gap-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-28" />
-      </div>
-    </div>
-  );
-}
-
 export function DriverManagementView() {
   const router = useRouter();
 
@@ -239,58 +254,73 @@ export function DriverManagementView() {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
 
-  const [firstName, setFirstName] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "suspended">("all");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "suspended"
+  >("all");
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const perPage = 10;
 
   const listParams = useMemo(
     () => ({
-      first_name: firstName || undefined,
-      driver_license_number: licenseNumber || undefined,
-      phone_number: phoneNumber || undefined,
-      status: status === "all" ? undefined : status,
+      first_name: search || undefined,
+      status: statusFilter === "all" ? undefined : statusFilter,
       page,
-      per_page: pageSize,
+      per_page: perPage,
     }),
-    [firstName, licenseNumber, phoneNumber, status, page, pageSize],
+    [search, statusFilter, page, perPage],
   );
 
   const { data, isLoading } = useDrivers(listParams);
   const deleteDriver = useDeleteDriver();
 
   const drivers = data?.items ?? [];
-  const totalDrivers = data?.total ?? drivers.length;
-  const activeCount = status === "active" ? totalDrivers : drivers.filter((d) => d.status === "active").length;
+  const totalDrivers = data?.total ?? 0;
+  const totalPages =
+    data?.pages ?? Math.max(1, Math.ceil(totalDrivers / perPage));
+  const activeCount =
+    statusFilter === "active"
+      ? totalDrivers
+      : drivers.filter((d) => d.status === "active").length;
 
-  // Pagination
-  const totalPages = data?.pages ?? Math.ceil(totalDrivers / pageSize);
-  const paginatedDrivers = drivers; // Assuming backend already paginates
+  const handleView = useCallback(
+    (driver: Driver) => router.push(`/drivers/placeholder?id=${driver.id}`),
+    [router],
+  );
+  const handleEdit = useCallback((driver: Driver) => {
+    setSelectedDriver(driver);
+    setOpen(true);
+  }, []);
+  const handleDelete = useCallback((driver: Driver) => {
+    setDriverToDelete(driver);
+    setDeleteOpen(true);
+  }, []);
 
-  const clearFilters = () => {
-    setFirstName("");
-    setLicenseNumber("");
-    setPhoneNumber("");
-    setStatus("all");
-    setFilterOpen(false);
-  };
-
-  const hasActiveFilters = firstName || licenseNumber || phoneNumber || status !== "all";
+  const columns = useMemo(
+    () =>
+      driverColumns({
+        onView: handleView,
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+      }),
+    [handleView, handleEdit, handleDelete],
+  );
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-300 pb-6 px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between pt-2">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 animate-in fade-in duration-300 pb-10 sm:pb-6 w-full overflow-x-hidden">
+      {/* Header - same as ships/fleet */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0 px-0">
         <div>
-          <h1 className="text-lg font-bold">Driver Management</h1>
-          <p className="text-xs text-muted-foreground">Manage your drivers</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Driver Management
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Manage your drivers
+          </p>
         </div>
         <Button
-          className="rounded-xl h-9 px-3"
+          className="rounded-xl h-9 px-3 shrink-0"
           onClick={() => {
             setSelectedDriver(null);
             setOpen(true);
@@ -301,189 +331,79 @@ export function DriverManagementView() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatsCard
-          icon={Users}
-          label="Total"
-          value={totalDrivers}
-          accent="bg-blue-500/10 text-blue-500"
-          isLoading={isLoading}
-        />
-        <StatsCard
-          icon={UserCheck}
-          label="Active"
-          value={activeCount}
-          accent="bg-emerald-500/10 text-emerald-600"
-          isLoading={isLoading}
-        />
+      {/* Stats - scrollable on mobile, equal gap (same as ships/fleet) */}
+      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible shrink-0">
+        <div className="flex sm:grid sm:grid-cols-2 gap-3 sm:gap-4 min-w-0 sm:min-w-full pr-4 sm:pr-0">
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={Users}
+              label="Total"
+              value={totalDrivers}
+              accent="bg-primary/10 text-primary"
+              isLoading={isLoading}
+            />
+          </div>
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={UserCheck}
+              label="Active"
+              value={activeCount}
+              accent="bg-primary/10 text-primary"
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Filter Button */}
-      <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-between rounded-xl h-10",
-              hasActiveFilters && "border-primary",
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span>Filters</span>
-              {hasActiveFilters && (
-                <span className="px-1.5 py-0.5 text-[10px] bg-primary text-primary-foreground rounded-full">
-                  Active
-                </span>
-              )}
-            </div>
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader className="mb-4">
-            <SheetTitle>Filter Drivers</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">First Name</label>
-              <Input
-                placeholder="Enter first name..."
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="h-11 rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">License Number</label>
-              <Input
-                placeholder="Enter license number..."
-                value={licenseNumber}
-                onChange={(e) => setLicenseNumber(e.target.value)}
-                className="h-11 rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Phone Number</label>
-              <Input
-                placeholder="Enter phone number..."
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="h-11 rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Status</label>
+      {/* Table - desktop same as ships/fleet; mobile = cards via renderMobileCard */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {isLoading ? (
+          <TableLoadingSkeleton />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={drivers}
+            searchKey="first_name"
+            searchPlaceholder="Search name or license..."
+            onRowClick={(row) => handleView(row)}
+            manualPagination
+            page={page}
+            pageCount={totalPages}
+            perPage={perPage}
+            onPageChange={setPage}
+            onSearchChange={setSearch}
+            manualFiltering
+            filterControls={
               <Select
-                value={status}
-                onValueChange={(v) => setStatus(v as typeof status)}
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as typeof statusFilter);
+                  setPage(1);
+                }}
               >
-                <SelectTrigger className="h-11 rounded-xl min-w-0 w-full">
-                  <div className="flex-1 text-left truncate min-w-0 pr-2">
-                    <SelectValue />
-                  </div>
+                <SelectTrigger className="h-9 w-[130px] sm:w-[150px] bg-background text-xs sm:text-sm">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="all">All Statuses</SelectItem>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="flex-1 h-11 rounded-xl"
-              >
-                Clear
-              </Button>
-              <Button
-                onClick={() => setFilterOpen(false)}
-                className="flex-1 h-11 rounded-xl"
-              >
-                Apply
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Driver Cards */}
-      <div className="space-y-3">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <DriverCardSkeleton key={i} />
-          ))
-        ) : paginatedDrivers.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-3">
-              <Users className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">No drivers found</p>
-            {hasActiveFilters && (
-              <Button
-                variant="link"
-                size="sm"
-                onClick={clearFilters}
-                className="mt-2"
-              >
-                Clear filters
-              </Button>
+            }
+            variant="clean"
+            hideColumnVisibility
+            renderMobileCard={(driver) => (
+              <DriverCard
+                driver={driver}
+                onView={() => handleView(driver)}
+                onEdit={() => handleEdit(driver)}
+                onDelete={() => handleDelete(driver)}
+              />
             )}
-          </div>
-        ) : (
-          paginatedDrivers.map((driver) => (
-            <DriverCard
-              key={driver.id}
-              driver={driver}
-              onView={() => router.push(`/drivers/placeholder?id=${driver.id}`)}
-              onEdit={() => {
-                setSelectedDriver(driver);
-                setOpen(true);
-              }}
-              onDelete={() => {
-                setDriverToDelete(driver);
-                setDeleteOpen(true);
-              }}
-            />
-          ))
+          />
         )}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-muted-foreground">
-            {(page - 1) * pageSize + 1}–
-            {Math.min(page * pageSize, totalDrivers)} of {totalDrivers}
-          </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-lg"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs font-medium px-2">
-              {page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-lg"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Create / Edit Dialog */}
       <DriverDialog

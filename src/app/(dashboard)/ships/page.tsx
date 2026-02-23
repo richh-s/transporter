@@ -2,9 +2,11 @@
 
 import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Anchor, MapPin, Package, TrendingUp } from "lucide-react";
+import { Anchor, MapPin, Package, TrendingUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
+import { ShipCard } from "./ship-card";
 import { useShips } from "@/hooks/use-ships";
 import { Ship } from "@/types/ship";
 import { cn } from "@/lib/utils";
@@ -84,72 +86,122 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
   ).length;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-      <StatsCard
-        title="Total Ships"
-        value={totalShips}
-        subtitle="Active shipments"
-        icon={Anchor}
-        gradient="bg-gradient-to-br from-primary to-primary/50"
-        iconBg="bg-primary/10 text-primary"
-      />
-      <StatsCard
-        title="In Transit"
-        value={inTransit}
-        subtitle="On the move"
-        icon={TrendingUp}
-        gradient="bg-gradient-to-br from-amber-500 to-amber-500/50"
-        iconBg="bg-amber-500/10 text-amber-600"
-      />
-      <StatsCard
-        title="Delivered"
-        value={delivered}
-        subtitle="Arrived at destination"
-        icon={Package}
-        gradient="bg-gradient-to-br from-blue-500 to-blue-500/50"
-        iconBg="bg-blue-500/10 text-blue-600"
-      />
-      <StatsCard
-        title="Completed"
-        value={completed}
-        subtitle="Fully processed"
-        icon={MapPin}
-        gradient="bg-gradient-to-br from-emerald-500 to-emerald-500/50"
-        iconBg="bg-emerald-500/10 text-emerald-600"
-      />
+    <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
+      <div className="flex sm:grid sm:grid-cols-4 gap-3 sm:gap-4 min-w-0 sm:min-w-full pr-4 sm:pr-0">
+        <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+          <StatsCard
+            title="Total Ships"
+            value={totalShips}
+            subtitle="Active shipments"
+            icon={Anchor}
+            gradient="bg-gradient-to-br from-primary to-primary/50"
+            iconBg="bg-primary/10 text-primary"
+          />
+        </div>
+        <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+          <StatsCard
+            title="In Transit"
+            value={inTransit}
+            subtitle="On the move"
+            icon={TrendingUp}
+            gradient="bg-gradient-to-br from-amber-500 to-amber-500/50"
+            iconBg="bg-amber-500/10 text-amber-600"
+          />
+        </div>
+        <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+          <StatsCard
+            title="Delivered"
+            value={delivered}
+            subtitle="Arrived at destination"
+            icon={Package}
+            gradient="bg-gradient-to-br from-blue-500 to-blue-500/50"
+            iconBg="bg-blue-500/10 text-blue-600"
+          />
+        </div>
+        <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+          <StatsCard
+            title="Completed"
+            value={completed}
+            subtitle="Fully processed"
+            icon={MapPin}
+            gradient="bg-gradient-to-br from-emerald-500 to-emerald-500/50"
+            iconBg="bg-emerald-500/10 text-emerald-600"
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
-// Loading skeleton for stats
+// Loading skeleton for stats (scrollable on mobile)
 function StatsLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-      {[...Array(4)].map((_, i) => (
-        <div
-          key={i}
-          className="relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-card border border-border/50 animate-pulse"
-        >
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="h-3 w-16 bg-muted rounded" />
-              <div className="h-8 w-12 bg-muted rounded" />
-              <div className="h-2 w-20 bg-muted rounded" />
+    <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
+      <div className="flex sm:grid sm:grid-cols-4 gap-3 sm:gap-4 min-w-0 sm:min-w-full pr-4 sm:pr-0">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0"
+          >
+            <div className="relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-card border border-border/50 animate-pulse">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <div className="h-3 w-16 bg-muted rounded" />
+                  <div className="h-8 w-12 bg-muted rounded" />
+                  <div className="h-2 w-20 bg-muted rounded" />
+                </div>
+                <div className="h-10 w-10 bg-muted rounded-xl" />
+              </div>
             </div>
-            <div className="h-10 w-10 bg-muted rounded-xl" />
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
-// Table Loading
-function TableLoading() {
+// Table loading skeleton
+function TableLoadingSkeleton() {
+  const rows = 8;
+  const cols = 6;
   return (
-    <div className="flex items-center justify-center h-32 gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm font-medium">Loading ships...</span>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-4 border-b border-border flex items-center justify-between gap-4">
+        <Skeleton className="h-9 w-48 sm:w-64" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-9" />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              {[...Array(cols)].map((_, i) => (
+                <th key={i} className="px-4 py-3 text-left">
+                  <Skeleton className="h-4 w-16 sm:w-24" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {[...Array(rows)].map((_, rowIdx) => (
+              <tr key={rowIdx}>
+                {[...Array(cols)].map((_, colIdx) => (
+                  <td key={colIdx} className="px-4 py-3">
+                    <Skeleton
+                      className={cn(
+                        "h-4",
+                        colIdx === 0 ? "w-20 sm:w-28" : "w-16 sm:w-24",
+                      )}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -244,7 +296,7 @@ function ShipsContent() {
       {/* Table Section */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {isLoading ? (
-          <TableLoading />
+          <TableLoadingSkeleton />
         ) : (
           <DataTable
             columns={columns}
@@ -254,6 +306,14 @@ function ShipsContent() {
             filterControls={filterControls}
             onRowClick={(row) => router.push(`/ships/placeholder?id=${row.id}`)}
             onScrollChange={setIsScrolled}
+            variant="clean"
+            hideColumnVisibility
+            renderMobileCard={(ship) => (
+              <ShipCard
+                ship={ship}
+                onClick={() => router.push(`/ships/placeholder?id=${ship.id}`)}
+              />
+            )}
           />
         )}
       </div>
@@ -263,7 +323,7 @@ function ShipsContent() {
 
 export default function ShipsPage() {
   return (
-    <Suspense fallback={<TableLoading />}>
+    <Suspense fallback={<TableLoadingSkeleton />}>
       <ShipsContent />
     </Suspense>
   );

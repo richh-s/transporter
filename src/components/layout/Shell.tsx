@@ -15,7 +15,6 @@ import {
   // User, // Removed - My Profile menu item removed
   // Settings, // Removed - Settings menu item removed
   LogOut,
-  Bell,
   Satellite,
   FileText,
   Lock,
@@ -184,22 +183,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex items-center flex-1 min-w-0">
-              <Image
-                src="https://www.wetruck.ai/images/logo.png"
-                alt="WeTruck Logo"
-                width={100}
-                height={28}
-                className="h-7 object-contain"
-              />
-            </div>
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
+            <div className="flex items-center gap-x-4 lg:gap-x-6 ml-auto">
               <ThemeToggle />
-              <button className="text-muted-foreground hover:text-foreground">
-                <Bell className="h-5 w-5" />
-              </button>
-              <div className="h-6 w-px bg-border lg:block" aria-hidden="true" />
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-x-2 text-sm font-medium hover:text-primary transition-colors outline-none cursor-pointer">

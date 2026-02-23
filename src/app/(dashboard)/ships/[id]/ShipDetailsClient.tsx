@@ -22,6 +22,10 @@ import {
   Package,
   User,
   Eye,
+  Wallet,
+  Download,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import Link from "next/link";
@@ -67,27 +71,67 @@ function StatusBadge({ status }: { status: string }) {
     const normalized = s?.toLowerCase();
     switch (normalized) {
       case "created":
-        return { dot: "bg-slate-400", text: "text-slate-700", bg: "bg-slate-400/10" };
+        return {
+          dot: "bg-slate-400",
+          text: "text-slate-700",
+          bg: "bg-slate-400/10",
+        };
       case "price_requested":
-        return { dot: "bg-orange-500", text: "text-orange-700", bg: "bg-orange-500/10" };
+        return {
+          dot: "bg-orange-500",
+          text: "text-orange-700",
+          bg: "bg-orange-500/10",
+        };
       case "priced":
-        return { dot: "bg-purple-500", text: "text-purple-700", bg: "bg-purple-500/10" };
+        return {
+          dot: "bg-purple-500",
+          text: "text-purple-700",
+          bg: "bg-purple-500/10",
+        };
       case "accepted_by_shipper":
-        return { dot: "bg-blue-500", text: "text-blue-700", bg: "bg-blue-500/10" };
+        return {
+          dot: "bg-blue-500",
+          text: "text-blue-700",
+          bg: "bg-blue-500/10",
+        };
       case "rejected_by_shipper":
         return { dot: "bg-red-500", text: "text-red-700", bg: "bg-red-500/10" };
       case "allocated":
-        return { dot: "bg-indigo-500", text: "text-indigo-700", bg: "bg-indigo-500/10" };
+        return {
+          dot: "bg-indigo-500",
+          text: "text-indigo-700",
+          bg: "bg-indigo-500/10",
+        };
       case "ready_for_pickup":
-        return { dot: "bg-lime-500", text: "text-lime-700", bg: "bg-lime-500/10" };
+        return {
+          dot: "bg-lime-500",
+          text: "text-lime-700",
+          bg: "bg-lime-500/10",
+        };
       case "in_transit":
-        return { dot: "bg-amber-500", text: "text-amber-700", bg: "bg-amber-500/10" };
+        return {
+          dot: "bg-amber-500",
+          text: "text-amber-700",
+          bg: "bg-amber-500/10",
+        };
       case "delivered":
-        return { dot: "bg-cyan-500", text: "text-cyan-700", bg: "bg-cyan-500/10" };
+        return {
+          dot: "bg-cyan-500",
+          text: "text-cyan-700",
+          bg: "bg-cyan-500/10",
+        };
       case "completed":
-        return { dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-500/10" };
+        return {
+          dot: "bg-emerald-500",
+          text: "text-emerald-700",
+          bg: "bg-emerald-500/10",
+        };
       default:
-        return { dot: "bg-slate-400", text: "text-slate-700", bg: "bg-slate-400/10" };
+        return {
+          dot: "bg-slate-400",
+          text: "text-slate-700",
+          bg: "bg-slate-400/10",
+        };
     }
   };
   const config = getConfig(status);
@@ -205,12 +249,9 @@ function ShipDetailsContent() {
   useEffect(() => {
     const telebirrPaymentUrl = createPaymentOrder.data?.result?.payment_url;
     if (telebirrPaymentUrl && createPaymentOrder.isSuccess) {
-
       // Close the modal
       setPaymentModalOpen(false);
       const encodedUrl = encodeURIComponent(telebirrPaymentUrl);
-      const returnUrl = encodeURIComponent(window.location.href);
-
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const baseUrl = API_URL?.replace(/\/api\/v1\/?$/, "/");
@@ -224,7 +265,7 @@ function ShipDetailsContent() {
           url: paymentUrl,
           presentationStyle: "popover", // Shows as overlay, feels more "in-app"
           toolbarColor: "#4ba94d", // Match app's brand color
-        }).catch((err) => {
+        }).catch(() => {
           // Fallback to window.open
           window.open(paymentUrl, "_blank");
         });
@@ -399,10 +440,29 @@ function ShipDetailsContent() {
 
   const shipItems = ship?.ship_items || [];
 
+  // Get driver and truck from first ship item that has them
+  const firstShipItemWithDriver = shipItems.find(
+    (item) => item.assigned_driver || item.driver,
+  );
+  const firstShipItemWithTruck = shipItems.find(
+    (item) => item.assigned_truck || item.truck,
+  );
+  const driver =
+    firstShipItemWithDriver?.assigned_driver || firstShipItemWithDriver?.driver;
+  const truck =
+    firstShipItemWithTruck?.assigned_truck || firstShipItemWithTruck?.truck;
+
+  // Format invoice ID
+  const invoiceId = unpaidPayment
+    ? `#INV-${new Date().getFullYear()}-${String(unpaidPayment.id).padStart(3, "0")}`
+    : paidPayment
+      ? `#INV-${new Date().getFullYear()}-${String(paidPayment.id).padStart(3, "0")}`
+      : null;
+
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 py-3">
         <div className="space-y-2">
           <CompactBreadcrumb
             parentLabel="Ships"
@@ -421,13 +481,6 @@ function ShipDetailsContent() {
                 </h1>
                 {!isShipLoading && ship && <StatusBadge status={ship.status} />}
               </div>
-              {!isShipLoading && ship && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                  {ship.origin?.replace(/_/g, " ")}{" "}
-                  <ArrowRight className="h-3 w-3" />{" "}
-                  {ship.destination?.replace(/_/g, " ")}
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -435,131 +488,183 @@ function ShipDetailsContent() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-4">
+        <div className="space-y-4 sm:space-y-6">
           {isShipLoading ? (
             <DetailSkeleton />
           ) : (
             <>
               {/* Payment Card */}
-              <Card className="border-0 shadow-sm overflow-hidden">
-                <div className="bg-linear-to-r from-primary/10 to-primary/5 p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-xl bg-white/80 text-primary shadow-sm">
-                        <CreditCard className="h-4 w-4" />
+              <Card className="border border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left: Icon + Label + Amount */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 shrink-0">
+                        <Wallet className="h-5 w-5 text-green-600" />
                       </div>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Payment
-                      </span>
-                    </div>
-                    <span
-                      className={cn(
-                        "text-xs font-semibold px-2.5 py-1 rounded-full",
-                        hasUnpaidPayment
-                          ? "text-amber-700 bg-amber-100"
-                          : payments?.length
-                            ? "text-emerald-700 bg-emerald-100"
-                            : "text-slate-500 bg-slate-100",
-                      )}
-                    >
-                      {hasUnpaidPayment
-                        ? "Pending"
-                        : payments?.length
-                          ? "Paid"
-                          : "No Invoice"}
-                    </span>
-                  </div>
-                  {(hasUnpaidPayment || (payments?.length ?? 0) > 0) && (
-                    <div className="space-y-3">
-                      {hasUnpaidPayment && (
-                        <div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                          Payment Overview
+                        </p>
+                        {hasUnpaidPayment && unpaidPayment && (
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-3xl font-bold text-foreground tracking-tight">
-                              {unpaidPayment ? unpaidPayment.total_str : "0"}
+                              {unpaidPayment.total_str}
                             </span>
                             <span className="text-sm font-semibold text-muted-foreground">
                               ETB
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Incl. VAT {unpaidPayment.vat_str} ETB
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex flex-wrap gap-2">
-                        {hasUnpaidPayment && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-white/80 hover:bg-white hover:text-foreground"
-                              onClick={handleDownloadInvoice}
-                              disabled={isDownloadingInvoice}
-                            >
-                              {isDownloadingInvoice ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              <span className="ml-1.5">Invoice</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-primary hover:bg-primary/90 shadow-sm"
-                              onClick={handlePayNow}
-                              disabled={createPaymentOrder.isPending}
-                            >
-                              Pay Now
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-white/80 hover:bg-white hover:text-foreground hover:shadow-md hover:scale-105 transition-all duration-200"
-                              onClick={() => setManualConfirmModalOpen(true)}
-                            >
-                              Manual Confirm
-                            </Button>
-                          </>
                         )}
                       </div>
                     </div>
-                  )}
-                </div>
-              </Card>
 
-              {/* Pickup & Delivery */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Pickup Card */}
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-blue-500/10">
-                          <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                        </div>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Pickup
+                    {/* Middle: Status Badge + Invoice ID */}
+                    {hasUnpaidPayment && invoiceId && (
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500 text-white">
+                          Pending
                         </span>
-                      </div>
-                    </div>
-                    {ship?.pickup_date && (
-                      <div className="flex items-center gap-1.5 text-sm font-bold">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        {format(new Date(ship.pickup_date), "MMM d, yyyy")}
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">
+                            Invoice ID
+                          </p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {invoiceId}
+                          </p>
+                        </div>
                       </div>
                     )}
-                    {!hasUnpaidPayment && (payments?.length ?? 0) > 0 && (
-                      <div className="space-y-1 pt-1 border-t border-border/50">
-                        <p className="font-medium text-xs line-clamp-1">
-                          {ship?.pickup_facility?.name || "—"}
+
+                    {/* Right: Action Buttons */}
+                    {hasUnpaidPayment && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-white border border-border hover:bg-muted/50"
+                          onClick={handleDownloadInvoice}
+                          disabled={isDownloadingInvoice}
+                        >
+                          {isDownloadingInvoice ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                          <span className="ml-1.5">Invoice</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-white border border-border hover:bg-muted/50"
+                          onClick={() => setManualConfirmModalOpen(true)}
+                        >
+                          Manual Confirm
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={handlePayNow}
+                          disabled={createPaymentOrder.isPending}
+                        >
+                          Pay Now
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Route, Pickup & Delivery */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Route Card */}
+                <Card className="border border-border bg-card">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 rounded-md bg-purple-500/10 border border-purple-500/20">
+                        <MapPin className="h-3.5 w-3.5 text-purple-600" />
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Route
+                      </span>
+                    </div>
+                    {!isShipLoading && ship && (
+                      <div className="space-y-2">
+                        {/* FROM */}
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                            From
+                          </p>
+                          <p className="text-sm font-bold text-foreground capitalize leading-tight">
+                            {ship.origin?.replace(/_/g, " ") || "—"}
+                          </p>
+                          {ship.pickup_facility?.name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {ship.pickup_facility.name}
+                            </p>
+                          )}
+                        </div>
+                        {/* Arrow */}
+                        <div className="flex items-center justify-center py-1">
+                          <div className="p-1 rounded-full bg-muted/50">
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+                          </div>
+                        </div>
+                        {/* TO */}
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                            To
+                          </p>
+                          <p className="text-sm font-bold text-foreground capitalize leading-tight">
+                            {ship.destination?.replace(/_/g, " ") || "—"}
+                          </p>
+                          {ship.delivery_facility?.name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {ship.delivery_facility.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Pickup Card */}
+                <Card className="border border-border bg-card">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
+                        <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Pickup
+                      </span>
+                    </div>
+                    {ship?.pickup_date && (
+                      <div className="space-y-1.5">
+                        <p className="text-lg font-bold text-foreground">
+                          {format(new Date(ship.pickup_date), "MMM d, yyyy")}
                         </p>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">
-                          {ship?.pickup_facility?.address || "—"}
-                        </p>
-                        {ship?.pickup_facility?.contact_phone_number && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {ship.pickup_facility.contact_phone_number}
+                        {firstShipItemWithDriver?.pickup_scheduled_time && (
+                          <p className="text-xs text-muted-foreground">
+                            {format(
+                              new Date(
+                                firstShipItemWithDriver.pickup_scheduled_time,
+                              ),
+                              "hh:mm a",
+                            )}
+                          </p>
+                        )}
+                        {driver && (
+                          <div className="pt-2 mt-2">
+                            <div className="inline-flex flex-col gap-0.5 px-2.5 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
+                                Driver
+                              </p>
+                              <p className="text-sm font-bold text-blue-700">
+                                {driver.first_name} {driver.last_name}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -568,36 +673,41 @@ function ShipDetailsContent() {
                 </Card>
 
                 {/* Delivery Card */}
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                          <Building2 className="h-3.5 w-3.5 text-emerald-500" />
-                        </div>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Delivery
-                        </span>
+                <Card className="border border-border bg-card">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Delivery
+                      </span>
                     </div>
                     {ship?.delivery_date && (
-                      <div className="flex items-center gap-1.5 text-sm font-bold">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        {format(new Date(ship.delivery_date), "MMM d, yyyy")}
-                      </div>
-                    )}
-                    {!hasUnpaidPayment && (payments?.length ?? 0) > 0 && (
-                      <div className="space-y-1 pt-1 border-t border-border/50">
-                        <p className="font-medium text-xs line-clamp-1">
-                          {ship?.delivery_facility?.name || "—"}
+                      <div className="space-y-1.5">
+                        <p className="text-lg font-bold text-foreground">
+                          {format(new Date(ship.delivery_date), "MMM d, yyyy")}
                         </p>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">
-                          {ship?.delivery_facility?.address || "—"}
-                        </p>
-                        {ship?.delivery_facility?.contact_phone_number && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {ship.delivery_facility.contact_phone_number}
+                        {firstShipItemWithTruck?.delivery_scheduled_time && (
+                          <p className="text-xs text-muted-foreground">
+                            {format(
+                              new Date(
+                                firstShipItemWithTruck.delivery_scheduled_time,
+                              ),
+                              "h:mm a",
+                            )}
+                          </p>
+                        )}
+                        {truck && (
+                          <div className="pt-2 mt-2">
+                            <div className="inline-flex flex-col gap-0.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                                Truck ID
+                              </p>
+                              <p className="text-sm font-bold text-emerald-700">
+                                {truck.plate_number}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -607,96 +717,96 @@ function ShipDetailsContent() {
               </div>
 
               {/* Shipment Details Card */}
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-muted/20 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
-                <CardHeader className="relative z-10 pb-2">
+              <Card className="border border-border bg-card">
+                <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600">
+                    <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600">
                       <FileText className="h-4 w-4" />
                     </div>
                     Shipment Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-5 relative z-10 pt-2">
+                <CardContent className="space-y-5 pt-2">
                   <div className="grid grid-cols-1 gap-3">
                     {/* Bill of Lading */}
                     {(ship?.shipment_details?.bill_of_lading_number ||
                       documents.some(
                         (d) => d.document_type === "BILL_OF_LADING",
                       )) && (
-                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                                Bill of Lading
-                              </p>
-                              <p className="font-mono text-sm font-bold text-foreground">
-                                {ship?.shipment_details?.bill_of_lading_number ||
-                                  "Document Only"}
-                              </p>
-                            </div>
-                            {documents.find(
-                              (d) =>
-                                d.document_type === "BILL_OF_LADING" &&
-                                d.presigned_url,
-                            ) && (
-                                <a
-                                  href={
-                                    documents.find(
-                                      (d) => d.document_type === "BILL_OF_LADING",
-                                    )?.presigned_url || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                  title="View Bill of Lading"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </a>
-                              )}
+                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                              Bill of Lading
+                            </p>
+                            <p className="font-mono text-sm font-bold text-foreground">
+                              {ship?.shipment_details?.bill_of_lading_number ||
+                                "Document Only"}
+                            </p>
                           </div>
+                          {documents.find(
+                            (d) =>
+                              d.document_type === "BILL_OF_LADING" &&
+                              d.presigned_url,
+                          ) && (
+                            <a
+                              href={
+                                documents.find(
+                                  (d) => d.document_type === "BILL_OF_LADING",
+                                )?.presigned_url || "#"
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                              title="View Bill of Lading"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {/* Packing List */}
                     {documents.some(
                       (d) => d.document_type === "PACKING_LIST",
                     ) && (
-                        <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                                Packing List
-                              </p>
-                              <p className="font-mono text-sm font-bold text-foreground">
-                                Available
-                              </p>
-                            </div>
-                            {documents.find(
-                              (d) =>
-                                d.document_type === "PACKING_LIST" &&
-                                d.presigned_url,
-                            ) && (
-                                <a
-                                  href={
-                                    documents.find(
-                                      (d) => d.document_type === "PACKING_LIST",
-                                    )?.presigned_url || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                                  title="View Packing List"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </a>
-                              )}
+                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                              Packing List
+                            </p>
+                            <p className="font-mono text-sm font-bold text-foreground">
+                              Available
+                            </p>
                           </div>
+                          {documents.find(
+                            (d) =>
+                              d.document_type === "PACKING_LIST" &&
+                              d.presigned_url,
+                          ) && (
+                            <a
+                              href={
+                                documents.find(
+                                  (d) => d.document_type === "PACKING_LIST",
+                                )?.presigned_url || "#"
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                              title="View Packing List"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {/* Pickup Number */}
                     {ship?.shipment_details?.pickup_number && (
-                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
                           Pickup Number
                         </p>
@@ -708,7 +818,7 @@ function ShipDetailsContent() {
 
                     {/* Delivery Number */}
                     {ship?.shipment_details?.delivery_number && (
-                      <div className="p-3 rounded-2xl bg-white/40 dark:bg-card/40 backdrop-blur-sm border border-border/50 hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
                           Delivery Number
                         </p>
@@ -723,17 +833,16 @@ function ShipDetailsContent() {
 
               {/* Shipper Details Card - Only show if paid */}
               {(shipperInfo || isShipperLoading) && (
-                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-500/5 via-background to-background shadow-lg hover:shadow-xl transition-all duration-500 group">
-                  <div className="absolute -right-8 -bottom-8 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
-                  <CardHeader className="relative z-10 pb-2">
+                <Card className="border border-border bg-card">
+                  <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
+                      <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
                         <User className="h-4 w-4" />
                       </div>
                       Shipper Details
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 relative z-10 pt-2">
+                  <CardContent className="space-y-4 pt-2">
                     {isShipperLoading ? (
                       <div className="space-y-3">
                         <Skeleton className="h-4 w-24" />
@@ -819,6 +928,8 @@ function ShipDetailsContent() {
                       isMarkingDelivered: markAsDelivered.isPending,
                       isTransporter: user?.role === "transporter",
                     }}
+                    variant="clean"
+                    hideColumnVisibility
                   />
                 </div>
               )}

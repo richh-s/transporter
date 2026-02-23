@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Critical for containerized deployment (App Runner, Docker, etc.)
-  output: 'standalone',
+  output: "export",
   eslint: {
     ignoreDuringBuilds: true,
   },
   images: {
+    unoptimized: true, // Required for static export (output: 'export')
     remotePatterns: [
       {
         protocol: "https",

@@ -4,6 +4,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ShipItem, Truck, Driver, Ship, Container } from "@/types/ship";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Package,
   Truck as TruckIcon,
   User,
@@ -12,12 +18,6 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export interface ShipItemsTableMeta {
   onViewContainers: (containers: Container[]) => void;
@@ -129,7 +129,8 @@ export const columns: ColumnDef<ShipItem>[] = [
           </div>
           <div className="flex flex-col gap-1 min-w-0">
             <span className="text-[10px] font-medium text-muted-foreground/90 bg-muted/40 px-2 py-0.5 rounded-md w-fit whitespace-nowrap">
-              {containers.length} {containers.length === 1 ? "Container" : "Containers"}
+              {containers.length}{" "}
+              {containers.length === 1 ? "Container" : "Containers"}
             </span>
             <span className="text-[11px] font-bold text-primary px-0.5">
               {totalWeight.toLocaleString()} Kg
@@ -235,7 +236,9 @@ export const columns: ColumnDef<ShipItem>[] = [
               disabled={meta?.isMarkingDelivered}
             >
               <CheckCircle className="h-3 w-3 min-[391px]:hidden" />
-              <span className="hidden min-[391px]:inline whitespace-nowrap">Mark Delivered</span>
+              <span className="hidden min-[391px]:inline whitespace-nowrap">
+                Mark Delivered
+              </span>
             </Button>
           )}
 

@@ -85,8 +85,8 @@ export function useAssignTruck(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-            (data.message as string) ||
-            "Failed to assign truck",
+              (data.message as string) ||
+              "Failed to assign truck",
           );
         }
       }
@@ -128,8 +128,8 @@ export function useAssignDriver(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-            (data.message as string) ||
-            "Failed to assign driver",
+              (data.message as string) ||
+              "Failed to assign driver",
           );
         }
       }
@@ -162,8 +162,8 @@ export function useMarkAsDelivered(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-            (data.message as string) ||
-            "Failed to mark as delivered",
+              (data.message as string) ||
+              "Failed to mark as delivered",
           );
         }
       }
@@ -189,10 +189,25 @@ export function useShipPayments(shipId: string | number) {
     queryFn: async () => {
       if (!shipId) return null;
       const response = await shipApi.getPayments(shipId);
-      if (response.error) throw new Error(response.error);
+      if (response.error) {
+        // Handle network errors gracefully - don't throw for network issues
+        if (response.status === 0 || response.error.includes("Network error")) {
+          console.warn("⚠️ Payments endpoint unavailable:", response.error);
+          return null; // Return null instead of throwing for network errors
+        }
+        throw new Error(response.error);
+      }
       return response.data;
     },
     enabled: !!shipId,
+    retry: (failureCount, error) => {
+      // Don't retry on network errors (status 0) or if error message indicates network issue
+      if (error instanceof Error && error.message.includes("Network error")) {
+        return false;
+      }
+      return failureCount < 2; // Retry up to 2 times for other errors
+    },
+    retryDelay: 1000,
   });
 }
 
@@ -270,7 +285,9 @@ export function useManualPaymentConfirmation(shipId: string | number) {
       toast.success("Manual confirmation request submitted successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to submit manual confirmation request");
+      toast.error(
+        error.message || "Failed to submit manual confirmation request",
+      );
     },
   });
 }

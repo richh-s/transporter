@@ -3,15 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  OctagonAlert,
-  Loader2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-} from "lucide-react";
+import { OctagonAlert, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -73,7 +65,7 @@ export const SignInView = () => {
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
       setError(
-        "Unable to load security code. Please refresh the page and try again."
+        "Unable to load security code. Please refresh the page and try again.",
       );
     } else {
       setError(msg);
@@ -104,7 +96,7 @@ export const SignInView = () => {
             lowerErrorMessage.includes("code")))
       ) {
         setError(
-          "The security code you entered is incorrect. Please enter the code from the new image below."
+          "The security code you entered is incorrect. Please enter the code from the new image below.",
         );
         // Refresh captcha on error
         setCaptchaSolution("");
@@ -116,7 +108,6 @@ export const SignInView = () => {
         return;
       }
 
-
       // Network/Connection errors
       if (
         lowerErrorMessage.includes("failed to fetch") ||
@@ -125,7 +116,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("connection")
       ) {
         setError(
-          "Unable to connect to the server. Please check your internet connection and try again."
+          "Unable to connect to the server. Please check your internet connection and try again.",
         );
       }
       // Invalid credentials (but not captcha)
@@ -142,7 +133,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("401")
       ) {
         setError(
-          "The email or password you entered is incorrect. Please check your credentials and try again."
+          "The email or password you entered is incorrect. Please check your credentials and try again.",
         );
       }
       // Account-related errors
@@ -152,7 +143,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("user not found")
       ) {
         setError(
-          "No account found with this email address. Please check your email or contact support."
+          "No account found with this email address. Please check your email or contact support.",
         );
       } else if (
         lowerErrorMessage.includes("disabled") ||
@@ -160,7 +151,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("inactive")
       ) {
         setError(
-          "Your account has been disabled. Please contact support for assistance."
+          "Your account has been disabled. Please contact support for assistance.",
         );
       }
       // Server errors
@@ -178,13 +169,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("429")
       ) {
         setError(
-          "Too many login attempts. Please wait a few minutes before trying again."
+          "Too many login attempts. Please wait a few minutes before trying again.",
         );
       }
       // Generic fallback
       else {
         setError(
-          "Login failed. Please check your credentials and try again. If the problem persists, contact support."
+          "Login failed. Please check your credentials and try again. If the problem persists, contact support.",
         );
       }
     } finally {
@@ -238,14 +229,16 @@ export const SignInView = () => {
                       Enter your credentials to manage freight operations.
                     </p>
                   </div>
-
                   <div className="space-y-3 sm:space-y-4">
                     <FormField
                       control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          <FormLabel
+                            required
+                            className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                          >
                             Work Email
                           </FormLabel>
                           <FormControl>
@@ -263,15 +256,16 @@ export const SignInView = () => {
                       )}
                     />
 
-
-
                     <FormField
                       control={form.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between">
-                            <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <FormLabel
+                              required
+                              className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                            >
                               Password
                             </FormLabel>
                             <a
@@ -309,7 +303,6 @@ export const SignInView = () => {
                       )}
                     />
                   </div>
-
                   {/* CAPTCHA Component */}
                   <div className="pt-2">
                     <CaptchaComponent
@@ -322,7 +315,6 @@ export const SignInView = () => {
                       }}
                     />
                   </div>
-
                   {error && (
                     <Alert
                       variant="destructive"
@@ -336,8 +328,6 @@ export const SignInView = () => {
                       </div>
                     </Alert>
                   )}
-
-
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
@@ -355,29 +345,7 @@ export const SignInView = () => {
                     ) : (
                       "Sign In to Dashboard"
                     )}
-                  </Button>
-
-                  <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                      Contact support to request access to the platform.
-                    </span>
-                  </div>
-
-                  {/* Mock Credentials Hint */}
-                  <div className="rounded-lg border border-dashed border-primary/50 bg-primary/5 p-3 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <ShieldCheck className="h-3 w-3 text-primary" />
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-primary/60">
-                        Dev Access
-                      </p>
-                    </div>
-                    <p className="text-xs text-primary/80">
-                      <span className="font-semibold">Email:</span>{" "}
-                      transporter@wetruck.ai <br />
-                      <span className="font-semibold">Password:</span>{" "}
-                      transporter123
-                    </p>
-                  </div>
+                  </Button>{" "}
                 </form>
               </Form>
             </div>
@@ -418,7 +386,6 @@ export const SignInView = () => {
                 </p>
               </div>
 
-
               {/* Bottom Accent */}
               <div className="absolute bottom-8 left-8 right-8 z-10">
                 <div className="flex justify-between items-center text-[10px] text-white/40 uppercase tracking-[0.2em]">
@@ -442,8 +409,8 @@ export const SignInView = () => {
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
           &copy; {new Date().getFullYear()}{" "}
-          <span className="text-primary font-medium">WeTruck</span>{" "}
-          TechEnable Solutions PLC.
+          <span className="text-primary font-medium">WeTruck</span> TechEnable
+          Solutions PLC.
           <a
             href="#"
             className="ml-2 text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
@@ -462,4 +429,3 @@ export const SignInView = () => {
     </div>
   );
 };
-
