@@ -8,9 +8,27 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
 export const metadata: Metadata = {
   title: "WeTruck Transporter",
   description: "Transporter Portal for WeTruck Fleet Management",
+  ...(siteUrl && { metadataBase: new URL(siteUrl) }),
+  icons: {
+    icon: "/favicon.ico",
+  },
+  openGraph: {
+    title: "WeTruck Transporter",
+    description: "Transporter Portal for WeTruck Fleet Management",
+    type: "website",
+    ...(siteUrl && { url: siteUrl }),
+    images: [{ url: "/favicon.ico", width: 32, height: 32, alt: "WeTruck" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "WeTruck Transporter",
+    description: "Transporter Portal for WeTruck Fleet Management",
+  },
 };
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -25,9 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
-      <body
-        className={`${openSans.className} antialiased overflow-x-hidden`}
-      >
+      <body className={`${openSans.className} antialiased overflow-x-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
