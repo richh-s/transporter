@@ -123,8 +123,8 @@ export function PodUploadModal({
   // If not batch: only allow if at least one container is returning (or we shouldn't show the option?)
   const allSelectedAreReturning = isBatch
     ? selectedContainerIds.every(
-        (id) => containers.find((c) => c.id.toString() === id)?.is_returning,
-      )
+      (id) => containers.find((c) => c.id.toString() === id)?.is_returning,
+    )
     : returningContainers.length > 0;
 
   const showReturnReceiptOption = isBatch
@@ -159,14 +159,25 @@ export function PodUploadModal({
             <Select
               value={documentType}
               onValueChange={(val) => {
-                setDocumentType(val as ShipItemDocumentTypeEnum);
-                // Reset container selection if invalid for new type
+                const newType = val as ShipItemDocumentTypeEnum;
+                setDocumentType(newType);
+                // Reset container selection if invalid for new type or if "all" is not allowed
                 if (
-                  val ===
-                    ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT &&
-                  manualContainerId !== "all"
+                  newType ===
+                  ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT
                 ) {
-                  const isCurrentValid = returningContainers.find(
+                  const isCurrentValid = returningContainers.some(
+                    (c) => c.id.toString() === manualContainerId,
+                  );
+                  if (manualContainerId === "all" || !isCurrentValid) {
+                    if (returningContainers.length > 0) {
+                      setManualContainerId(
+                        returningContainers[0].id.toString(),
+                      );
+                    }
+                  }
+                } else if (manualContainerId !== "all") {
+                  const isCurrentValid = containers.some(
                     (c) => c.id.toString() === manualContainerId,
                   );
                   if (!isCurrentValid) setManualContainerId("all");
@@ -211,9 +222,12 @@ export function PodUploadModal({
                   <SelectValue placeholder="Select container" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    Check if this applies to the whole shipment
-                  </SelectItem>
+                  {documentType !==
+                    ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT && (
+                      <SelectItem value="all">
+                        Check if this applies to the whole shipment
+                      </SelectItem>
+                    )}
                   {availableContainers.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
                       {c.container_number} ({c.container_size || "Unknown Size"}
@@ -222,10 +236,13 @@ export function PodUploadModal({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Select &quot;Whole Shipment&quot; for a single document covering
-                all containers.
-              </p>
+              {documentType !==
+                ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT && (
+                  <p className="text-xs text-muted-foreground">
+                    Select &quot;Whole Shipment&quot; for a single document
+                    covering all containers.
+                  </p>
+                )}
             </div>
           )}
 

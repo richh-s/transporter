@@ -7,14 +7,12 @@ import { FileOpener } from "@capacitor-community/file-opener";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { format } from "date-fns";
-import { Container, Truck, Driver } from "@/types/ship";
+import { Container, Truck, Driver, PaymentResponse } from "@/types/ship";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MapPin,
-  Building2,
   FileText,
   CreditCard,
-  Phone,
   Loader2,
   AlertCircle,
   Calendar,
@@ -25,7 +23,6 @@ import {
   Wallet,
   Download,
   CheckCircle,
-  Clock,
 } from "lucide-react";
 import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import Link from "next/link";
@@ -38,6 +35,7 @@ import {
   useCreatePaymentOrder,
   useShipDocuments,
 } from "@/hooks/use-ships";
+import { useReceiptGeneration } from "@/hooks/use-receipt-generation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useTrucksQuery } from "@/hooks/use-trucks-query";
 import { useDrivers } from "@/hooks/use-drivers";
@@ -208,15 +206,23 @@ function ShipDetailsContent() {
 
   const { data: trucksData } = useTrucksQuery({ per_page: 100 });
   const { data: driversData } = useDrivers({ per_page: 100 });
-  const { data: payments } = useShipPayments(id || "0");
+  const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id || "0");
   const createPaymentOrder = useCreatePaymentOrder(id || "0");
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
   const markAsDelivered = useMarkAsDelivered(id || "0");
+  const { generateReceipt, isGenerating: isGeneratingReceipt } = useReceiptGeneration();
   const { user } = useAuth();
 
-  const paidPayment = payments?.find((p) => p.paid);
+  const paymentsList = useMemo(() => {
+    if (!payments) return [];
+    if (Array.isArray(payments)) return payments as PaymentResponse[];
+    const p = payments as Record<string, unknown>;
+    return (p.items as PaymentResponse[]) || (p.result as PaymentResponse[]) || (p.data as PaymentResponse[]) || [];
+  }, [payments]);
+
+  const paidPayment = paymentsList.find((p: PaymentResponse) => p.paid);
   const { data: shipperInfoResponse, isLoading: isShipperLoading } =
     useShipperInfo({
       ship_id: id,
@@ -293,7 +299,7 @@ function ShipDetailsContent() {
     ? driversData
     : (driversData as unknown as { items: Driver[] })?.items || [];
   const error = shipError ? (shipError as Error).message : null;
-  const unpaidPayment = payments?.find((p) => !p.paid);
+  const unpaidPayment = paymentsList.find((p: PaymentResponse) => !p.paid);
   const hasUnpaidPayment = !!unpaidPayment;
 
   const handlePayNow = () => {
@@ -496,9 +502,9 @@ function ShipDetailsContent() {
               {/* Payment Card */}
               <Card className="border border-border bg-card">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                     {/* Left: Icon + Label + Amount */}
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="flex items-start gap-3 w-full sm:flex-1 min-w-0">
                       <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 shrink-0">
                         <Wallet className="h-5 w-5 text-green-600" />
                       </div>
@@ -506,71 +512,136 @@ function ShipDetailsContent() {
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                           Payment Overview
                         </p>
-                        {hasUnpaidPayment && unpaidPayment && (
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-3xl font-bold text-foreground tracking-tight">
-                              {unpaidPayment.total_str}
-                            </span>
-                            <span className="text-sm font-semibold text-muted-foreground">
-                              ETB
-                            </span>
+                        {isPaymentsLoading ? (
+                          <Skeleton className="h-9 w-32" />
+                        ) : (unpaidPayment || paidPayment) ? (
+                          <div className="space-y-1">
+                            {(() => {
+                              const activePayment = unpaidPayment || paidPayment;
+                              const total = parseFloat(activePayment?.total || "0");
+                              const vat = parseFloat(activePayment?.vat || "0");
+                              const grandTotal = total + vat;
+                              return (
+                                <>
+                                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                                    <span className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+                                      {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                    <span className="text-sm font-semibold text-muted-foreground">
+                                      ETB
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col gap-0.5">
+                                    <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                                      Fees: {activePayment?.total_str} ETB
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-500/30" />
+                                      VAT: {activePayment?.vat_str} ETB
+                                    </p>
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
 
-                    {/* Middle: Status Badge + Invoice ID */}
-                    {hasUnpaidPayment && invoiceId && (
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500 text-white">
-                          Pending
-                        </span>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">
-                            Invoice ID
-                          </p>
-                          <p className="text-sm font-semibold text-foreground">
-                            {invoiceId}
-                          </p>
+                    {/* Middle & Right Container for Mobile */}
+                    <div className="flex flex-row sm:flex-row items-center justify-between w-full sm:w-auto sm:gap-4 flex-wrap">
+                      {/* Status Badge + Invoice ID */}
+                      {(hasUnpaidPayment || paidPayment) && invoiceId && (
+                        <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+                          <span className={cn(
+                            "text-xs font-semibold px-2.5 py-1 rounded-md",
+                            hasUnpaidPayment ? "bg-amber-500 text-white" : "bg-green-600 text-white"
+                          )}>
+                            {hasUnpaidPayment ? "Pending" : "Paid"}
+                          </span>
+                          <div className="text-left sm:text-right">
+                            <p className="text-xs text-muted-foreground">
+                              Invoice ID
+                            </p>
+                            <p className="text-sm font-semibold text-foreground">
+                              {invoiceId}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Right: Action Buttons */}
-                    {hasUnpaidPayment && (
+                      {/* Action Buttons */}
                       <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="bg-white border border-border hover:bg-muted/50"
-                          onClick={handleDownloadInvoice}
-                          disabled={isDownloadingInvoice}
-                        >
-                          {isDownloadingInvoice ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Download className="h-3.5 w-3.5" />
-                          )}
-                          <span className="ml-1.5">Invoice</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="bg-white border border-border hover:bg-muted/50"
-                          onClick={() => setManualConfirmModalOpen(true)}
-                        >
-                          Manual Confirm
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={handlePayNow}
-                          disabled={createPaymentOrder.isPending}
-                        >
-                          Pay Now
-                        </Button>
+                        {/* Invoice Button - Show if priced or later, independent of payments data */}
+                        {!isShipLoading && ship && ["priced", "accepted_by_shipper", "allocated", "ready_for_pickup", "in_transit", "delivered", "completed"].includes(ship.status.toLowerCase()) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-white border border-border hover:bg-muted/50"
+                            onClick={handleDownloadInvoice}
+                            disabled={isDownloadingInvoice}
+                          >
+                            {isDownloadingInvoice ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                            <span className="ml-1.5 gap-1.5 flex items-center">
+                              Invoice
+                            </span>
+                          </Button>
+                        )}
+
+                        {isPaymentsLoading ? (
+                          <div className="flex gap-2">
+                            <Skeleton className="h-8 w-24 border border-border" />
+                            <Skeleton className="h-8 w-20 border border-border" />
+                          </div>
+                        ) : (
+                          <>
+                            {/* Payment Actions for Unpaid */}
+                            {hasUnpaidPayment && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-white border border-border hover:bg-muted/50"
+                                  onClick={() => setManualConfirmModalOpen(true)}
+                                >
+                                  Confirm
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={handlePayNow}
+                                  disabled={createPaymentOrder.isPending}
+                                >
+                                  Pay Now
+                                </Button>
+                              </>
+                            )}
+
+                            {/* Receipt for Paid */}
+                            {!hasUnpaidPayment && paidPayment && (
+                              <Button
+                                size="sm"
+                                className="bg-primary hover:bg-primary/90 text-white"
+                                onClick={() => generateReceipt(paidPayment)}
+                                disabled={isGeneratingReceipt}
+                              >
+                                {isGeneratingReceipt ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <FileText className="h-3.5 w-3.5" />
+                                )}
+                                <span className="ml-1.5">Receipt</span>
+                              </Button>
+                            )}
+                          </>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -733,76 +804,76 @@ function ShipDetailsContent() {
                       documents.some(
                         (d) => d.document_type === "BILL_OF_LADING",
                       )) && (
-                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                              Bill of Lading
-                            </p>
-                            <p className="font-mono text-sm font-bold text-foreground">
-                              {ship?.shipment_details?.bill_of_lading_number ||
-                                "Document Only"}
-                            </p>
+                        <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Bill of Lading
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                {ship?.shipment_details?.bill_of_lading_number ||
+                                  "Document Only"}
+                              </p>
+                            </div>
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "BILL_OF_LADING" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "BILL_OF_LADING",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Bill of Lading"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
-                          {documents.find(
-                            (d) =>
-                              d.document_type === "BILL_OF_LADING" &&
-                              d.presigned_url,
-                          ) && (
-                            <a
-                              href={
-                                documents.find(
-                                  (d) => d.document_type === "BILL_OF_LADING",
-                                )?.presigned_url || "#"
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                              title="View Bill of Lading"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Packing List */}
                     {documents.some(
                       (d) => d.document_type === "PACKING_LIST",
                     ) && (
-                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                              Packing List
-                            </p>
-                            <p className="font-mono text-sm font-bold text-foreground">
-                              Available
-                            </p>
+                        <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Packing List
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                Available
+                              </p>
+                            </div>
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "PACKING_LIST" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "PACKING_LIST",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Packing List"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
-                          {documents.find(
-                            (d) =>
-                              d.document_type === "PACKING_LIST" &&
-                              d.presigned_url,
-                          ) && (
-                            <a
-                              href={
-                                documents.find(
-                                  (d) => d.document_type === "PACKING_LIST",
-                                )?.presigned_url || "#"
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                              title="View Packing List"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Pickup Number */}
                     {ship?.shipment_details?.pickup_number && (

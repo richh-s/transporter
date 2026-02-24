@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Upload, File as FileIcon, Loader2 } from "lucide-react";
 import { useManualPaymentConfirmation } from "@/hooks/use-ships";
+import { cn } from "@/lib/utils";
 
 interface ManualConfirmationModalProps {
     open: boolean;
@@ -53,7 +54,7 @@ export function ManualConfirmationModal({
                 reference_url: referenceUrl || undefined,
                 date: date || undefined,
                 note: note || undefined,
-                reference_doc_file: file || undefined,
+                 reference_doc_file: file || undefined,
             },
             {
                 onSuccess: () => {
@@ -154,9 +155,15 @@ export function ManualConfirmationModal({
 
                     {/* File Upload */}
                     <div className="grid gap-1.5">
-                        <Label>Reference Document</Label>
+                        <Label className="flex items-center gap-1">
+                            Reference Document
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <div
-                            className="border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                            className={cn(
+                                "border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer transition-colors",
+                                !file ? "border-muted-foreground/20 hover:bg-muted/50" : "border-primary/50 bg-primary/5"
+                            )}
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDrop}
                             onClick={() =>
@@ -204,7 +211,7 @@ export function ManualConfirmationModal({
                     </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
@@ -212,7 +219,11 @@ export function ManualConfirmationModal({
                     >
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit} disabled={mutation.isPending}>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={mutation.isPending || !file}
+                        className={cn(!file && "opacity-50 cursor-not-allowed")}
+                    >
                         {mutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}

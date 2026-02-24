@@ -96,7 +96,7 @@ export default function CreateGPSDevicePage() {
       device_name: values.device_name || undefined,
       device_model: values.device_model || undefined,
       expire_date: values.expire_date.toISOString(),
-      last_synced_at: new Date().toISOString(),
+      last_synced_at: new Date(Date.now() - 10000).toISOString(),
       status: values.status,
       truck_id: values.truck_id!,
     };

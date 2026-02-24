@@ -41,9 +41,7 @@ export function OrganizationDocumentsView() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [pageCount, setPageCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<{
@@ -188,28 +186,6 @@ export function OrganizationDocumentsView() {
     setPage(1);
   };
 
-  const handleDocumentTypeFilter = (
-    type: "trade_licence" | "id" | "other" | "all" | null,
-  ) => {
-    setFilters((prev) => ({
-      ...prev,
-      document_type: type === "all" ? null : type,
-    }));
-    setPage(1);
-  };
-
-  const handleEntityTypeFilter = (type: "truck" | "driver" | "all" | null) => {
-    setFilters((prev) => ({
-      ...prev,
-      entity_type: type === "all" ? null : type,
-    }));
-    setPage(1);
-  };
-
-  const clearFilters = () => {
-    setFilters({});
-    setPage(1);
-  };
 
   // Filter documents based on active filters
   const filteredDocuments = React.useMemo(() => {
@@ -294,8 +270,6 @@ export function OrganizationDocumentsView() {
           }}
           onScrollChange={setIsScrolled}
           isScrolled={isScrolled}
-          onPageCountChange={setPageCount}
-          onSearchFocus={setIsSearchFocused}
           isLoading={documentsLoading}
           topSection={
             <div className="-mt-1">

@@ -12,8 +12,6 @@ import {
   Truck,
   User,
   FileText,
-  ChevronDown,
-  ChevronUp,
   Loader2,
 } from "lucide-react";
 import { DocumentList } from "./DocumentList";
@@ -45,7 +43,6 @@ interface ShipItemPodCardProps {
 export function ShipItemPodCard({
   shipItem: initialShipItem,
 }: ShipItemPodCardProps) {
-  const [expanded, setExpanded] = useState(false);
   const [documents, setDocuments] = useState<ShipItemDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -151,11 +148,6 @@ export function ShipItemPodCard({
 
   const podCount = documents.filter(
     (d) => d.document_type === ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY,
-  ).length;
-  const podDocCount = documents.filter(
-    (d) =>
-      d.document_type ===
-      ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT,
   ).length;
   const returnCount = documents.filter(
     (d) =>
@@ -360,7 +352,7 @@ export function ShipItemPodCard({
                       <>
                         {shipItem.assigned_truck.plate_number}
                         {shipItem.assigned_truck.make ||
-                        shipItem.assigned_truck.model ? (
+                          shipItem.assigned_truck.model ? (
                           <span className="text-muted-foreground font-normal text-xs block">
                             {shipItem.assigned_truck.make}{" "}
                             {shipItem.assigned_truck.model}

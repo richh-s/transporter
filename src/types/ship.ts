@@ -211,6 +211,7 @@ export interface PaymentResponse {
   payment_method: "tele_birr";
   transaction_receipt: string | null;
   paid: boolean;
+  confirmation_method: string | null;
   total_str: string; // Computed field
   vat_str: string; // Computed field
 }

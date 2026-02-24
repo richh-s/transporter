@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/ships";
 import { CreateOrderRequest } from "@/types/ship";
 import { toast } from "sonner";
+import { humanizeError } from "@/lib/utils/error-humanizer";
 
 export const shipKeys = {
   all: ["ships"] as const,
@@ -85,8 +86,8 @@ export function useAssignTruck(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign truck",
+            (data.message as string) ||
+            "Failed to assign truck",
           );
         }
       }
@@ -99,7 +100,7 @@ export function useAssignTruck(shipId: string | number) {
       toast.success("Truck assigned successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to assign truck");
+      toast.error(humanizeError(error.message) || "Failed to assign truck");
     },
   });
 }
@@ -128,8 +129,8 @@ export function useAssignDriver(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to assign driver",
+            (data.message as string) ||
+            "Failed to assign driver",
           );
         }
       }
@@ -142,7 +143,7 @@ export function useAssignDriver(shipId: string | number) {
       toast.success("Driver assigned successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to assign driver");
+      toast.error(humanizeError(error.message) || "Failed to assign driver");
     },
   });
 }
@@ -162,8 +163,8 @@ export function useMarkAsDelivered(shipId: string | number) {
         if (data.status === false) {
           throw new Error(
             (data.error as string) ||
-              (data.message as string) ||
-              "Failed to mark as delivered",
+            (data.message as string) ||
+            "Failed to mark as delivered",
           );
         }
       }
@@ -175,7 +176,7 @@ export function useMarkAsDelivered(shipId: string | number) {
       toast.success("Ship item marked as delivered");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to mark as delivered");
+      toast.error(humanizeError(error.message) || "Failed to mark as delivered");
     },
   });
 }
@@ -276,6 +277,7 @@ export function useManualPaymentConfirmation(shipId: string | number) {
       date?: string;
       note?: string;
       reference_doc_file?: File;
+      transaction_receipt?: File;
     }) => {
       return shipApi.requestManualConfirmation(data);
     },

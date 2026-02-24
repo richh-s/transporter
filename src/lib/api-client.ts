@@ -1,3 +1,5 @@
+import { extractErrorMessage } from "./utils/error-humanizer";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_URL) {
@@ -209,11 +211,7 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error:
-          ((result as unknown as Record<string, unknown>)?.error as string) ||
-          ((result as unknown as Record<string, unknown>)?.detail as string) ||
-          ((result as unknown as Record<string, unknown>)?.message as string) ||
-          (typeof result === "string" ? result : "Something went wrong"),
+        error: extractErrorMessage(result),
         status,
         errorCode:
           ((result as unknown as Record<string, unknown>)?.code as string) ||
