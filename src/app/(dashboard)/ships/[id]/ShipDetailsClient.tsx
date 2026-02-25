@@ -518,9 +518,9 @@ function ShipDetailsContent() {
                           <div className="space-y-1">
                             {(() => {
                               const activePayment = unpaidPayment || paidPayment;
-                              const total = parseFloat(activePayment?.total || "0");
-                              const vat = parseFloat(activePayment?.vat || "0");
-                              const grandTotal = total + vat;
+                              const grandTotal = parseFloat(activePayment?.total_str || "0");
+                              const vat = parseFloat(activePayment?.vat_str || "0");
+                              const subtotal = grandTotal - vat;
                               return (
                                 <>
                                   <div className="flex items-baseline gap-1.5 flex-wrap">
@@ -534,11 +534,11 @@ function ShipDetailsContent() {
                                   <div className="flex flex-col gap-0.5">
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
-                                      Fees: {activePayment?.total_str} ETB
+                                      Fees: {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                                     </p>
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-green-500/30" />
-                                      VAT: {activePayment?.vat_str} ETB
+                                      VAT: {vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                                     </p>
                                   </div>
                                 </>
@@ -1033,6 +1033,8 @@ function ShipDetailsContent() {
           onOpenChange={setManualConfirmModalOpen}
           paymentId={unpaidPayment.id}
           shipId={Number(id)}
+          totalStr={unpaidPayment.total_str}
+          vatStr={unpaidPayment.vat_str}
         />
       )}
 

@@ -20,15 +20,16 @@ export class ReceiptValidationService {
         }
 
         // Validate invoice calculations (15% VAT)
-        // payment.total is the base Fee (subtotal)
-        const subtotal = parseFloat(payment.total);
+        // payment.total is the Grand Total (Fees + VAT)
+        const total = parseFloat(payment.total);
         const storedVAT = parseFloat(payment.vat);
+        const subtotal = total - storedVAT;
         const calculatedVAT = subtotal * 0.15;
 
         // Use a small epsilon to handle floating point precision issues
         if (Math.abs(calculatedVAT - storedVAT) > 0.1) {
             errors.push(
-                `VAT calculation mismatch. Expected: ${calculatedVAT.toFixed(2)} (15% of ${subtotal.toFixed(2)}), Found: ${storedVAT.toFixed(2)}`,
+                `VAT calculation mismatch. Expected: ${calculatedVAT.toFixed(2)} (15% of Subtotal ${subtotal.toFixed(2)}), Found: ${storedVAT.toFixed(2)}`,
             );
         }
 
