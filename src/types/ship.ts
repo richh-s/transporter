@@ -254,7 +254,16 @@ export interface TrackingShipItem {
 export interface LocationLog {
   latitude: number;
   longitude: number;
-  timestamp: string;
+  speed: number;
+  direction: number;
+  is_moving: boolean;
+  accuracy_radius: number;
+  parking: boolean;
+  park_duration: number;
+  total_distance: number;
+  gps_time: string;
+  server_arrived_time: string;
+  update_time: string;
 }
 
 export interface TrackingTruck {

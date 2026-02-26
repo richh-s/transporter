@@ -2,6 +2,7 @@
 
 import { useTrackShip, useShip } from "@/hooks/use-ships";
 import { TrackingTruck } from "@/types/ship";
+import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
 import {
     ArrowLeft,
@@ -21,10 +22,19 @@ import {
     Send,
     MapPin,
     CircleCheckBig,
+    Maximize2,
+    Map as MapIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-
+const LiveTrackingMap = dynamic(() => import("../../../modules/live-tracking/ui/components/live-tracking-map").then(mod => mod.LiveTrackingMap), {
+    ssr: false,
+    loading: () => (
+        <div className="h-full w-full flex items-center justify-center bg-muted/20 animate-pulse">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+    ),
+});
 // Status steps with icons matching the CS portal
 const STATUS_STEPS = [
     { key: "created", label: "Created", icon: FileText },
@@ -457,6 +467,21 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Tracking Map */}
+            <Card className="border border-border bg-card overflow-hidden">
+                <CardContent className="p-0">
+                    <div className="p-4 border-b border-border flex items-center justify-between">
+                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                            <MapIcon className="h-4 w-4 text-emerald-600" />
+                            Live Tracking Map
+                        </h3>
+                    </div>
+                    <div className="h-[400px] w-full">
+                        <LiveTrackingMap trucks={trucks} />
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Status Timeline */}
             <StatusTimeline currentStatus={shipStatus} />
