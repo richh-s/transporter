@@ -82,7 +82,9 @@ function StatusTimeline({ currentStatus }: { currentStatus: string }) {
                     <Clock className="h-4 w-4 text-emerald-600" />
                     Status Timeline
                 </h3>
-                <div className="relative flex items-start justify-between">
+
+                {/* Desktop Horizontal Timeline */}
+                <div className="hidden md:flex relative items-start justify-between">
                     {STATUS_STEPS.map((step, idx) => {
                         const isCompleted = idx <= activeIdx;
                         const isCurrent = idx === activeIdx;
@@ -135,6 +137,65 @@ function StatusTimeline({ currentStatus }: { currentStatus: string }) {
                                 >
                                     {step.label}
                                 </span>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Mobile Vertical Timeline */}
+                <div className="flex md:hidden flex-col space-y-0">
+                    {STATUS_STEPS.map((step, idx) => {
+                        const isCompleted = idx <= activeIdx;
+                        const isCurrent = idx === activeIdx;
+                        const StepIcon = step.icon;
+
+                        return (
+                            <div key={step.key} className="flex gap-4 relative">
+                                {/* Vertical Connector */}
+                                {idx < STATUS_STEPS.length - 1 && (
+                                    <div
+                                        className={cn(
+                                            "absolute left-[18px] top-9 w-[2px] h-[calc(100%-18px)]",
+                                            idx < activeIdx ? "bg-emerald-500" : "bg-gray-200"
+                                        )}
+                                    />
+                                )}
+
+                                <div className="flex flex-col items-center">
+                                    <div
+                                        className={cn(
+                                            "relative h-9 w-9 rounded-full flex items-center justify-center border-2 z-10 transition-all",
+                                            isCompleted
+                                                ? "bg-emerald-500 border-emerald-500 text-white"
+                                                : "bg-white border-gray-200 text-gray-400",
+                                            isCurrent && "ring-4 ring-emerald-100",
+                                        )}
+                                    >
+                                        {isCompleted ? (
+                                            <CheckCircle2 className="h-5 w-5 text-white" />
+                                        ) : (
+                                            <StepIcon className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="pb-8">
+                                    <p
+                                        className={cn(
+                                            "text-sm font-semibold",
+                                            isCurrent
+                                                ? "text-emerald-700"
+                                                : isCompleted
+                                                    ? "text-emerald-600"
+                                                    : "text-gray-400",
+                                        )}
+                                    >
+                                        {step.label}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isCompleted ? (isCurrent ? "In Progress" : "Completed") : "Pending"}
+                                    </p>
+                                </div>
                             </div>
                         );
                     })}
@@ -302,10 +363,10 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                 {/* Route card */}
                 <Card className="lg:col-span-3 border border-border bg-card">
                     <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
                             {/* Origin */}
-                            <div className="flex-1">
-                                <div className="flex items-center gap-1.5 mb-1.5">
+                            <div className="flex-1 w-full md:w-auto text-center md:text-left">
+                                <div className="flex items-center justify-center md:justify-start gap-1.5 mb-1.5">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                         Origin
@@ -315,7 +376,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                     {origin?.replace(/_/g, " ") || "—"}
                                 </p>
                                 {pickupDate && (
-                                    <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+                                    <div className="flex items-center justify-center md:justify-start gap-1.5 mt-2 text-xs text-muted-foreground">
                                         <Calendar className="h-3.5 w-3.5" />
                                         {format(new Date(pickupDate), "MMMM d, yyyy")}
                                     </div>
@@ -323,19 +384,20 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                             </div>
 
                             {/* Arrow / Truck icon */}
-                            <div className="flex flex-col items-center mx-6">
-                                <div className="flex items-center gap-1">
-                                    <div className="w-16 h-px bg-muted-foreground/30" />
+                            <div className="flex flex-row md:flex-col items-center mx-0 md:mx-6">
+                                <div className="flex md:flex-row items-center gap-1">
+                                    <div className="hidden md:block w-8 lg:w-16 h-px bg-muted-foreground/30" />
                                     <div className="p-2 rounded-full bg-muted border">
                                         <Truck className="h-4 w-4 text-muted-foreground" />
                                     </div>
-                                    <div className="w-16 h-px bg-muted-foreground/30" />
+                                    <div className="hidden md:block w-8 lg:w-16 h-px bg-muted-foreground/30" />
                                 </div>
+                                <div className="md:hidden w-8 h-px bg-muted-foreground/30 mx-2" />
                             </div>
 
                             {/* Destination */}
-                            <div className="flex-1 text-right">
-                                <div className="flex items-center justify-end gap-1.5 mb-1.5">
+                            <div className="flex-1 w-full md:w-auto text-center md:text-right">
+                                <div className="flex items-center justify-center md:justify-end gap-1.5 mb-1.5">
                                     <span className="h-2 w-2 rounded-full bg-red-500" />
                                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                         Destination
@@ -345,7 +407,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                     {destination?.replace(/_/g, " ") || "—"}
                                 </p>
                                 {deliveryDate && (
-                                    <div className="flex items-center justify-end gap-1.5 mt-2 text-xs text-muted-foreground">
+                                    <div className="flex items-center justify-center md:justify-end gap-1.5 mt-2 text-xs text-muted-foreground">
                                         <Calendar className="h-3.5 w-3.5" />
                                         {format(new Date(deliveryDate), "MMMM d, yyyy")}
                                     </div>
