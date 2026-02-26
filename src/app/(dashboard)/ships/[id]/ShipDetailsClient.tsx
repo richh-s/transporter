@@ -23,6 +23,7 @@ import {
   Wallet,
   Download,
   CheckCircle,
+  Navigation2,
 } from "lucide-react";
 import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
 import Link from "next/link";
@@ -55,6 +56,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { columns as shipItemColumns } from "./ship-items-columns";
 import { AssignModal } from "./assign-modal";
+import { ShipTrackingView } from "./ship-tracking-view";
 import { toast } from "sonner";
 import { shipApi } from "@/lib/api/ships";
 import { cn } from "@/lib/utils";
@@ -246,6 +248,7 @@ function ShipDetailsContent() {
   const [selectedShipItem, setSelectedShipItem] = useState<ShipItem | null>(
     null,
   );
+  const [showTracking, setShowTracking] = useState(false);
 
   useEffect(() => {
     if (!id) router.replace("/ships");
@@ -488,6 +491,16 @@ function ShipDetailsContent() {
                 {!isShipLoading && ship && <StatusBadge status={ship.status} />}
               </div>
             </div>
+            {!isShipLoading && ship && !showTracking && (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => setShowTracking(true)}
+              >
+                <Navigation2 className="h-4 w-4 mr-1.5" />
+                Track Shipment
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -495,7 +508,12 @@ function ShipDetailsContent() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-4 sm:space-y-6">
-          {isShipLoading ? (
+          {showTracking && id ? (
+            <ShipTrackingView
+              shipId={id}
+              onBack={() => setShowTracking(false)}
+            />
+          ) : isShipLoading ? (
             <DetailSkeleton />
           ) : (
             <>

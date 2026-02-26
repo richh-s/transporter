@@ -9,6 +9,7 @@ import {
   CreateOrderRequest,
   CreateOrderResponse,
   ShipDocumentsResponse,
+  TrackShipResponse,
 } from "@/types/ship";
 
 /**
@@ -499,5 +500,15 @@ export const shipApi = {
     }
 
     return response.blob();
+  },
+
+  /**
+   * Track a ship for transporter
+   * GET /api/v1/ship/transporter/track-for-transporter/{ship_id}
+   */
+  trackShipForTransporter: async (shipId: number | string) => {
+    return request<TrackShipResponse>(
+      `/ship/transporter/track-for-transporter/${shipId}`,
+    );
   },
 };

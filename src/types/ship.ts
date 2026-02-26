@@ -230,3 +230,43 @@ export interface CreateOrderResponse {
     payment_url: string;
   };
 }
+
+// ── Tracking Types ──
+
+export interface TrackingContainer {
+  container_number: string;
+  container_size: string;
+  container_type: string;
+  return_location_info: Record<string, string> | null;
+  is_returning: boolean;
+}
+
+export interface TrackingShipItem {
+  transporter_name: string | null;
+  containers: TrackingContainer[];
+  origin: string | null;
+  destination: string | null;
+  pickup_date: string | null;
+  delivery_date: string | null;
+  status: string;
+}
+
+export interface LocationLog {
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+}
+
+export interface TrackingTruck {
+  truck_id: number;
+  ship_item: TrackingShipItem;
+  location_log: LocationLog[];
+  count_location_log: number;
+}
+
+export interface TrackShipResponse {
+  status: boolean;
+  error_message: string | null;
+  success_message: string | null;
+  result: TrackingTruck[];
+}
