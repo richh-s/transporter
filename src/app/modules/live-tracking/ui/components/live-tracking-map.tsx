@@ -47,6 +47,20 @@ function getTruckIcon(color: string) {
   });
 }
 
+function getStartIcon() {
+  return new L.DivIcon({
+    className: "start-marker-icon",
+    html: `
+      <div class="flex flex-col items-center">
+        <div class="h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-md"></div>
+        <span class="text-[11px] font-bold text-emerald-700 bg-white/95 px-1.5 py-0.5 rounded-md mt-1 shadow-md uppercase tracking-tight whitespace-nowrap">Start</span>
+      </div>
+    `,
+    iconSize: [50, 50],
+    iconAnchor: [25, 10],
+  });
+}
+
 const COLORS = [
   "#dc2626", // red
   "#2563eb", // blue
@@ -117,6 +131,10 @@ export function LiveTrackingMap({ trucks, className }: { trucks: MapTruck[], cla
         .leaflet-container {
           background: #f8fafc !important;
         }
+        .start-marker-icon {
+          background: transparent !important;
+          border: none !important;
+        }
       `}} />
       <div className="absolute top-4 right-4 z-[1000]">
         <Button
@@ -148,6 +166,13 @@ export function LiveTrackingMap({ trucks, className }: { trucks: MapTruck[], cla
         {normalizedTrucks.map((truck, index) => {
           const color = COLORS[index % COLORS.length];
 
+          // Skip rendering if the truck has no valid position or logs
+          // 0,0 usually indicates missing data
+          const hasValidPosition = truck.latest.lat !== 0 || truck.latest.lng !== 0;
+          const hasPath = truck.path.length > 0;
+
+          if (!hasValidPosition && !hasPath) return null;
+
           return (
             <div key={truck.id}>
               {/* Path */}
@@ -164,48 +189,59 @@ export function LiveTrackingMap({ trucks, className }: { trucks: MapTruck[], cla
                 />
               )}
 
+              {/* Start Marker */}
+              {hasPath && (
+                <Marker
+                  position={truck.path[0]}
+                  icon={getStartIcon()}
+                  interactive={false}
+                />
+              )}
+
               {/* Marker at current/latest position */}
-              <Marker
-                position={[truck.latest.lat, truck.latest.lng]}
-                icon={getTruckIcon(color)}
-                rotationAngle={truck.latest.direction}
-                rotationOrigin="center"
-              >
-                <Popup>
-                  <div className="space-y-2 text-sm">
-                    <div className="font-semibold flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-                      Truck #{truck.id}
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge variant={truck.latest.is_moving ? "default" : "secondary"}>
-                        {truck.latest.is_moving ? "Moving" : "Stopped"}
-                      </Badge>
-                      {truck.latest.parking && (
-                        <Badge variant="outline" className="border-orange-500 text-orange-600">
-                          Parking
+              {hasValidPosition && (
+                <Marker
+                  position={[truck.latest.lat, truck.latest.lng]}
+                  icon={getTruckIcon(color)}
+                  rotationAngle={truck.latest.direction}
+                  rotationOrigin="center"
+                >
+                  <Popup>
+                    <div className="space-y-2 text-sm">
+                      <div className="font-semibold flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                        Truck #{truck.id}
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge variant={truck.latest.is_moving ? "default" : "secondary"}>
+                          {truck.latest.is_moving ? "Moving" : "Stopped"}
                         </Badge>
-                      )}
+                        {truck.latest.parking && (
+                          <Badge variant="outline" className="border-orange-500 text-orange-600">
+                            Parking
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <span className="text-muted-foreground">Speed:</span>
+                        <span>{truck.latest.speed.toFixed(1)} km/h</span>
+                        {truck.latest.total_distance && (
+                          <>
+                            <span className="text-muted-foreground">Total Dist:</span>
+                            <span>{(truck.latest.total_distance / 1000).toFixed(1)} km</span>
+                          </>
+                        )}
+                        {truck.latest.update_time && (
+                          <>
+                            <span className="text-muted-foreground">Last Update:</span>
+                            <span>{new Date(truck.latest.update_time).toLocaleTimeString()}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                      <span className="text-muted-foreground">Speed:</span>
-                      <span>{truck.latest.speed.toFixed(1)} km/h</span>
-                      {truck.latest.total_distance && (
-                        <>
-                          <span className="text-muted-foreground">Total Dist:</span>
-                          <span>{(truck.latest.total_distance / 1000).toFixed(1)} km</span>
-                        </>
-                      )}
-                      {truck.latest.update_time && (
-                        <>
-                          <span className="text-muted-foreground">Last Update:</span>
-                          <span>{new Date(truck.latest.update_time).toLocaleTimeString()}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
+                  </Popup>
+                </Marker>
+              )}
             </div>
           );
         })}

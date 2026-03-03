@@ -1051,8 +1051,6 @@ function ShipDetailsContent() {
           onOpenChange={setManualConfirmModalOpen}
           paymentId={unpaidPayment.id}
           shipId={Number(id)}
-          totalStr={unpaidPayment.total_str}
-          vatStr={unpaidPayment.vat_str}
         />
       )}
 
