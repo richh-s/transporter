@@ -308,3 +308,19 @@ export function useShipDocuments(shipId: string | number) {
     enabled: !!shipId,
   });
 }
+
+/**
+ * Hook to track a ship for transporter
+ */
+export function useTrackShip(shipId: string | number) {
+  return useQuery({
+    queryKey: [...shipKeys.all, "track", shipId] as const,
+    queryFn: async () => {
+      if (!shipId) return null;
+      const response = await shipApi.trackShipForTransporter(shipId);
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    enabled: !!shipId,
+  });
+}
