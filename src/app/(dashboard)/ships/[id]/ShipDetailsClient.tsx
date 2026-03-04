@@ -184,6 +184,7 @@ function ShipDetailsContent() {
     null,
   );
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [showTracking, setShowTracking] = useState(false);
 
   // Hooks
   const {
