@@ -27,7 +27,7 @@ export const shipKeys = {
     [...shipKeys.all, "documents", shipId] as const,
 };
 
-export function useShips(params: GetShipsParams = {}) {
+export function useShips(params: GetShipsParams = {}, options: { refetchInterval?: number | false } = {}) {
   return useQuery({
     queryKey: shipKeys.list(params),
     queryFn: async () => {
@@ -35,6 +35,7 @@ export function useShips(params: GetShipsParams = {}) {
       if (response.error) throw new Error(response.error);
       return response.data;
     },
+    ...options,
   });
 }
 

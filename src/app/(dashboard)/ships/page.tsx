@@ -223,9 +223,10 @@ function ShipsContent() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
-  const { data, isLoading } = useShips({
-    per_page: 100,
-  });
+  const { data, isLoading } = useShips(
+    { per_page: 100 },
+    { refetchInterval: 60 * 1000 },
+  );
 
   const ships = data?.items || [];
 

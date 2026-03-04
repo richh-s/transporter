@@ -170,9 +170,20 @@ function DetailSkeleton() {
 function ShipDetailsContent() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const rawId = searchParams.get("id") || (params.id as string);
   const id = rawId && rawId !== "placeholder" ? rawId : "";
+  const router = useRouter();
+
+  // State
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [manualConfirmModalOpen, setManualConfirmModalOpen] = useState(false);
+  const [showContainersModal, setShowContainersModal] = useState(false);
+  const [modalContainers, setModalContainers] = useState<Container[]>([]);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedShipItem, setSelectedShipItem] = useState<ShipItem | null>(
+    null,
+  );
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
   // Hooks
   const {
@@ -206,11 +217,10 @@ function ShipDetailsContent() {
     }
   }, [documentsResponse, documents]);
 
-  const { data: trucksData } = useTrucksQuery({ per_page: 100 });
-  const { data: driversData } = useDrivers({ per_page: 100 });
+  const { data: trucksData } = useTrucksQuery({ per_page: 100 }, assignModalOpen);
+  const { data: driversData } = useDrivers({ per_page: 100 }, assignModalOpen);
   const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id || "0");
   const createPaymentOrder = useCreatePaymentOrder(id || "0");
-  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
   const markAsDelivered = useMarkAsDelivered(id || "0");
@@ -238,17 +248,6 @@ function ShipDetailsContent() {
       console.log("👤 [Debug] Shipper Info:", shipperInfo);
     }
   }, [shipperInfo]);
-
-  // State
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [manualConfirmModalOpen, setManualConfirmModalOpen] = useState(false);
-  const [showContainersModal, setShowContainersModal] = useState(false);
-  const [modalContainers, setModalContainers] = useState<Container[]>([]);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [selectedShipItem, setSelectedShipItem] = useState<ShipItem | null>(
-    null,
-  );
-  const [showTracking, setShowTracking] = useState(false);
 
   useEffect(() => {
     if (!id) router.replace("/ships");
@@ -592,7 +591,7 @@ function ShipDetailsContent() {
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 shrink-0">
                         {/* Invoice Button - Show if priced or later, independent of payments data */}
-                        {!isShipLoading && ship && ["priced", "accepted_by_shipper", "allocated", "ready_for_pickup", "in_transit", "delivered", "completed"].includes(ship.status.toLowerCase()) && (
+                        {!isShipLoading && ship && hasUnpaidPayment && ["priced", "accepted_by_shipper", "allocated", "ready_for_pickup", "in_transit", "delivered", "completed"].includes(ship.status.toLowerCase()) && (
                           <Button
                             variant="outline"
                             size="sm"

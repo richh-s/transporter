@@ -38,7 +38,7 @@ export function TruckCard({
   onClick?: () => void;
 }) {
   const status = STATUS_CONFIG[truck.status] ?? {
-    label: (truck.status || "—").replace(/_/g, " "),
+    label: String(truck.status || "—").replace(/_/g, " "),
     className: "bg-muted text-muted-foreground",
     accent: "bg-muted-foreground/20",
   };

@@ -7,7 +7,7 @@ export const driverKeys = {
     list: (params: GetDriversParams) => [...driverKeys.lists(), params] as const,
 };
 
-export function useDrivers(params: GetDriversParams = {}) {
+export function useDrivers(params: GetDriversParams = {}, enabled = true) {
     return useQuery({
         queryKey: driverKeys.list(params),
         queryFn: async () => {
@@ -15,5 +15,6 @@ export function useDrivers(params: GetDriversParams = {}) {
             if (response.error) throw new Error(response.error);
             return response.data;
         },
+        enabled,
     });
 }

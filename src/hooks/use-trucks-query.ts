@@ -7,7 +7,7 @@ export const truckQueryKeys = {
     list: (params: GetTrucksParams) => [...truckQueryKeys.lists(), params] as const,
 };
 
-export function useTrucksQuery(params: GetTrucksParams = {}) {
+export function useTrucksQuery(params: GetTrucksParams = {}, enabled = true) {
     return useQuery({
         queryKey: truckQueryKeys.list(params),
         queryFn: async () => {
@@ -15,5 +15,6 @@ export function useTrucksQuery(params: GetTrucksParams = {}) {
             if (response.error) throw new Error(response.error);
             return response.data;
         },
+        enabled,
     });
 }
