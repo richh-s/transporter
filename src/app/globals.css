@@ -82,7 +82,7 @@
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.93 0.01 145);
   --sidebar-accent-foreground: oklch(0.21 0.02 253);
-  --sidebar-border: oklch(0.90 0.01 145);
+  --sidebar-border: oklch(0.9 0.01 145);
   --sidebar-ring: oklch(0.61 0.16 145);
 }
 
@@ -126,17 +126,29 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    /* Safe area insets for notched devices (iOS/Android) */
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Open Sans", sans-serif;
     font-optical-sizing: auto;
     font-style: normal;
     font-variation-settings: "wdth" 100;
+    /* Prevent horizontal overflow on small screens */
+    min-width: 0;
+    overflow-x: hidden;
+    /* Use dynamic viewport height on mobile when supported (address bar) */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
 @layer utilities {
-
   /* Hide scrollbar for Chrome, Safari and Opera */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -148,6 +160,26 @@
     /* IE and Edge */
     scrollbar-width: none;
     /* Firefox */
+  }
+
+  /* Safe area padding for fixed headers/footers on notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .safe-left {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+  .safe-right {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  /* Minimum touch target size (44px) for mobile accessibility */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 

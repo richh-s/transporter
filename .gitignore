@@ -43,3 +43,7 @@ next-env.d.ts
 # Capacitor native projects (not tracked)
 /android
 /ios
+/icons
+# Android release signing (never commit)
+*.keystore
+wetruck-transporter-release.keystore

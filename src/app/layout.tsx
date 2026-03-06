@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
@@ -9,6 +9,17 @@ const openSans = Open_Sans({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1419" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "WeTruck Transporter",
@@ -42,8 +53,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
-      <body className={`${openSans.className} antialiased overflow-x-hidden`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className="overflow-x-hidden touch-manipulation"
+    >
+      <body
+        className={`${openSans.className} antialiased overflow-x-hidden min-h-screen touch-manipulation`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

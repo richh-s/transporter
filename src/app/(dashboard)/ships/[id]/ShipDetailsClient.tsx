@@ -218,21 +218,32 @@ function ShipDetailsContent() {
     }
   }, [documentsResponse, documents]);
 
-  const { data: trucksData } = useTrucksQuery({ per_page: 100 }, assignModalOpen);
+  const { data: trucksData } = useTrucksQuery(
+    { per_page: 100 },
+    assignModalOpen,
+  );
   const { data: driversData } = useDrivers({ per_page: 100 }, assignModalOpen);
-  const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(id || "0");
+  const { data: payments, isLoading: isPaymentsLoading } = useShipPayments(
+    id || "0",
+  );
   const createPaymentOrder = useCreatePaymentOrder(id || "0");
   const assignTruck = useAssignTruck(id || "0");
   const assignDriver = useAssignDriver(id || "0");
   const markAsDelivered = useMarkAsDelivered(id || "0");
-  const { generateReceipt, isGenerating: isGeneratingReceipt } = useReceiptGeneration();
+  const { generateReceipt, isGenerating: isGeneratingReceipt } =
+    useReceiptGeneration();
   const { user } = useAuth();
 
   const paymentsList = useMemo(() => {
     if (!payments) return [];
     if (Array.isArray(payments)) return payments as PaymentResponse[];
     const p = payments as Record<string, unknown>;
-    return (p.items as PaymentResponse[]) || (p.result as PaymentResponse[]) || (p.data as PaymentResponse[]) || [];
+    return (
+      (p.items as PaymentResponse[]) ||
+      (p.result as PaymentResponse[]) ||
+      (p.data as PaymentResponse[]) ||
+      []
+    );
   }, [payments]);
 
   const paidPayment = paymentsList.find((p: PaymentResponse) => p.paid);
@@ -253,7 +264,7 @@ function ShipDetailsContent() {
   useEffect(() => {
     if (!id) router.replace("/ships");
   }, [id, router]);
-
+  // const [showTracking, setShowTracking] = useState(false);
   // Navigate to payment page when URL is received
   useEffect(() => {
     const telebirrPaymentUrl = createPaymentOrder.data?.result?.payment_url;
@@ -463,9 +474,15 @@ function ShipDetailsContent() {
 
   // Format invoice ID
   const invoiceId = unpaidPayment
-    ? `#INV-${new Date().getFullYear()}-${String(unpaidPayment.id).padStart(3, "0")}`
+    ? `#INV-${new Date().getFullYear()}-${String(unpaidPayment.id).padStart(
+      3,
+      "0",
+    )}`
     : paidPayment
-      ? `#INV-${new Date().getFullYear()}-${String(paidPayment.id).padStart(3, "0")}`
+      ? `#INV-${new Date().getFullYear()}-${String(paidPayment.id).padStart(
+        3,
+        "0",
+      )}`
       : null;
 
   return (
@@ -532,18 +549,26 @@ function ShipDetailsContent() {
                         </p>
                         {isPaymentsLoading ? (
                           <Skeleton className="h-9 w-32" />
-                        ) : (unpaidPayment || paidPayment) ? (
+                        ) : unpaidPayment || paidPayment ? (
                           <div className="space-y-1">
                             {(() => {
-                              const activePayment = unpaidPayment || paidPayment;
-                              const grandTotal = parseFloat(activePayment?.total_str || "0");
-                              const vat = parseFloat(activePayment?.vat_str || "0");
+                              const activePayment =
+                                unpaidPayment || paidPayment;
+                              const grandTotal = parseFloat(
+                                activePayment?.total_str || "0",
+                              );
+                              const vat = parseFloat(
+                                activePayment?.vat_str || "0",
+                              );
                               const subtotal = grandTotal - vat;
                               return (
                                 <>
                                   <div className="flex items-baseline gap-1.5 flex-wrap">
                                     <span className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                                      {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      {grandTotal.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}
                                     </span>
                                     <span className="text-sm font-semibold text-muted-foreground">
                                       ETB
@@ -552,11 +577,21 @@ function ShipDetailsContent() {
                                   <div className="flex flex-col gap-0.5">
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
-                                      Fees: {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                                      Fees:{" "}
+                                      {subtotal.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{" "}
+                                      ETB
                                     </p>
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-green-500/30" />
-                                      VAT: {vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                                      VAT:{" "}
+                                      {vat.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{" "}
+                                      ETB
                                     </p>
                                   </div>
                                 </>
@@ -572,10 +607,14 @@ function ShipDetailsContent() {
                       {/* Status Badge + Invoice ID */}
                       {(hasUnpaidPayment || paidPayment) && invoiceId && (
                         <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
-                          <span className={cn(
-                            "text-xs font-semibold px-2.5 py-1 rounded-md",
-                            hasUnpaidPayment ? "bg-amber-500 text-white" : "bg-green-600 text-white"
-                          )}>
+                          <span
+                            className={cn(
+                              "text-xs font-semibold px-2.5 py-1 rounded-md",
+                              hasUnpaidPayment
+                                ? "bg-amber-500 text-white"
+                                : "bg-green-600 text-white",
+                            )}
+                          >
                             {hasUnpaidPayment ? "Pending" : "Paid"}
                           </span>
                           <div className="text-left sm:text-right">
@@ -592,24 +631,35 @@ function ShipDetailsContent() {
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 shrink-0">
                         {/* Invoice Button - Show if priced or later, independent of payments data */}
-                        {!isShipLoading && ship && hasUnpaidPayment && ["priced", "accepted_by_shipper", "allocated", "ready_for_pickup", "in_transit", "delivered", "completed"].includes(ship.status.toLowerCase()) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="hover:bg-primary/5 hover:text-primary transition-colors"
-                            onClick={handleDownloadInvoice}
-                            disabled={isDownloadingInvoice}
-                          >
-                            {isDownloadingInvoice ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Download className="h-3.5 w-3.5" />
-                            )}
-                            <span className="ml-1.5 gap-1.5 flex items-center">
-                              Invoice
-                            </span>
-                          </Button>
-                        )}
+                        {!isShipLoading &&
+                          ship &&
+                          hasUnpaidPayment &&
+                          [
+                            "priced",
+                            "accepted_by_shipper",
+                            "allocated",
+                            "ready_for_pickup",
+                            "in_transit",
+                            "delivered",
+                            "completed",
+                          ].includes(ship.status.toLowerCase()) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-primary/5 hover:text-primary transition-colors"
+                              onClick={handleDownloadInvoice}
+                              disabled={isDownloadingInvoice}
+                            >
+                              {isDownloadingInvoice ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Download className="h-3.5 w-3.5" />
+                              )}
+                              <span className="ml-1.5 gap-1.5 flex items-center">
+                                Invoice
+                              </span>
+                            </Button>
+                          )}
 
                         {isPaymentsLoading ? (
                           <div className="flex gap-2">

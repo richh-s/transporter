@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CaptchaComponent from "@/components/captcha/CaptchaComponent";
 
@@ -268,12 +269,12 @@ export const SignInView = () => {
                             >
                               Password
                             </FormLabel>
-                            <a
-                              href="#"
+                            <Link
+                              href="/forgot-password"
                               className="text-xs text-primary hover:text-primary/80 hover:underline"
                             >
                               Forgot?
-                            </a>
+                            </Link>
                           </div>
                           <FormControl>
                             <div className="relative">
