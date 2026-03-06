@@ -243,7 +243,7 @@ export function DataTable<TData, TValue>({
       (cell) =>
         cell.column.id === "plate_number" ||
         (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
-          "plate_number",
+        "plate_number",
     );
     const idCell = visibleCells.find((cell) => cell.column.id === "id");
     const primaryHeaderCell = plateCell ?? idCell;
@@ -260,7 +260,7 @@ export function DataTable<TData, TValue>({
         cell.column.id !== "id" &&
         cell.column.id !== "actions" &&
         (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
-          "plate_number",
+        "plate_number",
     );
 
     // Get header label for a column
@@ -574,8 +574,8 @@ export function DataTable<TData, TValue>({
                 className={cn(
                   "sticky top-0 z-20",
                   variant === "clean"
-                    ? "bg-muted/50"
-                    : "bg-background shadow-sm",
+                    ? "bg-muted"
+                    : "bg-white dark:bg-background shadow-sm border-b",
                 )}
               >
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -597,8 +597,9 @@ export function DataTable<TData, TValue>({
                           key={header.id}
                           className={cn(
                             "h-11 font-medium text-muted-foreground",
+                            variant === "clean" ? "bg-muted" : "bg-white dark:bg-background",
                             isSticky &&
-                              "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
+                            "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
                             index === 0 ? "pl-4 pr-3" : "px-3",
                             "align-middle",
                           )}
@@ -607,9 +608,9 @@ export function DataTable<TData, TValue>({
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
                           </div>
                         </TableHead>
                       );
@@ -641,8 +642,8 @@ export function DataTable<TData, TValue>({
                           : "border-border/30",
                         onRowClick && "cursor-pointer hover:bg-muted/50",
                         variant === "clean" &&
-                          onRowClick &&
-                          "hover:bg-muted/30",
+                        onRowClick &&
+                        "hover:bg-muted/30",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -654,7 +655,7 @@ export function DataTable<TData, TValue>({
                             key={cell.id}
                             className={cn(
                               isSticky &&
-                                "sticky left-0 z-10 bg-background border-r",
+                              "sticky left-0 z-10 bg-background border-r",
                               "align-middle py-3",
                               variant === "clean" ? "px-3" : "px-2",
                             )}
@@ -690,9 +691,9 @@ export function DataTable<TData, TValue>({
           <div className="text-muted-foreground hidden sm:block">
             {total !== undefined
               ? `Showing ${(page - 1) * perPage + 1} to ${Math.min(
-                  page * perPage,
-                  total,
-                )} of ${total}`
+                page * perPage,
+                total,
+              )} of ${total}`
               : `${table.getFilteredRowModel().rows.length} total`}
           </div>
           {onPerPageChange && (
@@ -732,7 +733,7 @@ export function DataTable<TData, TValue>({
                             }}
                             className={cn(
                               perPage === value &&
-                                "bg-amber-100 text-amber-700",
+                              "bg-amber-100 text-amber-700",
                             )}
                           >
                             {value}

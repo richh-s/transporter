@@ -475,15 +475,15 @@ function ShipDetailsContent() {
   // Format invoice ID
   const invoiceId = unpaidPayment
     ? `#INV-${new Date().getFullYear()}-${String(unpaidPayment.id).padStart(
-        3,
-        "0",
-      )}`
+      3,
+      "0",
+    )}`
     : paidPayment
-    ? `#INV-${new Date().getFullYear()}-${String(paidPayment.id).padStart(
+      ? `#INV-${new Date().getFullYear()}-${String(paidPayment.id).padStart(
         3,
         "0",
       )}`
-    : null;
+      : null;
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300">
@@ -646,7 +646,7 @@ function ShipDetailsContent() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-white border border-border hover:bg-muted/50"
+                              className="hover:bg-primary/5 hover:text-primary transition-colors"
                               onClick={handleDownloadInvoice}
                               disabled={isDownloadingInvoice}
                             >
@@ -674,12 +674,21 @@ function ShipDetailsContent() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="bg-white border border-border hover:bg-muted/50"
-                                  onClick={() =>
-                                    setManualConfirmModalOpen(true)
-                                  }
+                                  className={cn(
+                                    "hover:bg-primary/5 hover:text-primary transition-colors",
+                                    unpaidPayment.confirmation_method === "manual" && "opacity-70"
+                                  )}
+                                  onClick={() => setManualConfirmModalOpen(true)}
+                                  disabled={unpaidPayment.confirmation_method === "manual"}
                                 >
-                                  Confirm
+                                  {unpaidPayment.confirmation_method === "manual" ? (
+                                    <>
+                                      <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+                                      Submitted
+                                    </>
+                                  ) : (
+                                    "Confirm"
+                                  )}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -874,76 +883,76 @@ function ShipDetailsContent() {
                       documents.some(
                         (d) => d.document_type === "BILL_OF_LADING",
                       )) && (
-                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                              Bill of Lading
-                            </p>
-                            <p className="font-mono text-sm font-bold text-foreground">
-                              {ship?.shipment_details?.bill_of_lading_number ||
-                                "Document Only"}
-                            </p>
+                        <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Bill of Lading
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                {ship?.shipment_details?.bill_of_lading_number ||
+                                  "Document Only"}
+                              </p>
+                            </div>
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "BILL_OF_LADING" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "BILL_OF_LADING",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Bill of Lading"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
-                          {documents.find(
-                            (d) =>
-                              d.document_type === "BILL_OF_LADING" &&
-                              d.presigned_url,
-                          ) && (
-                            <a
-                              href={
-                                documents.find(
-                                  (d) => d.document_type === "BILL_OF_LADING",
-                                )?.presigned_url || "#"
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                              title="View Bill of Lading"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Packing List */}
                     {documents.some(
                       (d) => d.document_type === "PACKING_LIST",
                     ) && (
-                      <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                              Packing List
-                            </p>
-                            <p className="font-mono text-sm font-bold text-foreground">
-                              Available
-                            </p>
+                        <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+                                Packing List
+                              </p>
+                              <p className="font-mono text-sm font-bold text-foreground">
+                                Available
+                              </p>
+                            </div>
+                            {documents.find(
+                              (d) =>
+                                d.document_type === "PACKING_LIST" &&
+                                d.presigned_url,
+                            ) && (
+                                <a
+                                  href={
+                                    documents.find(
+                                      (d) => d.document_type === "PACKING_LIST",
+                                    )?.presigned_url || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+                                  title="View Packing List"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              )}
                           </div>
-                          {documents.find(
-                            (d) =>
-                              d.document_type === "PACKING_LIST" &&
-                              d.presigned_url,
-                          ) && (
-                            <a
-                              href={
-                                documents.find(
-                                  (d) => d.document_type === "PACKING_LIST",
-                                )?.presigned_url || "#"
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-                              title="View Packing List"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Pickup Number */}
                     {ship?.shipment_details?.pickup_number && (
