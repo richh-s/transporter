@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "payment-server": "npx http-server payment-server -p 8000 -c-1 --cors",
-    "dev:all": "concurrently \"npm run dev\" \"npm run payment-server\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run payment-server\"",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "android:build": "cd android && gradlew.bat bundleRelease",
+    "cap:assets": "npx @capacitor/assets generate"
   },
   "dependencies": {
     "@capacitor-community/file-opener": "^8.0.0",
@@ -52,6 +56,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.0.2",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",

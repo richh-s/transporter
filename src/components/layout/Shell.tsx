@@ -173,7 +173,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="flex flex-1 flex-col lg:pl-72 overflow-x-hidden min-h-screen">
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-4 shadow-sm backdrop-blur-md sm:gap-x-6 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top,0)] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-foreground lg:hidden"
@@ -258,15 +258,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           onOpenChange={setPasswordDialogOpen}
         />
 
-        <main className="flex-1 pt-6 pb-24 px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-auto min-h-0">
+        <main className="flex-1 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] px-4 sm:px-6 lg:px-8 lg:py-8 lg:pb-8 overflow-x-hidden overflow-y-auto min-h-0">
           <div className="mx-auto max-w-7xl overflow-x-hidden overflow-y-visible">
             {children}
           </div>
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 border-t border-border backdrop-blur-md lg:hidden">
-          <div className="flex justify-around items-center h-16">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 border-t border-border backdrop-blur-md lg:hidden pb-[env(safe-area-inset-bottom,0)] pl-[env(safe-area-inset-left,0)] pr-[env(safe-area-inset-right,0)]">
+          <div className="flex justify-around items-center h-16 min-h-[56px]">
             {navigation.slice(0, 4).map((item) => {
               // Show only first 4 items on mobile
               const isActive =
