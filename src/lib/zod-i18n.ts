@@ -2,7 +2,7 @@ import { z } from "zod";
 import i18n from "@/i18n";
 
 export function setupZodI18n() {
-  z.setErrorMap((issue, ctx) => {
+  z.setErrorMap(((issue: any, ctx: any) => {
     const t = i18n.t.bind(i18n);
 
     switch (issue.code) {
@@ -30,6 +30,6 @@ export function setupZodI18n() {
         break;
     }
 
-    return { message: ctx.defaultError };
-  });
+    return { message: ctx?.defaultError || t("validation:invalid") || "Invalid" };
+  }) as any);
 }
