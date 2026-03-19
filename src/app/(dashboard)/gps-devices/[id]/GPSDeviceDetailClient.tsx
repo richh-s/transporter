@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   Edit,
@@ -33,6 +34,7 @@ import { cn } from "@/lib/utils";
 
 // Status Badge Component
 function StatusBadge({ active }: { active: boolean }) {
+  const { t } = useTranslation("gps");
   return (
     <span
       className={cn(
@@ -48,7 +50,7 @@ function StatusBadge({ active }: { active: boolean }) {
           active ? "bg-emerald-500" : "bg-gray-400",
         )}
       />
-      {active ? "Active" : "Inactive"}
+      {active ? t("create_form.status.active") : t("create_form.status.inactive")}
     </span>
   );
 }
@@ -124,6 +126,7 @@ function DetailSkeleton() {
 }
 
 function GPSDeviceDetailContent() {
+  const { t } = useTranslation(["gps", "common"]);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -163,7 +166,7 @@ function GPSDeviceDetailContent() {
     deactivateMutation.mutate(id, {
       onSuccess: () => {
         setShowDeactivateDialog(false);
-        toast.success("GPS device deactivated successfully");
+        toast.success(t("gps:details.success_msg"));
       },
     });
   };
@@ -195,11 +198,11 @@ function GPSDeviceDetailContent() {
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
         <p className="text-sm text-muted-foreground text-center">
-          Failed to load device
+          {t("gps:error.failed_load")}
         </p>
         <Link href="/gps-devices">
           <Button variant="outline" size="sm">
-            Go to Devices
+            {t("gps:error.go_to_devices")}
           </Button>
         </Link>
       </div>
@@ -214,7 +217,7 @@ function GPSDeviceDetailContent() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="p-4 space-y-2">
           <CompactBreadcrumb
-            parentLabel="GPS Devices"
+            parentLabel={t("gps:create_form.breadcrumb_parent")}
             parentHref="/gps-devices"
             currentLabel={device.external_device_id}
           />
@@ -225,7 +228,7 @@ function GPSDeviceDetailContent() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground font-mono">
-            IMEI: {device.imei_number}
+            {t("gps:card.imei")}: {device.imei_number}
           </p>
         </div>
       </div>
@@ -236,13 +239,13 @@ function GPSDeviceDetailContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                GPS Device
+                {t("gps:create_form.breadcrumb_parent")}
               </p>
               <p className="text-xl font-bold text-foreground">
                 {device.device_name || device.external_device_id}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {device.device_model || "Unknown Model"}
+                {device.device_model || t("common:labels.unknown_model")}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-primary/10">
@@ -254,19 +257,19 @@ function GPSDeviceDetailContent() {
         {/* Device Info */}
         <InfoCard
           icon={Hash}
-          title="Device Information"
+          title={t("gps:details.title")}
           accent="bg-blue-500/10 text-blue-500"
         >
           <div className="space-y-0">
             <DetailRow
-              label="External ID"
+              label={t("gps:details.external_id")}
               value={device.external_device_id}
               mono
             />
-            <DetailRow label="IMEI Number" value={device.imei_number} mono />
-            <DetailRow label="Device Name" value={device.device_name || "—"} />
+            <DetailRow label={t("gps:details.imei")} value={device.imei_number} mono />
+            <DetailRow label={t("gps:details.device_name")} value={device.device_name || "—"} />
             <DetailRow
-              label="Device Model"
+              label={t("gps:details.device_model")}
               value={device.device_model || "—"}
             />
           </div>
@@ -275,16 +278,16 @@ function GPSDeviceDetailContent() {
         {/* Truck Assignment */}
         <InfoCard
           icon={Truck}
-          title="Truck Assignment"
+          title={t("gps:details.truck_assignment")}
           accent="bg-emerald-500/10 text-emerald-600"
         >
           {assignedTruckId ? (
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">
-                  Truck #{assignedTruckId}
+                  {t("common:labels.truck")} #{assignedTruckId}
                 </p>
-                <p className="text-xs text-muted-foreground">Assigned</p>
+                <p className="text-xs text-muted-foreground">{t("gps:details.assigned")}</p>
               </div>
               <Button
                 variant="outline"
@@ -294,13 +297,13 @@ function GPSDeviceDetailContent() {
                 }
                 className="rounded-xl"
               >
-                View Truck
+                {t("gps:details.view_truck")}
               </Button>
             </div>
           ) : (
             <div className="text-center py-2">
               <p className="text-sm text-muted-foreground">
-                Not assigned to any truck
+                {t("gps:details.unassigned")}
               </p>
             </div>
           )}
@@ -314,7 +317,7 @@ function GPSDeviceDetailContent() {
                 <Calendar className="h-3.5 w-3.5 text-amber-600" />
               </div>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Expires
+                {t("gps:details.expires")}
               </span>
             </div>
             <p className="text-sm font-semibold">
@@ -327,7 +330,7 @@ function GPSDeviceDetailContent() {
                 <Clock className="h-3.5 w-3.5 text-purple-500" />
               </div>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Last Synced
+                {t("gps:details.last_synced")}
               </span>
             </div>
             <p className="text-sm font-semibold">
@@ -339,15 +342,15 @@ function GPSDeviceDetailContent() {
         {/* Timestamps */}
         <InfoCard
           icon={Clock}
-          title="Timestamps"
+          title={t("gps:details.timestamps")}
           accent="bg-gray-500/10 text-gray-600"
         >
           <DetailRow
-            label="Created"
+            label={t("gps:details.created")}
             value={formatDateTime(device.created_at)}
           />
           <DetailRow
-            label="Updated"
+            label={t("gps:details.updated")}
             value={formatDateTime(device.updated_at)}
           />
         </InfoCard>
@@ -361,7 +364,7 @@ function GPSDeviceDetailContent() {
           className="flex-1 rounded-xl h-11"
         >
           <Edit className="mr-2 h-4 w-4" />
-          Edit
+          {t("gps:details.edit")}
         </Button>
         {device.status && (
           <Button
@@ -381,9 +384,9 @@ function GPSDeviceDetailContent() {
       >
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Deactivate Device</DialogTitle>
+            <DialogTitle>{t("gps:details.deactivate_title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to deactivate this GPS device?
+              {t("gps:details.deactivate_desc")}
             </DialogDescription>
           </DialogHeader>
           <div className="py-3 space-y-2 text-sm">
@@ -403,8 +406,7 @@ function GPSDeviceDetailContent() {
             )}
           </div>
           <div className="py-2 px-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-            This will set the device status to inactive and unlink it from any
-            truck.
+            {t("gps:details.deactivate_note")}
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -413,7 +415,7 @@ function GPSDeviceDetailContent() {
               disabled={deactivateMutation.isPending}
               className="rounded-xl"
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -424,10 +426,10 @@ function GPSDeviceDetailContent() {
               {deactivateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deactivating...
+                  {t("gps:details.deactivating")}
                 </>
               ) : (
-                "Deactivate"
+                t("gps:details.deactivate")
               )}
             </Button>
           </DialogFooter>

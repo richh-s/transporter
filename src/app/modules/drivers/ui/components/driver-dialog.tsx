@@ -35,17 +35,18 @@ import { useCreateDriver } from "../../server/hooks/use-create-driver";
 import { useUpdateDriver } from "../../server/hooks/use-update-driver";
 import { useUploadDriverDocument } from "../../server/hooks/use-upload-driver-document";
 import { ApiError } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
-const driverSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  driver_license_number: z.string().min(1, "License number is required"),
-  phone_number: z.string().min(1, "Phone number is required"),
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
+const createDriverSchema = (t: any) => z.object({
+  first_name: z.string().min(1, t("validation:required", { field: t("drivers:fields.first_name") })),
+  last_name: z.string().min(1, t("validation:required", { field: t("drivers:fields.last_name") })),
+  driver_license_number: z.string().min(1, t("validation:required", { field: t("drivers:fields.license_number") })),
+  phone_number: z.string().min(1, t("validation:required", { field: t("drivers:fields.phone_number") })),
+  email: z.string().min(1, t("validation:required", { field: t("drivers:fields.email") })).email(t("validation:invalid_email")),
   status: z.enum(["active", "suspended"]),
 });
 
-type DriverFormValues = z.infer<typeof driverSchema>;
+type DriverFormValues = z.infer<ReturnType<typeof createDriverSchema>>;
 
 interface DriverDialogProps {
   open: boolean;
@@ -58,6 +59,7 @@ export function DriverDialog({
   onOpenChange,
   driver,
 }: DriverDialogProps) {
+  const { t } = useTranslation(["drivers", "common", "validation"]);
   const router = useRouter();
   const isEdit = !!driver;
   const [step, setStep] = useState(1);
@@ -71,7 +73,7 @@ export function DriverDialog({
   const uploadDocumentMutation = useUploadDriverDocument();
 
   const form = useForm<DriverFormValues>({
-    resolver: zodResolver(driverSchema),
+    resolver: zodResolver(createDriverSchema(t)),
     defaultValues: {
       first_name: "",
       last_name: "",
@@ -118,26 +120,19 @@ export function DriverDialog({
     try {
       if (driver?.id) {
         await updateDriver.mutateAsync(values as CreateDriverInput);
-        toast.success("Driver updated successfully");
+        toast.success(t("drivers:messages.success_update"));
         onOpenChange(false);
       } else {
         const result = await createDriver.mutateAsync(values as CreateDriverInput);
 
-        // Log the result to help debug response structure issues
-        console.log("🚗 Driver creation response:", result);
-
-        // Robust check for the driver ID in the response
-        // Result might be { result: { id: ... } } (ApiResult pattern) 
-        // or just { id: ... } (Direct object pattern)
         const newDriverId = (result as { result?: { id: number }; id?: number })?.result?.id || (result as { id?: number })?.id;
 
         if (newDriverId) {
           setCreatedDriverId(newDriverId);
           setStep(2);
-          toast.success("Driver created successfully. Now upload documents.");
+          toast.success(t("drivers:messages.success_create"));
         } else {
-          console.error("❌ Failed to find driver ID in response:", result);
-          toast.error("Driver created but unexpected response from server.");
+          toast.error(t("drivers:messages.error_create"));
         }
       }
     } catch (error) {
@@ -152,12 +147,12 @@ export function DriverDialog({
         toast.error(humanizeError(firstError as string));
       } else if (error instanceof ApiError) {
         if (error.code === "DRIVER_DUPLICATE") {
-          toast.error("Driver already exists");
+          toast.error(t("drivers:messages.error_duplicate"));
         } else {
-          toast.error(error.message || "Failed to save driver");
+          toast.error(error.message || t("drivers:messages.error_save"));
         }
       } else {
-        toast.error("An unexpected error occurred");
+        toast.error(t("common:messages.error_unexpected"));
       }
     }
   };
@@ -182,12 +177,12 @@ export function DriverDialog({
               </div>
               <div>
                 <h2 className="text-base font-bold">
-                  {isEdit ? "Edit Driver" : "Add Driver"}
+                  {isEdit ? t("drivers:labels.edit_driver") : t("drivers:labels.add_driver")}
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   {isEdit
-                    ? "Update driver information"
-                    : "Enter driver details"}
+                    ? t("drivers:subtitle")
+                    : t("drivers:labels.driver_info")}
                 </p>
               </div>
             </div>
@@ -225,7 +220,7 @@ export function DriverDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">
-                              First Name <span className="text-red-500">*</span>
+                              {t("drivers:fields.first_name")} <span className="text-red-500">*</span>
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -245,7 +240,7 @@ export function DriverDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">
-                              Last Name <span className="text-red-500">*</span>
+                              {t("drivers:fields.last_name")} <span className="text-red-500">*</span>
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -267,7 +262,7 @@ export function DriverDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">
-                            License Number <span className="text-red-500">*</span>
+                            {t("drivers:fields.license_number")} <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -288,7 +283,7 @@ export function DriverDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">
-                            Phone Number <span className="text-red-500">*</span>
+                            {t("drivers:fields.phone_number")} <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -298,7 +293,7 @@ export function DriverDialog({
                             />
                           </FormControl>
                           <p className="text-[10px] text-muted-foreground">
-                            Include country code (e.g. +251)
+                            {t("common:hints.phone_format", { defaultValue: "Include country code (e.g. +251)" })}
                           </p>
                           <FormMessage />
                         </FormItem>
@@ -312,7 +307,7 @@ export function DriverDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">
-                            Email <span className="text-red-500">*</span>
+                            {t("drivers:fields.email")} <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -334,7 +329,7 @@ export function DriverDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">
-                            Status <span className="text-red-500">*</span>
+                            {t("drivers:fields.status")} <span className="text-red-500">*</span>
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
@@ -343,15 +338,15 @@ export function DriverDialog({
                           >
                             <FormControl>
                               <SelectTrigger className="h-11 rounded-xl">
-                                <SelectValue placeholder="Select status" />
+                                <SelectValue placeholder={t("drivers:documents.select_type")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="rounded-xl">
                               <SelectItem value="active" className="rounded-lg">
-                                Active
+                                {t("drivers:status.active")}
                               </SelectItem>
                               <SelectItem value="suspended" className="rounded-lg">
-                                Suspended
+                                {t("drivers:status.suspended")}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -366,29 +361,29 @@ export function DriverDialog({
                       <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                         <CheckCircle2 className="h-6 w-6 text-green-600" />
                       </div>
-                      <h3 className="text-lg font-bold">Driver Added!</h3>
+                      <h3 className="text-lg font-bold">{t("drivers:labels.driver_added")}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Upload the required documents for the driver.
+                        {t("drivers:labels.upload_docs_msg")}
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="driver-doc-type">Document Type</Label>
+                        <Label htmlFor="driver-doc-type">{t("drivers:fields.document_type")}</Label>
                         <Select value={documentType} onValueChange={setDocumentType}>
                           <SelectTrigger id="driver-doc-type" className="h-11 rounded-xl">
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder={t("drivers:documents.select_type")} />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl">
-                            <SelectItem value="driver_id">Driver ID</SelectItem>
-                            <SelectItem value="driver_license">Driver License</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="driver_id">{t("drivers:documents.types.driver_id")}</SelectItem>
+                            <SelectItem value="driver_license">{t("drivers:documents.types.driver_license")}</SelectItem>
+                            <SelectItem value="other">{t("drivers:documents.types.other")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="driver-file">File</Label>
+                        <Label htmlFor="driver-file">{t("drivers:fields.file")}</Label>
                         <input
                           ref={fileInputRef}
                           id="driver-file"
@@ -413,7 +408,7 @@ export function DriverDialog({
                           ) : (
                             <>
                               <Upload className="h-5 w-5 text-muted-foreground" />
-                              <span className="text-xs font-medium">Click to select file</span>
+                              <span className="text-xs font-medium">{t("common:buttons.upload")}</span>
                             </>
                           )}
                         </Button>
@@ -431,12 +426,12 @@ export function DriverDialog({
                                 file: selectedFile,
                                 document_type: documentType,
                               });
-                              toast.success("Document uploaded successfully");
+                              toast.success(t("drivers:documents.upload_success"));
                               setSelectedFile(null);
                               setDocumentType("");
                               if (fileInputRef.current) fileInputRef.current.value = "";
                             } catch {
-                              toast.error("Failed to upload document");
+                              toast.error(t("drivers:documents.upload_error"));
                             }
                           }
                         }}
@@ -446,7 +441,7 @@ export function DriverDialog({
                         ) : (
                           <>
                             <Upload className="mr-2 h-4 w-4" />
-                            Upload Document
+                            {t("drivers:documents.upload")}
                           </>
                         )}
                       </Button>
@@ -460,7 +455,7 @@ export function DriverDialog({
                 <div className="sm:hidden absolute bottom-0 left-0 right-0 h-10 pointer-events-none bg-gradient-to-t from-background via-background/60 to-transparent flex items-end justify-center pb-2 z-10">
                   <div className="flex items-center gap-1.5 px-3 py-1 bg-background/50 backdrop-blur-[2px] rounded-full border border-border/50 text-[10px] font-medium text-muted-foreground animate-bounce">
                     <ChevronDown className="h-3 w-3" />
-                    <span>Scroll for more fields</span>
+                    <span>{t("drivers:labels.scroll_hint")}</span>
                   </div>
                 </div>
               )}
@@ -477,7 +472,7 @@ export function DriverDialog({
                     className="flex-1 h-11 rounded-xl"
                     disabled={isPending}
                   >
-                    Cancel
+                    {t("common:buttons.cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -487,13 +482,13 @@ export function DriverDialog({
                     {isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
+                        {t("common:messages.saving")}
                       </>
                     ) : isEdit ? (
-                      "Save Changes"
+                      t("common:buttons.save_changes")
                     ) : (
                       <>
-                        Next
+                        {t("common:buttons.next")}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
@@ -512,14 +507,14 @@ export function DriverDialog({
                       }
                     }}
                   >
-                    Go to Details
+                    {t("drivers:labels.driver_details")}
                   </Button>
                   <Button
                     type="button"
                     className="flex-1 h-11 rounded-xl"
                     onClick={() => onOpenChange(false)}
                   >
-                    Done
+                    {t("common:buttons.done")}
                   </Button>
                 </>
               )}

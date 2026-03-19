@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Dialog,
     DialogContent,
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Upload, File as FileIcon, Loader2 } from "lucide-react";
 import { useManualPaymentConfirmation } from "@/hooks/use-ships";
+import { cn } from "@/lib/utils";
 
 interface ManualConfirmationModalProps {
     open: boolean;
@@ -28,6 +30,7 @@ export function ManualConfirmationModal({
     paymentId,
     shipId,
 }: ManualConfirmationModalProps) {
+    const { t } = useTranslation(["shipments", "common"]);
     const [referenceId, setReferenceId] = useState("");
     const [referenceUrl, setReferenceUrl] = useState("");
     const [date, setDate] = useState("");
@@ -53,7 +56,7 @@ export function ManualConfirmationModal({
                 reference_url: referenceUrl || undefined,
                 date: date || undefined,
                 note: note || undefined,
-                reference_doc_file: file || undefined,
+                 reference_doc_file: file || undefined,
             },
             {
                 onSuccess: () => {
@@ -87,9 +90,9 @@ export function ManualConfirmationModal({
         >
             <DialogContent className="max-w-sm rounded-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Manual Payment Confirmation</DialogTitle>
+                    <DialogTitle>{t("shipments:manual_confirmation.title")}</DialogTitle>
                     <DialogDescription>
-                        Provide payment reference details for manual verification.
+                        {t("shipments:manual_confirmation.description")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -97,21 +100,21 @@ export function ManualConfirmationModal({
                     {/* Payment ID & Ship ID */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-1.5">
-                            <Label>Payment ID</Label>
+                            <Label>{t("shipments:manual_confirmation.payment_id")}</Label>
                             <Input value={paymentId} disabled />
                         </div>
                         <div className="grid gap-1.5">
-                            <Label>Ship ID</Label>
+                            <Label>{t("shipments:manual_confirmation.ship_id")}</Label>
                             <Input value={shipId} disabled />
                         </div>
                     </div>
 
                     {/* Reference ID */}
                     <div className="grid gap-1.5">
-                        <Label htmlFor="mc-reference-id">Reference ID</Label>
+                        <Label htmlFor="mc-reference-id">{t("shipments:manual_confirmation.reference_id")}</Label>
                         <Input
                             id="mc-reference-id"
-                            placeholder="e.g. TXN-123456"
+                            placeholder={t("shipments:manual_confirmation.reference_id_placeholder")}
                             value={referenceId}
                             onChange={(e) => setReferenceId(e.target.value)}
                         />
@@ -119,11 +122,11 @@ export function ManualConfirmationModal({
 
                     {/* Reference URL */}
                     <div className="grid gap-1.5">
-                        <Label htmlFor="mc-reference-url">Reference URL</Label>
+                        <Label htmlFor="mc-reference-url">{t("shipments:manual_confirmation.reference_url")}</Label>
                         <Input
                             id="mc-reference-url"
                             type="url"
-                            placeholder="https://..."
+                            placeholder={t("shipments:manual_confirmation.reference_url_placeholder")}
                             value={referenceUrl}
                             onChange={(e) => setReferenceUrl(e.target.value)}
                         />
@@ -131,7 +134,7 @@ export function ManualConfirmationModal({
 
                     {/* Date */}
                     <div className="grid gap-1.5">
-                        <Label htmlFor="mc-date">Payment Date</Label>
+                        <Label htmlFor="mc-date">{t("shipments:manual_confirmation.payment_date")}</Label>
                         <Input
                             id="mc-date"
                             type="date"
@@ -142,21 +145,27 @@ export function ManualConfirmationModal({
 
                     {/* Note */}
                     <div className="grid gap-1.5">
-                        <Label htmlFor="mc-note">Note</Label>
+                        <Label htmlFor="mc-note">{t("shipments:manual_confirmation.note")}</Label>
                         <textarea
                             id="mc-note"
                             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Additional details about the payment..."
+                            placeholder={t("shipments:manual_confirmation.note_placeholder")}
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                         />
                     </div>
 
                     {/* File Upload */}
-                    <div className="grid gap-1.5">
-                        <Label>Reference Document</Label>
+                     <div className="grid gap-1.5">
+                        <Label className="flex items-center gap-1">
+                            {t("shipments:manual_confirmation.reference_doc")}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <div
-                            className="border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                            className={cn(
+                                "border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer transition-colors",
+                                !file ? "border-muted-foreground/20 hover:bg-muted/50" : "border-primary/50 bg-primary/5"
+                            )}
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDrop}
                             onClick={() =>
@@ -186,17 +195,17 @@ export function ManualConfirmationModal({
                                             setFile(null);
                                         }}
                                     >
-                                        Remove
+                                        {t("shipments:manual_confirmation.remove")}
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center text-center text-muted-foreground">
                                     <Upload className="h-8 w-8 mb-2" />
                                     <span className="text-sm">
-                                        Click to upload or drag and drop
+                                        {t("shipments:manual_confirmation.upload_text")}
                                     </span>
                                     <span className="text-xs mt-1">
-                                        PDF, JPG, PNG (Max 10MB)
+                                        {t("shipments:manual_confirmation.upload_hint")}
                                     </span>
                                 </div>
                             )}
@@ -204,19 +213,23 @@ export function ManualConfirmationModal({
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button
+                <DialogFooter className="gap-2 sm:gap-0">
+                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={mutation.isPending}
                     >
-                        Cancel
+                        {t("common:buttons.cancel")}
                     </Button>
-                    <Button onClick={handleSubmit} disabled={mutation.isPending}>
-                        {mutation.isPending && (
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={mutation.isPending || !file}
+                        className={cn(!file && "opacity-50 cursor-not-allowed")}
+                    >
+                         {mutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        Submit
+                        {t("shipments:manual_confirmation.submit_button")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

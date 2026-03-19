@@ -1,0 +1,40 @@
+{
+  "overview": {
+    "title": "የመርከቦች አጠቃላይ እይታ",
+    "subtitle": "የመጓጓዣ ስራዎችዎን በቅጽበት በመከታተል ላይ።",
+    "stats": {
+      "active_trucks": "ንቁ የጭነት መኪናዎች",
+      "total_orders": "አጠቃላይ ትዕዛዞች",
+      "open_quotes": "ክፍት የዋጋ ጥያቄዎች",
+      "revenue": "ገቢ (በብር)"
+    }
+  },
+  "quick_actions": {
+    "title": "ፈጣን እርምጃዎች",
+    "subtitle": "ወደ ዋና ዋና ክፍሎች ይሂዱ",
+    "items": {
+      "ships": "ጭነቶች እና ትዕዛዞች",
+      "quotes": "የዋጋ ጥያቄዎች",
+      "fleet": "መኪናዎች እና የጭነት መኪናዎች",
+      "drivers": "አሽከርካሪዎች",
+      "gps": "የጂፒኤስ መሳሪያዎች"
+    }
+  },
+  "recent_activity": {
+    "title": "የቅርብ ጊዜ እንቅስቃሴ",
+    "view_all": "ሁሉንም ይመልከቱ",
+    "no_data": "ምንም የቅርብ ጊዜ እንቅስቃሴ አልተገኘም።",
+    "table": {
+      "id": "መለያ",
+      "status": "ሁኔታ",
+      "truck": "የጭነት መኪና",
+      "date": "ቀን"
+    },
+    "status": {
+      "full_assigned": "ሙሉ በሙሉ የተመደበ",
+      "partial_assigned": "በከፊል የተመደበ",
+      "truck_assigned": "መኪና የተመደበ",
+      "driver_assigned": "አሽከርካሪ የተመደበ"
+    }
+  }
+}

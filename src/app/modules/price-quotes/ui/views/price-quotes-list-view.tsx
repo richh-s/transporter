@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   FileText,
@@ -30,16 +31,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { DataTable } from "@/components/ui/data-table";
-import { priceQuoteColumns, type PriceQuoteTableRow } from "../columns/price-quote-columns";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  priceQuoteColumns,
+  type PriceQuoteTableRow,
+} from "../columns/price-quote-columns";
+import { PriceQuoteCard } from "../components/price-quote-card";
 import type { PriceQuoteFilters, PriceQuote } from "@/types/price-quote";
 import {
   LocationEnum,
   TruckTypeEnum,
   PriceQuoteStatusEnum,
 } from "@/types/price-quote";
-import {
-  LOCATION_OPTIONS,
-} from "@/lib/price-quote-utils";
+import { LOCATION_OPTIONS } from "@/lib/price-quote-utils";
 import {
   usePriceQuotes,
   useDeletePriceQuote,
@@ -61,7 +65,7 @@ function StatsCard({
   accent: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+    <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border/50 shadow-sm h-full">
       <div className={cn("p-2 rounded-lg", accent)}>
         <Icon className="h-4 w-4" />
       </div>
@@ -75,7 +79,54 @@ function StatsCard({
   );
 }
 
+// Table loading skeleton (same as ships/fleet/drivers/gps-devices)
+function TableLoadingSkeleton() {
+  const rows = 8;
+  const cols = 6;
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-4 border-b border-border flex items-center justify-between gap-4">
+        <Skeleton className="h-9 w-48 sm:w-64" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-9" />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              {[...Array(cols)].map((_, i) => (
+                <th key={i} className="px-4 py-3 text-left">
+                  <Skeleton className="h-4 w-16 sm:w-24" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {[...Array(rows)].map((_, rowIdx) => (
+              <tr key={rowIdx}>
+                {[...Array(cols)].map((_, colIdx) => (
+                  <td key={colIdx} className="px-4 py-3">
+                    <Skeleton
+                      className={cn(
+                        "h-4",
+                        colIdx === 0 ? "w-20 sm:w-28" : "w-16 sm:w-24",
+                      )}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function PriceQuotesListView() {
+  const { t } = useTranslation(["price_quotes", "common"]);
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -149,7 +200,7 @@ export function PriceQuotesListView() {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setQuoteToDelete(null);
-          toast.success("Price quote deleted successfully");
+          toast.success(t("price_quotes:messages.delete_success"));
         },
       });
     }
@@ -167,254 +218,297 @@ export function PriceQuotesListView() {
   );
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-300 pb-6 px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 animate-in fade-in duration-300 pb-10 sm:pb-6 w-full overflow-x-hidden">
+      {/* Header - same as ships/fleet/drivers/gps-devices */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0 px-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Price Quotes</h1>
-          <p className="text-xs text-muted-foreground">{total} total quotes</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            {t("price_quotes:title")}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {t("price_quotes:subtitle")}
+          </p>
         </div>
         <Button
           onClick={() => router.push("/price-quotes/create")}
           size="sm"
-          className="rounded-xl h-9 gap-1.5"
+          className="rounded-xl h-9 gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Create Quote</span>
-          <span className="sm:hidden">New</span>
+          <span className="hidden sm:inline">{t("price_quotes:buttons.create_quote")}</span>
+          <span className="sm:hidden">{t("price_quotes:buttons.new_short")}</span>
         </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatsCard
-          icon={FileText}
-          label="Total"
-          value={total}
-          accent="bg-primary/10 text-primary"
-        />
-        <StatsCard
-          icon={CheckCircle}
-          label="Active"
-          value={activeCount}
-          accent="bg-emerald-500/10 text-emerald-600"
-        />
-        <StatsCard
-          icon={Clock}
-          label="Draft"
-          value={draftCount}
-          accent="bg-amber-500/10 text-amber-600"
-        />
-        <StatsCard
-          icon={XCircle}
-          label="Inactive"
-          value={inactiveCount}
-          accent="bg-gray-500/10 text-gray-600"
-        />
+      {/* Stats - scrollable on mobile, equal gap */}
+      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible shrink-0">
+        <div className="flex sm:grid sm:grid-cols-4 gap-3 sm:gap-4 min-w-0 sm:min-w-full pr-4 sm:pr-0">
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={FileText}
+              label={t("price_quotes:stats.total")}
+              value={total}
+              accent="bg-primary/10 text-primary"
+            />
+          </div>
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={CheckCircle}
+              label={t("price_quotes:stats.active")}
+              value={activeCount}
+              accent="bg-primary/10 text-primary"
+            />
+          </div>
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={Clock}
+              label={t("price_quotes:stats.draft")}
+              value={draftCount}
+              accent="bg-amber-500/10 text-amber-600"
+            />
+          </div>
+          <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
+            <StatsCard
+              icon={XCircle}
+              label={t("price_quotes:stats.inactive")}
+              value={inactiveCount}
+              accent="bg-gray-500/10 text-gray-600"
+            />
+          </div>
+        </div>
       </div>
 
-      <DataTable
-        columns={priceQuoteColumns}
-        data={quotes as PriceQuoteTableRow[]}
-        isLoading={isLoading}
-        onRowClick={(quote) => router.push(`/price-quotes/placeholder?id=${quote.id}`)}
-        meta={{
-          onEdit: (quote: PriceQuote) => router.push(`/price-quotes/placeholder/edit?id=${quote.id}`),
-          onDelete: (quote: PriceQuote) => handleDeleteClick(quote),
-          onStatusChange: handleStatusChange,
-        }}
-        // Server-side pagination
-        manualPagination={true}
-        page={page}
-        pageCount={pages}
-        total={total}
-        perPage={perPage}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-        filterControls={
-          <div className="flex items-center gap-2">
-            <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "rounded-xl h-9 gap-2",
-                    hasActiveFilters && "border-primary text-primary",
-                  )}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {hasActiveFilters && (
-                    <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                      {
-                        Object.values(appliedFilters).filter((v) => v !== undefined)
-                          .length
-                      }
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-3xl">
-                <SheetHeader className="pb-4">
-                  <SheetTitle>Filter Quotes</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" /> Origin
-                      </label>
-                      <Select
-                        value={filters.origin || "all"}
-                        onValueChange={(value) =>
-                          setFilters({
-                            ...filters,
-                            origin:
-                              value === "all" ? undefined : (value as LocationEnum),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="all">All Origins</SelectItem>
-                          {LOCATION_OPTIONS.map((loc) => (
-                            <SelectItem key={loc.value} value={loc.value}>
-                              {loc.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" /> Destination
-                      </label>
-                      <Select
-                        value={filters.destination || "all"}
-                        onValueChange={(value) =>
-                          setFilters({
-                            ...filters,
-                            destination:
-                              value === "all" ? undefined : (value as LocationEnum),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="all">All Destinations</SelectItem>
-                          {LOCATION_OPTIONS.map((loc) => (
-                            <SelectItem key={loc.value} value={loc.value}>
-                              {loc.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <Truck className="h-3 w-3" /> Truck Type
-                      </label>
-                      <Select
-                        value={filters.truck_type || "all"}
-                        onValueChange={(value) =>
-                          setFilters({
-                            ...filters,
-                            truck_type:
-                              value === "all"
-                                ? undefined
-                                : (value as TruckTypeEnum),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value={TruckTypeEnum.FLATBED}>
-                            Flatbed
-                          </SelectItem>
-                          <SelectItem value={TruckTypeEnum.TRAILER}>
-                            Trailer
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <DollarSign className="h-3 w-3" /> Status
-                      </label>
-                      <Select
-                        value={filters.status || "all"}
-                        onValueChange={(value) =>
-                          setFilters({
-                            ...filters,
-                            status:
-                              value === "all"
-                                ? undefined
-                                : (value as PriceQuoteStatusEnum),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value={PriceQuoteStatusEnum.DRAFT}>
-                            Draft
-                          </SelectItem>
-                          <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>
-                            Active
-                          </SelectItem>
-                          <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>
-                            Inactive
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
+      {/* Table - desktop same as others; mobile = cards via renderMobileCard */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {isLoading ? (
+          <TableLoadingSkeleton />
+        ) : (
+          <DataTable
+            columns={priceQuoteColumns}
+            data={quotes as PriceQuoteTableRow[]}
+            onRowClick={(quote) =>
+              router.push(`/price-quotes/placeholder?id=${quote.id}`)
+            }
+            meta={{
+              onEdit: (quote: PriceQuote) =>
+                router.push(`/price-quotes/placeholder/edit?id=${quote.id}`),
+              onDelete: (quote: PriceQuote) => handleDeleteClick(quote),
+              onStatusChange: handleStatusChange,
+            }}
+            manualPagination
+            page={page}
+            pageCount={pages}
+            total={total}
+            perPage={perPage}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
+            variant="clean"
+            hideColumnVisibility
+            renderMobileCard={(quote) => (
+              <PriceQuoteCard
+                quote={quote}
+                onClick={() =>
+                  router.push(`/price-quotes/placeholder?id=${quote.id}`)
+                }
+              />
+            )}
+            filterControls={
+              <div className="flex items-center gap-2">
+                <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+                  <SheetTrigger asChild>
                     <Button
                       variant="outline"
-                      onClick={handleClearFilters}
-                      className="flex-1 rounded-xl"
+                      size="sm"
+                      className={cn(
+                        "rounded-xl h-9 gap-2",
+                        hasActiveFilters && "border-primary text-primary",
+                      )}
                     >
-                      Clear
+                      <Filter className="h-4 w-4" />
+                      {t("common:labels.filters")}
+                      {hasActiveFilters && (
+                        <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                          {
+                            Object.values(appliedFilters).filter(
+                              (v) => v !== undefined,
+                            ).length
+                          }
+                        </span>
+                      )}
                     </Button>
-                    <Button
-                      onClick={handleApplyFilters}
-                      className="flex-1 rounded-xl"
-                    >
-                      Apply Filters
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-3xl">
+                    <SheetHeader className="pb-4">
+                      <SheetTitle>{t("price_quotes:filters.title")}</SheetTitle>
+                    </SheetHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <MapPin className="h-3 w-3" /> {t("price_quotes:filters.origin")}
+                          </label>
+                          <Select
+                            value={filters.origin || "all"}
+                            onValueChange={(value) =>
+                              setFilters({
+                                ...filters,
+                                origin:
+                                  value === "all"
+                                    ? undefined
+                                    : (value as LocationEnum),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-10 rounded-xl">
+                              <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="all">{t("price_quotes:filters.all_origins")}</SelectItem>
+                              {LOCATION_OPTIONS.map((loc) => (
+                                <SelectItem key={loc.value} value={loc.value}>
+                                  {loc.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <MapPin className="h-3 w-3" /> {t("price_quotes:filters.destination")}
+                          </label>
+                          <Select
+                            value={filters.destination || "all"}
+                            onValueChange={(value) =>
+                              setFilters({
+                                ...filters,
+                                destination:
+                                  value === "all"
+                                    ? undefined
+                                    : (value as LocationEnum),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-10 rounded-xl">
+                              <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="all">
+                                {t("price_quotes:filters.all_destinations")}
+                              </SelectItem>
+                              {LOCATION_OPTIONS.map((loc) => (
+                                <SelectItem key={loc.value} value={loc.value}>
+                                  {loc.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
 
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="text-xs text-muted-foreground"
-              >
-                Clear all
-              </Button>
-            )}
-          </div>
-        }
-      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Truck className="h-3 w-3" /> {t("price_quotes:filters.truck_type")}
+                          </label>
+                          <Select
+                            value={filters.truck_type || "all"}
+                            onValueChange={(value) =>
+                              setFilters({
+                                ...filters,
+                                truck_type:
+                                  value === "all"
+                                    ? undefined
+                                    : (value as TruckTypeEnum),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-10 rounded-xl">
+                              <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="all">
+                                {t("price_quotes:filters.all_types")}
+                              </SelectItem>
+                              <SelectItem value={TruckTypeEnum.FLATBED}>
+                                {t("price_quotes:create.truck_types.flatbed")}
+                              </SelectItem>
+                              <SelectItem value={TruckTypeEnum.TRAILER}>
+                                {t("price_quotes:create.truck_types.trailer")}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <DollarSign className="h-3 w-3" /> {t("price_quotes:filters.status")}
+                          </label>
+                          <Select
+                            value={filters.status || "all"}
+                            onValueChange={(value) =>
+                              setFilters({
+                                ...filters,
+                                status:
+                                  value === "all"
+                                    ? undefined
+                                    : (value as PriceQuoteStatusEnum),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-10 rounded-xl">
+                              <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="all">
+                                {t("price_quotes:filters.all_status")}
+                              </SelectItem>
+                              <SelectItem value={PriceQuoteStatusEnum.DRAFT}>
+                                {t("price_quotes:list.stats.draft")}
+                              </SelectItem>
+                              <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>
+                                {t("price_quotes:list.stats.active")}
+                              </SelectItem>
+                              <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>
+                                {t("price_quotes:list.stats.inactive")}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <Button
+                          variant="outline"
+                          onClick={handleClearFilters}
+                          className="flex-1 rounded-xl"
+                        >
+                          {t("common:buttons.clear")}
+                        </Button>
+                        <Button
+                          onClick={handleApplyFilters}
+                          className="flex-1 rounded-xl"
+                        >
+                          {t("price_quotes:filters.apply")}
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("common:buttons.clear_filters")}
+                  </Button>
+                )}
+              </div>
+            }
+          />
+        )}
+      </div>
 
       {/* Delete Dialog */}
       {quoteToDelete && (

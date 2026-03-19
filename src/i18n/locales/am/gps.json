@@ -1,0 +1,122 @@
+{
+  "title": "የጂፒኤስ መሣሪያዎች",
+  "subtitle": "የጂፒኤስ መሣሪያዎችዎን ያስዳድሩ እና ይከታተሉ",
+  "stats": {
+    "total": "ጠቅላላ",
+    "active": "ንቁ",
+    "inactive": "ንቁ ያልሆኑ",
+    "assigned": "የተመደቡ"
+  },
+  "buttons": {
+    "new_device": "አዲስ መሣሪያ",
+    "new_short": "አዲስ"
+  },
+  "filters": {
+    "title": "መሣሪያዎችን ያጣሩ",
+    "external_id": "ውጫዊ መለያ (External ID)",
+    "imei": "IMEI ቁጥር",
+    "device_name": "የመሣሪያ ስም",
+    "status": "ሁኔታ",
+    "all": "ሁሉም",
+    "active": "ንቁ",
+    "inactive": "ንቁ ያልሆኑ",
+    "apply": "ማጣሪያዎችን ተግብር"
+  },
+  "messages": {
+    "deactivate_confirm": "እርግጠኛ ነዎት ይህንን የጂፒኤስ መሣሪያ ማቦዘን ይፈልጋሉ?"
+  },
+  "create_form": {
+    "title": "አዲስ የጂፒኤስ መሣሪያ ይፍጠሩ",
+    "breadcrumb_parent": "የጂፒኤስ መሣሪያዎች",
+    "breadcrumb_current": "መሣሪያ ይፍጠሩ",
+    "sections": {
+      "device_info": "የመሣሪያ መረጃ",
+      "truck_assignment": "የመኪና ምደባ",
+      "expiration_status": "የማለቂያ ጊዜ እና ሁኔታ"
+    },
+    "labels": {
+      "external_id": "ውጫዊ የመሣሪያ መለያ (External ID)",
+      "imei": "IMEI ቁጥር",
+      "device_name": "የመሣሪያ ስም",
+      "device_model": "የመሣሪያ ሞዴል",
+      "truck": "ለመኪና ይመድቡ",
+      "expire_date": "የማለቂያ ቀን",
+      "status": "ሁኔታ"
+    },
+    "placeholders": {
+      "enter_id": "የመሣሪያ መለያ ያስገቡ",
+      "imei": "15-አሃዝ IMEI",
+      "optional": "አማራጭ",
+      "select_truck": "መኪና ይምረጡ",
+      "select_date": "ቀን ይምረጡ"
+    },
+    "status": {
+      "active": "ንቁ",
+      "inactive": "ንቁ ያልሆነ"
+    },
+    "truck_states": {
+      "loading": "መኪናዎች በመጫን ላይ...",
+      "no_available": "ምንም የሚገኙ መኪናዎች የሉም",
+      "all_assigned": "ሁሉም መኪናዎች አስቀድመው ለጂፒኤስ መሣሪያዎች ተመድበዋል"
+    },
+    "buttons": {
+      "cancel": "ሰርዝ",
+      "create": "መሣሪያ ፍጠር",
+      "creating": "በመፍጠር ላይ..."
+    },
+    "validation": {
+      "external_id_required": "የውጭ መሣሪያ መለያ ያስፈልጋል",
+      "imei_required": "የIMEI ቁጥር ያስፈልጋል",
+      "imei_invalid": "ትክክለኛ ያልሆነ IMEI (ቁጥር መሆን አለበት)",
+      "expire_date_required": "የማለቂያ ቀን ያስፈልጋል",
+      "status_required": "ሁኔታ አስፈላጊ ነው"
+    }
+  },
+  "list": {
+    "columns": {
+      "device_id_imei": "የመሣሪያ መለያ / IMEI",
+      "device_info": "የመሣሪያ መረጃ",
+      "expiration": "የማለቂያ ቀን",
+      "assignment": "ምደባ",
+      "status": "ሁኔታ"
+    },
+    "actions": {
+      "view": "ተመልከት",
+      "edit": "አስተካክል",
+      "deactivate": "አቦዝን",
+      "open_menu": "ምናሌን ክፈት"
+    }
+  },
+  "card": {
+    "imei": "IMEI",
+    "assigned": "የተመደበ",
+    "unassigned": "ያልተመደበ"
+  },
+  "details": {
+    "title": "የመሣሪያ መረጃ",
+    "external_id": "የውጭ መለያ",
+    "imei": "የIMEI ቁጥር",
+    "device_name": "የመሣሪያ ስም",
+    "device_model": "የመሣሪያ ሞዴል",
+    "truck_assignment": "የጭነት መኪና ምደባ",
+    "assigned": "የተመደበ",
+    "unassigned": "ከማንኛውም የጭነት መኪና ጋር አልተያያዘም",
+    "view_truck": "መኪናውን ተመልከት",
+    "expires": "ያበቃል",
+    "last_synced": "መጨረሻ የተመሳሰለ",
+    "timestamps": "የጊዜ ማህተሞች",
+    "created": "ተፈጥሯል",
+    "updated": "ተሻሽሏል",
+    "edit": "አስተካክል",
+    "deactivate": "አቦዝን",
+    "deactivate_title": "መሣሪያውን አቦዝን",
+    "deactivate_desc": "እርግጠኛ ነዎት ይህንን የጂፒኤስ መሣሪያ ማቦዘን ይፈልጋሉ?",
+    "deactivate_note": "ይህ የመሣሪያውን ሁኔታ ወደ ቦዘነ ይለውጠዋል እና ከማንኛውም የጭነት መኪና ይለየዋል።",
+    "deactivating": "በማቦዘን ላይ...",
+    "success_msg": "የጂፒኤስ መሣሪያ በተሳካ ሁኔታ አቦዝኗል"
+  },
+  "error": {
+    "failed_load": "መሣሪያውን መጫን አልተቻለም",
+    "go_to_devices": "ወደ መሣሪያዎች ይሂዱ"
+  }
+}

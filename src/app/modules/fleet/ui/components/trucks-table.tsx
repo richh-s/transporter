@@ -1,11 +1,14 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
-import { truckColumns, type TruckTableRow } from "../columns/truck-columns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getTruckColumns, type TruckTableRow } from "../columns/truck-columns";
+import { TruckCard } from "./truck-card";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 import {
   truckApi,
   type GetTrucksParams,
@@ -56,6 +59,8 @@ function TrucksTableContent({
   onRowClick,
 }: TrucksTableProps) {
   const router = useRouter();
+  const { t } = useTranslation(["fleet", "common"]);
+  const columns = useMemo(() => getTruckColumns(t), [t]);
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
     queryFn: async () => {
@@ -139,10 +144,10 @@ function TrucksTableContent({
 
   return (
     <DataTable
-      columns={truckColumns}
+      columns={columns}
       data={trucks as TruckTableRow[]}
       searchKey="plate_number"
-      searchPlaceholder="Search plate, VIN, or make..."
+      searchPlaceholder={t("fleet:labels.search_placeholder")}
       onRowClick={
         onRowClick || ((row) => router.push(`/fleet/placeholder?id=${row.id}`))
       }
@@ -150,7 +155,6 @@ function TrucksTableContent({
         onEdit,
         onDelete,
       }}
-      // Server-side pagination
       manualPagination={true}
       page={page}
       pageCount={totalPages}
@@ -164,22 +168,66 @@ function TrucksTableContent({
       filterControls={filterControls}
       headerActions={headerActions}
       mobileAddButton={mobileAddButton}
+      variant="clean"
+      hideColumnVisibility
+      renderMobileCard={(truck) => (
+        <TruckCard
+          truck={truck}
+          onClick={() => router.push(`/fleet/placeholder?id=${truck.id}`)}
+        />
+      )}
     />
   );
 }
 
-function TrucksTableLoading() {
+function TableLoadingSkeleton() {
+  const rows = 8;
+  const cols = 5;
   return (
-    <div className="flex items-center justify-center h-32 gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm">Loading fleet data...</span>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-4 border-b border-border flex items-center justify-between gap-4">
+        <Skeleton className="h-9 w-48 sm:w-64" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-9" />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              {[...Array(cols)].map((_, i) => (
+                <th key={i} className="px-4 py-3 text-left">
+                  <Skeleton className="h-4 w-16 sm:w-24" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {[...Array(rows)].map((_, rowIdx) => (
+              <tr key={rowIdx}>
+                {[...Array(cols)].map((_, colIdx) => (
+                  <td key={colIdx} className="px-4 py-3">
+                    <Skeleton
+                      className={cn(
+                        "h-4",
+                        colIdx === 0 ? "w-20 sm:w-28" : "w-16 sm:w-24",
+                      )}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 export function TrucksTable(props: TrucksTableProps) {
   return (
-    <Suspense fallback={<TrucksTableLoading />}>
+    <Suspense fallback={<TableLoadingSkeleton />}>
       <TrucksTableContent {...props} />
     </Suspense>
   );

@@ -1,221 +1,177 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Eye, Trash2, File, Edit, Truck, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import {
+  MoreHorizontal,
+  Eye,
+  Pencil,
+  Trash2,
+  ExternalLink,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { OrganizationDocument } from "@/lib/api/organization";
+import { format } from "date-fns";
 
-export type OrganizationDocumentTableRow = OrganizationDocument;
+export type OrganizationDocumentTableRow = {
+  id: number;
+  document_type: string;
+  status: string;
+  created_at: string;
+  entity_type?: "truck" | "driver" | null;
+  entity_id?: number | null;
+  entity_name?: string | null;
+  presigned_url?: string | null;
+  file_name?: string | null;
+};
 
 export const organizationDocumentColumns = (
-  onView: (id: string) => Promise<void>,
+  t: any,
+  onView: (id: string) => void,
   onEdit: (id: string) => void,
   onDelete: (id: number) => void,
   isDeleting: boolean,
-  onEntityClick?: (entityType: string, entityId: number | null) => void
+  onEntityClick: (type: string, id: number | null) => void,
 ): ColumnDef<OrganizationDocumentTableRow>[] => [
   {
     accessorKey: "document_type",
-    id: "document_type",
-    enableHiding: false,
-    header: ({ column }) => {
-      return (
-        <span
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
-        >
-          Document Type
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </span>
-      );
-    },
+    header: t("organization:fields.document_type"),
     cell: ({ row }) => {
-      const doc = row.original;
+      const type = row.getValue("document_type") as string;
       return (
-        <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[140px]">
-          <File className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium text-xs sm:text-sm capitalize">
-            {doc.document_type
-              ? doc.document_type.replace(/_/g, " ")
-              : "Document"}
+        <div className="flex flex-col">
+          <span className="font-medium text-brand-primary">
+            {t(`organization:types.${type}`, { defaultValue: type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) })}
           </span>
+          {row.original.file_name && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+              {row.original.file_name}
+            </span>
+          )}
         </div>
       );
-    },
-    meta: {
-      sticky: true,
     },
   },
   {
     accessorKey: "entity_type",
-    id: "entity_type",
-    header: ({ column }) => {
-      return (
-        <span
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
-        >
-          Entity Type
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </span>
-      );
-    },
+    header: t("organization:fields.entity_type"),
     cell: ({ row }) => {
-      const doc = row.original;
-      const entityType = doc.entity_type;
-      const entityId = entityType === "truck" ? doc.truck_id : doc.driver_id;
-      
-      if (!entityType) {
-        return <div className="text-xs sm:text-sm">—</div>;
-      }
-      
-      const handleClick = () => {
-        if (entityId && onEntityClick) {
-          onEntityClick(entityType, entityId);
-        }
-      };
-      
+      const type = row.getValue("entity_type") as string;
+      const entityId = row.original.entity_id;
+      const entityName = row.original.entity_name;
+
+      if (!type) return <span className="text-muted-foreground">—</span>;
+
       return (
-        <div className="min-w-[80px] sm:min-w-[100px]">
-          <Badge
-            variant="outline"
-            className={cn(
-              "font-medium text-xs px-2 py-0.5 h-6 capitalize cursor-pointer hover:bg-accent transition-colors",
-              entityId ? "" : "opacity-50 cursor-not-allowed"
-            )}
-            onClick={entityId ? handleClick : undefined}
-          >
-            <div className="flex items-center gap-1.5">
-              {entityType === "truck" ? (
-                <Truck className="h-3 w-3" />
-              ) : entityType === "driver" ? (
-                <User className="h-3 w-3" />
-              ) : null}
-              <span>{entityType}</span>
-            </div>
-          </Badge>
-        </div>
+        <button
+          onClick={() => onEntityClick(type, entityId || null)}
+          className="flex items-center gap-1.5 text-xs font-medium text-brand-secondary hover:underline transition-all"
+        >
+          <span className="capitalize">{t(`organization:entities.${type.toLowerCase()}`, { defaultValue: type })}</span>
+          {entityName && (
+            <span className="text-muted-foreground font-normal">
+              ({entityName})
+            </span>
+          )}
+          <ExternalLink className="h-3 w-3 opacity-50" />
+        </button>
       );
     },
   },
   {
     accessorKey: "status",
-    id: "status",
-    header: ({ column }) => {
-      return (
-        <span
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
-        >
-          Status
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </span>
-      );
-    },
+    header: t("organization:fields.status"),
     cell: ({ row }) => {
-      const doc = row.original;
-      const status = doc.status || "pending";
-      
-      const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
+      const status = (row.getValue("status") as string).toLowerCase();
+      const statusValue = status.replace(/_/g, "");
+
+      const getStatusColor = (s: string) => {
+        switch (s) {
           case "approved":
-            return "bg-green-100 text-green-700 hover:bg-green-100";
-          case "rejected":
-            return "bg-red-100 text-red-700 hover:bg-red-100";
+            return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
           case "pending":
-            return "bg-amber-100 text-amber-700 hover:bg-amber-100";
+            return "bg-amber-500/10 text-amber-600 border-amber-500/20";
+          case "rejected":
+          case "inactive":
+            return "bg-rose-500/10 text-rose-600 border-rose-500/20";
           default:
-            return "bg-gray-100 text-gray-700 hover:bg-gray-100";
+            return "bg-slate-500/10 text-slate-600 border-slate-500/20";
         }
       };
-      
+
       return (
-        <div className="min-w-[80px]">
-          <Badge
-            variant="secondary"
-            className={cn(
-              "font-semibold text-[10px] px-1.5 py-0.5 h-5 capitalize",
-              getStatusColor(status)
-            )}
-          >
-            {status}
-          </Badge>
-        </div>
+        <Badge
+          variant="outline"
+          className={cn("capitalize px-2 py-0.5 text-[10px]", getStatusColor(statusValue))}
+        >
+          {t(`organization:tabs.${statusValue}`, { defaultValue: status })}
+        </Badge>
       );
     },
   },
   {
     accessorKey: "created_at",
-    id: "created_at",
-    header: ({ column }) => {
-      return (
-        <span
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
-        >
-          Uploaded Date
-          <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-        </span>
-      );
-    },
+    header: t("organization:fields.created_at"),
     cell: ({ row }) => {
-      const doc = row.original;
-      const date = doc.created_at
-        ? new Date(doc.created_at).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
-        : "—";
+      const date = row.getValue("created_at") as string;
       return (
-        <div className="text-xs sm:text-sm min-w-[100px] whitespace-nowrap">
-          {date}
+        <div className="flex flex-col text-xs">
+          <span className="text-muted-foreground">
+            {format(new Date(date), "MMM dd, yyyy")}
+          </span>
+          <span className="text-[10px] text-muted-foreground/60">
+            {format(new Date(date), "hh:mm a")}
+          </span>
         </div>
       );
     },
   },
   {
     id: "actions",
-    enableHiding: false,
     cell: ({ row }) => {
       const doc = row.original;
 
       return (
-        <div className="text-right min-w-[50px] sm:min-w-[60px] flex items-center justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onView(String(doc.id))}>
-                <Eye className="mr-2 h-4 w-4" /> View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(doc.id)}
-                disabled={isDeleting}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 hover:bg-muted"
+              disabled={isDeleting}
+            >
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[160px]">
+            <DropdownMenuLabel>{t("common:buttons.actions")}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onView(doc.id.toString())}>
+              <Eye className="mr-2 h-4 w-4" />
+              {t("common:buttons.view")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(doc.id.toString())}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {t("common:buttons.edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-rose-600 focus:text-rose-600"
+              onClick={() => onDelete(doc.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("common:buttons.delete")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },
 ];
-

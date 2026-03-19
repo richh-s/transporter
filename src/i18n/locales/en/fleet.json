@@ -1,0 +1,59 @@
+{
+  "title": "Fleet Management",
+  "subtitle": "Manage your trucks and fleet capacity.",
+  "labels": {
+    "add_truck": "Add Truck",
+    "edit_truck": "Edit Truck",
+    "delete_truck": "Delete Truck",
+    "truck_details": "Truck Details",
+    "search_placeholder": "Search plate number...",
+    "no_trucks": "No trucks found.",
+    "total_fleet": "Total Fleet",
+    "active_trucks": "Active Trucks",
+    "avg_capacity": "Avg Capacity",
+    "unit_kg": "Kg",
+    "upload_docs": "Upload Documents",
+    "vehicle_details": "Vehicle Details",
+    "legal_docs": "Legal Documents",
+    "truck_registered": "Truck Registered!",
+    "go_to_details": "Go to Details",
+    "click_to_select": "Click to select file",
+    "upload_document_msg": "Now, upload the necessary documents to complete the profile.",
+    "required_docs": "Required Documents",
+    "required_docs_msg": "A valid Libre is required to activate the truck and assign it to shipments. The status will update automatically after upload.",
+    "delete_truck_confirm": "Delete Truck",
+    "delete_truck_description": "Are you sure you want to delete truck {{plate_number}}? This action cannot be undone."
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "maintenance": "Maintenance",
+    "out_of_service": "Out of Service"
+  },
+  "types": {
+    "flatbed": "Flatbed",
+    "trailer": "Trailer"
+  },
+  "fields": {
+    "plate_number": "Plate Number",
+    "truck_type": "Truck Type",
+    "make": "Make",
+    "model": "Model",
+    "vin": "VIN",
+    "status": "Status",
+    "capacity": "Capacity",
+    "year": "Year",
+    "gps_id": "GPS ID",
+    "gov_id": "Gov ID",
+    "document_type": "Document Type"
+  },
+  "messages": {
+    "success_operation": "Operation completed successfully!",
+    "truck_created_upload": "Truck created successfully. Now upload documents.",
+    "truck_created_error": "Truck created but unexpected response from server.",
+    "upload_success": "Document uploaded successfully",
+    "upload_error": "Failed to upload document",
+    "truck_updated": "Truck updated successfully",
+    "truck_deleted": "Truck deleted successfully"
+  }
+}

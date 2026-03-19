@@ -1,0 +1,40 @@
+{
+  "overview": {
+    "title": "Fleet Overview",
+    "subtitle": "Monitoring your transport operations in real-time.",
+    "stats": {
+      "active_trucks": "Active Trucks",
+      "total_orders": "Total Orders",
+      "open_quotes": "Open Quotes",
+      "revenue": "Revenue (ETB)"
+    }
+  },
+  "quick_actions": {
+    "title": "Quick Actions",
+    "subtitle": "Jump to key sections",
+    "items": {
+      "ships": "Ships & Orders",
+      "quotes": "Price Quotes",
+      "fleet": "Fleet & Trucks",
+      "drivers": "Drivers",
+      "gps": "GPS Devices"
+    }
+  },
+  "recent_activity": {
+    "title": "Recent Activity",
+    "view_all": "View all",
+    "no_data": "No recent activity found.",
+    "table": {
+      "id": "ID",
+      "status": "Status",
+      "truck": "Truck",
+      "date": "Date"
+    },
+    "status": {
+      "full_assigned": "Full Assigned",
+      "partial_assigned": "Partial Assigned",
+      "truck_assigned": "Truck Assigned",
+      "driver_assigned": "Driver Assigned"
+    }
+  }
+}

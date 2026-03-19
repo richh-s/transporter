@@ -1,0 +1,63 @@
+{
+  "title": "POD & Returning Documents",
+  "subtitle": "Upload and manage Proof of Delivery and Container Return Receipts.",
+  "stats": {
+    "shipments": "Shipments",
+    "items": "Items",
+    "containers": "Containers"
+  },
+  "labels": {
+    "no_shipments": "No eligible shipments found",
+    "no_shipments_detail": "Shipments with assigned truck and driver will appear here.",
+    "shipment_tag": "Shipment #{{id}}",
+    "pickup": "Pickup",
+    "item_count": "{{count}} Item",
+    "item_count_plural": "{{count}} Items",
+    "container_count": "{{count}} Container",
+    "container_count_plural": "{{count}} Containers",
+    "truck": "Truck",
+    "driver": "Driver",
+    "assigned": "Assigned",
+    "not_assigned": "Not Assigned",
+    "route": "Route",
+    "containers": "Containers",
+    "return": "Return",
+    "return_receipts": "Return Receipts",
+    "one_way": "One-way",
+    "more": "more",
+    "no_container_info": "No container info",
+    "documents": "Documents",
+    "no_documents": "No documents yet",
+    "container": "Container",
+    "number": "Number",
+    "size": "Size",
+    "type": "Type",
+    "view_document": "View Document",
+    "no_url": "No URL available",
+    "pod": "Proof of Delivery (POD)",
+    "pod_of_document": "Proof of Delivery of Document",
+    "upload_document": "Upload Document",
+    "upload_batch_desc": "Uploading for {{count}} selected containers",
+    "upload_single_desc": "Upload Proof of Delivery or Container Return Receipt for Ship Item #{{id}}",
+    "document_type": "Document Type",
+    "select_type": "Select type",
+    "upload_started_only": "Upload when status is Started",
+    "container_optional": "Container (Optional)",
+    "select_container": "Select container",
+    "whole_shipment_check": "Check if this applies to the whole shipment",
+    "whole_shipment_desc": "Select \"Whole Shipment\" for a single document covering all containers.",
+    "upload_drag_drop": "Click to upload or drag and drop",
+    "upload_formats": "PDF, JPG, PNG (Max 10MB)",
+    "return_receipt": "Container Return Receipt"
+  },
+  "buttons": {
+    "upload_document": "Upload document"
+  },
+  "messages": {
+    "no_url_error": "Document URL not available",
+    "select_file_error": "Please select a file to upload",
+    "upload_batch_success": "Document uploaded for {{count}} containers",
+    "upload_success": "Document uploaded successfully",
+    "upload_error": "Failed to upload document"
+  }
+}

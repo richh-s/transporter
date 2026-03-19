@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,34 +55,34 @@ import { cn } from "@/lib/utils";
 
 const formSchema = z
   .object({
-    origin: z.nativeEnum(LocationEnum, { message: "Origin is required" }),
+    origin: z.nativeEnum(LocationEnum, { message: "price_quotes:create.validation.origin_required" }),
     destination: z.nativeEnum(LocationEnum, {
-      message: "Destination is required",
+      message: "price_quotes:create.validation.destination_required",
     }),
     gross_weight_min: z
-      .number({ message: "Min weight is required" })
-      .min(1, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.min_weight_required" })
+      .min(1, "price_quotes:create.validation.must_be_positive"),
     gross_weight_max: z
-      .number({ message: "Max weight is required" })
-      .min(1, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.max_weight_required" })
+      .min(1, "price_quotes:create.validation.must_be_positive"),
     truck_type: z.nativeEnum(TruckTypeEnum, {
-      message: "Truck type is required",
+      message: "price_quotes:create.validation.truck_type_required",
     }),
     container_size: z.nativeEnum(ContainerSizeEnum, {
-      message: "Container size is required",
+      message: "price_quotes:create.validation.container_size_required",
     }),
     amount: z
-      .number({ message: "Amount is required" })
-      .min(0.01, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.amount_required" })
+      .min(0.01, "price_quotes:create.validation.must_be_positive"),
     currency: z.string().max(3).optional(),
     axle_type: z.nativeEnum(TruckAxleTypeEnum).optional().nullable(),
   })
   .refine((data) => data.origin !== data.destination, {
-    message: "Origin and destination must be different",
+    message: "price_quotes:create.validation.origin_destination_different",
     path: ["destination"],
   })
   .refine((data) => data.gross_weight_max >= data.gross_weight_min, {
-    message: "Max weight must be >= min weight",
+    message: "price_quotes:create.validation.max_weight_ge_min",
     path: ["gross_weight_max"],
   });
 
@@ -111,6 +112,7 @@ function SectionHeader({
 
 export function CreatePriceQuoteView() {
   const router = useRouter();
+  const { t } = useTranslation(["price_quotes", "common"]);
   const createMutation = useCreatePriceQuote();
 
   const { data: trucksData } = useTrucks({ per_page: 100 });
@@ -184,11 +186,11 @@ export function CreatePriceQuoteView() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="p-4 space-y-2">
           <CompactBreadcrumb
-            parentLabel="Price Quotes"
+            parentLabel={t("price_quotes:title")}
             parentHref="/price-quotes"
-            currentLabel="Create Quote"
+            currentLabel={t("price_quotes:create.title_short")}
           />
-          <h1 className="text-lg font-bold">Create New Quote</h1>
+          <h1 className="text-lg font-bold">{t("price_quotes:create.title")}</h1>
         </div>
       </div>
 
@@ -203,7 +205,7 @@ export function CreatePriceQuoteView() {
               <AlertDescription className="mt-2">
                 <p className="mb-3 text-sm">
                   {createMutation.error.message ||
-                    "The required Trade License document is missing or has not been approved."}
+                    t("price_quotes:create.alerts.org_docs_missing")}
                 </p>
                 <Button
                   variant="outline"
@@ -212,7 +214,7 @@ export function CreatePriceQuoteView() {
                   className="rounded-xl"
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  Go to Documents
+                  {t("common:buttons.go_to_docs")}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -228,7 +230,7 @@ export function CreatePriceQuoteView() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={MapPin}
-              title="Route"
+              title={t("price_quotes:create.sections.route")}
               accent="bg-red-500/10 text-red-500"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -238,7 +240,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Origin <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.origin")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -270,7 +272,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Destination <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.destination")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -302,7 +304,7 @@ export function CreatePriceQuoteView() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Truck}
-              title="Vehicle"
+              title={t("price_quotes:create.sections.vehicle")}
               accent="bg-blue-500/10 text-blue-500"
             />
             <div className="space-y-4">
@@ -312,7 +314,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Truck Type <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.truck_type")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -339,7 +341,7 @@ export function CreatePriceQuoteView() {
 
                           {containerSize === ContainerSizeEnum.FORTY_FEET && (
                             <div className="absolute -top-3 left-4 px-2.5 py-1 rounded-full bg-amber-500 text-[10px] font-bold text-white uppercase tracking-wider shadow-lg animate-in zoom-in duration-500">
-                              Best Match
+                              {t("price_quotes:create.labels.best_match")}
                             </div>
                           )}
 
@@ -359,9 +361,9 @@ export function CreatePriceQuoteView() {
                           </div>
 
                           <div>
-                            <p className="font-bold text-sm tracking-tight">Flatbed Truck</p>
+                            <p className="font-bold text-sm tracking-tight">{t("price_quotes:create.truck_types.flatbed")}</p>
                             <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                              Ideal for heavy loads and 40ft containers.
+                              {t("price_quotes:create.descriptions.flatbed")}
                             </p>
                           </div>
                         </Label>
@@ -405,9 +407,9 @@ export function CreatePriceQuoteView() {
                           </div>
 
                           <div>
-                            <p className="font-bold text-sm tracking-tight">Trailer Truck</p>
+                            <p className="font-bold text-sm tracking-tight">{t("price_quotes:create.truck_types.trailer")}</p>
                             <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                              Standard transport for 20ft containers.
+                              {t("price_quotes:create.descriptions.trailer")}
                             </p>
                           </div>
                         </Label>
@@ -445,7 +447,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Container Size <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.container_size")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -500,7 +502,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Axle Type (Optional)
+                      {t("price_quotes:create.labels.axle_type")} ({t("common:labels.optional")})
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -541,7 +543,7 @@ export function CreatePriceQuoteView() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Scale}
-              title="Weight Range"
+              title={t("price_quotes:create.sections.weight")}
               accent="bg-amber-500/10 text-amber-600"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -551,7 +553,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Min (kg) <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.min_weight")} (kg) <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -576,7 +578,7 @@ export function CreatePriceQuoteView() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Max (kg) <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.max_weight")} (kg) <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -601,7 +603,7 @@ export function CreatePriceQuoteView() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={DollarSign}
-              title="Pricing"
+              title={t("price_quotes:create.sections.pricing")}
               accent="bg-emerald-500/10 text-emerald-600"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -638,7 +640,7 @@ export function CreatePriceQuoteView() {
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Currency</FormLabel>
+                    <FormLabel className="text-xs">{t("price_quotes:create.labels.currency")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value || "ETB"}
@@ -672,7 +674,7 @@ export function CreatePriceQuoteView() {
           disabled={createMutation.isPending}
           className="flex-1 h-11 rounded-xl"
         >
-          Cancel
+          {t("common:buttons.cancel")}
         </Button>
         <Button
           type="submit"
@@ -683,10 +685,10 @@ export function CreatePriceQuoteView() {
           {createMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
+              {t("common:buttons.creating")}
             </>
           ) : (
-            "Create Quote"
+            t("price_quotes:buttons.create_quote")
           )}
         </Button>
       </div>

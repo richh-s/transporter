@@ -1,0 +1,59 @@
+{
+  "title": "የተሽከርካሪዎች አስተዳደር",
+  "subtitle": "ተሽከርካሪዎችዎን እና የተሽከርካሪ አቅምዎን ያስተዳድሩ።",
+  "labels": {
+    "add_truck": "ተሽከርካሪ ጨምር",
+    "edit_truck": "ተሽከርካሪ አሻሽል",
+    "delete_truck": "ተሽከርካሪ ሰርዝ",
+    "truck_details": "የተሽከርካሪ ዝርዝሮች",
+    "search_placeholder": "የሰሌዳ ቁጥር ፈልግ...",
+    "no_trucks": "ምንም ተሽከርካሪዎች አልተገኙም።",
+    "total_fleet": "ጠቅላላ ተሽከርካሪዎች",
+    "active_trucks": "ንቁ ተሽከርካሪዎች",
+    "avg_capacity": "አማካኝ አቅም",
+    "unit_kg": "ኪ.ግ",
+    "upload_docs": "ሰነዶችን ይጫኑ",
+    "vehicle_details": "የተሽከርካሪ ዝርዝሮች",
+    "legal_docs": "ህጋዊ ሰነዶች",
+    "truck_registered": "ተሽከርካሪ ተመዝግቧል!",
+    "go_to_details": "ወደ ዝርዝር ሂድ",
+    "click_to_select": "ፋይል ለመምረጥ እዚህ ይጫኑ",
+    "upload_document_msg": "አሁን መገለጫውን ለማጠናቀቅ አስፈላጊ ሰነዶችን ይጫኑ።",
+    "required_docs": "አስፈላጊ ሰነዶች",
+    "required_docs_msg": "ተሽከርካሪውን ለማንቀሳቀስ እና ለጭነት ለመመደብ የሚሰራ ሊብሬ ያስፈልጋል። ከጭነት በኋላ ሁኔታው በራስ-ሰር ይሻሻላል።",
+    "delete_truck_confirm": "ተሽከርካሪ ሰርዝ",
+    "delete_truck_description": "እርግጠኛ ነዎት ተሽከርካሪ {{plate_number}}ን መሰረዝ ይፈልጋሉ? ይህ ተግባር ሊመለስ አይችልም።"
+  },
+  "status": {
+    "active": "ንቁ",
+    "inactive": "ንቁ ያልሆነ",
+    "maintenance": "ጥገና ላይ",
+    "out_of_service": "ከአገልግሎት ውጭ"
+  },
+  "types": {
+    "flatbed": "ፍላትቤድ",
+    "trailer": "ትሬለር"
+  },
+  "fields": {
+    "plate_number": "የሰሌዳ ቁጥር",
+    "truck_type": "የተሽከርካሪ ዓይነት",
+    "make": "ብራንድ",
+    "model": "ሞዴል",
+    "vin": "VIN",
+    "status": "ሁኔታ",
+    "capacity": "አቅም",
+    "year": "ዓመተ ምህረት",
+    "gps_id": "GPS መለያ",
+    "gov_id": "መንግስታዊ መለያ",
+    "document_type": "የሰነድ ዓይነት"
+  },
+  "messages": {
+    "success_operation": "ተግባሩ በተሳካ ሁኔታ ተጠናቅቋል!",
+    "truck_created_upload": "ተሽከርካሪው በተሳካ ሁኔታ ተፈጥሯል። አሁን ሰነዶችን ይጫኑ።",
+    "truck_created_error": "ተሽከርካሪው ተፈጥሯል ነገር ግን ከአገልጋዩ ያልተጠበቀ ምላሽ ተገኝቷል።",
+    "upload_success": "ሰነዱ በተሳካ ሁኔታ ተጭኗል",
+    "upload_error": "ሰነዱን መጫን አልተቻለም",
+    "truck_updated": "ተሽከርካሪው በተሳካ ሁኔታ ተሻሽሏል",
+    "truck_deleted": "ተሽከርካሪው በተሳካ ሁኔታ ተሰርዟል"
+  }
+}

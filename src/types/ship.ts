@@ -211,6 +211,7 @@ export interface PaymentResponse {
   payment_method: "tele_birr";
   transaction_receipt: string | null;
   paid: boolean;
+  confirmation_method: string | null;
   total_str: string; // Computed field
   vat_str: string; // Computed field
 }
@@ -228,4 +229,53 @@ export interface CreateOrderResponse {
   result?: {
     payment_url: string;
   };
+}
+
+// ── Tracking Types ──
+
+export interface TrackingContainer {
+  container_number: string;
+  container_size: string;
+  container_type: string;
+  return_location_info: Record<string, string> | null;
+  is_returning: boolean;
+}
+
+export interface TrackingShipItem {
+  transporter_name: string | null;
+  containers: TrackingContainer[];
+  origin: string | null;
+  destination: string | null;
+  pickup_date: string | null;
+  delivery_date: string | null;
+  status: string;
+}
+
+export interface LocationLog {
+  latitude: number;
+  longitude: number;
+  speed: number;
+  direction: number;
+  is_moving: boolean;
+  accuracy_radius: number;
+  parking: boolean;
+  park_duration: number;
+  total_distance: number;
+  gps_time: string;
+  server_arrived_time: string;
+  update_time: string;
+}
+
+export interface TrackingTruck {
+  truck_id: number;
+  ship_item: TrackingShipItem;
+  location_log: LocationLog[];
+  count_location_log: number;
+}
+
+export interface TrackShipResponse {
+  status: boolean;
+  error_message: string | null;
+  success_message: string | null;
+  result: TrackingTruck[];
 }

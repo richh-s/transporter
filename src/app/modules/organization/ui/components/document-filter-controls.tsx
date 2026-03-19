@@ -15,23 +15,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-
-const DOCUMENT_TYPES = [
-  { value: "trade_licence", label: "Trade Licence" },
-  { value: "id", label: "ID" },
-  { value: "other", label: "Other" },
-] as const;
-
-const DOCUMENT_STATUSES = [
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-] as const;
-
-const ENTITY_TYPES = [
-  { value: "truck", label: "Truck" },
-  { value: "driver", label: "Driver" },
-] as const;
+import { useTranslation } from "react-i18next";
 
 interface DocumentFilterControlsProps {
   filters: {
@@ -56,19 +40,37 @@ export function DocumentFilterControls({
   onEntityTypeFilter,
   onClearFilters,
 }: DocumentFilterControlsProps) {
+  const { t } = useTranslation(["organization", "common"]);
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [isDocumentTypeFilterOpen, setIsDocumentTypeFilterOpen] = useState(false);
   const [isEntityTypeFilterOpen, setIsEntityTypeFilterOpen] = useState(false);
+
+  const DOCUMENT_TYPES = [
+    { value: "trade_licence", label: t("organization:types.trade_licence") },
+    { value: "id", label: t("organization:types.id") },
+    { value: "other", label: t("organization:types.other") },
+  ] as const;
+
+  const DOCUMENT_STATUSES = [
+    { value: "pending", label: t("organization:tabs.pending") },
+    { value: "approved", label: t("organization:tabs.approved") },
+    { value: "rejected", label: t("organization:tabs.rejected") },
+  ] as const;
+
+  const ENTITY_TYPES = [
+    { value: "truck", label: t("organization:entities.truck") },
+    { value: "driver", label: t("organization:entities.driver") },
+  ] as const;
 
   return (
     <>
       <Popover open={isStatusFilterOpen} onOpenChange={setIsStatusFilterOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-9 text-xs sm:text-sm">
-            <span className="hidden sm:inline">Status: </span>
+            <span className="hidden sm:inline">{t("organization:fields.status")}: </span>
             {filters.status
               ? DOCUMENT_STATUSES.find((s) => s.value === filters.status)?.label
-              : "All"}
+              : t("organization:tabs.all")}
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -92,7 +94,7 @@ export function DocumentFilterControls({
                     !filters.status && "bg-amber-100 text-amber-700 font-medium"
                   )}
                 >
-                  All
+                  {t("organization:tabs.all")}
                 </CommandItem>
                 {DOCUMENT_STATUSES.map((status) => (
                   <CommandItem
@@ -121,11 +123,11 @@ export function DocumentFilterControls({
       >
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-9 text-xs sm:text-sm">
-            <span className="hidden sm:inline">Document Type: </span>
+            <span className="hidden sm:inline">{t("organization:fields.document_type")}: </span>
             {filters.document_type
-              ? DOCUMENT_TYPES.find((t) => t.value === filters.document_type)
+              ? DOCUMENT_TYPES.find((t_item) => t_item.value === filters.document_type)
                   ?.label
-              : "All"}
+              : t("organization:tabs.all")}
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -150,7 +152,7 @@ export function DocumentFilterControls({
                       "bg-amber-100 text-amber-700 font-medium"
                   )}
                 >
-                  All
+                  {t("organization:tabs.all")}
                 </CommandItem>
                 {DOCUMENT_TYPES.map((type) => (
                   <CommandItem
@@ -179,10 +181,10 @@ export function DocumentFilterControls({
       >
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-9 text-xs sm:text-sm">
-            <span className="hidden sm:inline">Entity Type: </span>
+            <span className="hidden sm:inline">{t("organization:fields.entity_type")}: </span>
             {filters.entity_type
-              ? ENTITY_TYPES.find((t) => t.value === filters.entity_type)?.label
-              : "All"}
+              ? ENTITY_TYPES.find((t_item) => t_item.value === filters.entity_type)?.label
+              : t("organization:tabs.all")}
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -207,7 +209,7 @@ export function DocumentFilterControls({
                       "bg-amber-100 text-amber-700 font-medium"
                   )}
                 >
-                  All
+                  {t("organization:tabs.all")}
                 </CommandItem>
                 {ENTITY_TYPES.map((type) => (
                   <CommandItem
@@ -237,10 +239,9 @@ export function DocumentFilterControls({
           onClick={onClearFilters}
           className="h-9 text-xs sm:text-sm"
         >
-          Clear
+          {t("common:buttons.clear", { defaultValue: "Clear" })}
         </Button>
       )}
     </>
   );
 }
-

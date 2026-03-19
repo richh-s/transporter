@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ShipItem, Truck, Driver } from "@/types/ship";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,6 +53,7 @@ export function AssignModal({
   isAssigning,
   allShipItems,
 }: AssignModalProps) {
+  const { t } = useTranslation(["shipments", "common"]);
   const [selectedTruckId, setSelectedTruckId] = useState<number | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
 
@@ -170,10 +172,10 @@ export function AssignModal({
         <DialogHeader className="p-4 pb-3 border-b bg-muted/30">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Package className="h-5 w-5 text-primary" />
-            Assign Ship Item #{shipItem.id}
+            {t("shipments:assign_modal.title", { id: shipItem.id })}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Select a truck and driver for this shipment
+            {t("shipments:assign_modal.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -186,11 +188,17 @@ export function AssignModal({
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">
-                  {containers.length} Container
-                  {containers.length !== 1 ? "s" : ""}
+                  {t(
+                    containers.length === 1
+                      ? "shipments:assign_modal.containers_count"
+                      : "shipments:assign_modal.containers_count_plural",
+                    { count: containers.length },
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {totalWeight.toLocaleString()} kg total
+                  {t("shipments:assign_modal.total_weight", {
+                    weight: totalWeight.toLocaleString(),
+                  })}
                 </p>
               </div>
             </div>
@@ -212,7 +220,7 @@ export function AssignModal({
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <TruckIcon className="h-3.5 w-3.5" />
-              Truck
+              {t("shipments:assign_modal.truck_label")}
             </label>
             <Select
               value={selectedTruckId?.toString() || ""}
@@ -222,13 +230,13 @@ export function AssignModal({
             >
               <SelectTrigger className="h-12 rounded-xl min-w-0 w-full overflow-hidden">
                 <div className="flex-1 text-left truncate min-w-0 pr-4">
-                  <SelectValue placeholder="Select a truck..." />
+                  <SelectValue placeholder={t("shipments:assign_modal.truck_placeholder")} />
                 </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {availableTrucks.length === 0 ? (
                   <div className="p-3 text-center text-sm text-muted-foreground">
-                    No trucks available
+                    {t("shipments:assign_modal.no_trucks")}
                   </div>
                 ) : (
                   availableTrucks.map((truck) => (
@@ -263,7 +271,7 @@ export function AssignModal({
             {selectedTruckId && (
               <div className="flex items-center gap-1.5 text-xs text-emerald-600">
                 <Check className="h-3 w-3" />
-                Truck selected
+                {t("shipments:assign_modal.truck_selected")}
               </div>
             )}
           </div>
@@ -272,7 +280,7 @@ export function AssignModal({
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <User className="h-3.5 w-3.5" />
-              Driver
+              {t("shipments:assign_modal.driver_label")}
             </label>
             <Select
               value={selectedDriverId?.toString() || ""}
@@ -282,13 +290,13 @@ export function AssignModal({
             >
               <SelectTrigger className="h-12 rounded-xl min-w-0 w-full overflow-hidden">
                 <div className="flex-1 text-left truncate min-w-0 pr-4">
-                  <SelectValue placeholder="Select a driver..." />
+                  <SelectValue placeholder={t("shipments:assign_modal.driver_placeholder")} />
                 </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {availableDrivers.length === 0 ? (
                   <div className="p-3 text-center text-sm text-muted-foreground">
-                    No drivers available
+                    {t("shipments:assign_modal.no_drivers")}
                   </div>
                 ) : (
                   availableDrivers.map((driver) => (
@@ -315,7 +323,7 @@ export function AssignModal({
             {selectedDriverId && (
               <div className="flex items-center gap-1.5 text-xs text-emerald-600">
                 <Check className="h-3 w-3" />
-                Driver selected
+                {t("shipments:assign_modal.driver_selected")}
               </div>
             )}
           </div>
@@ -327,7 +335,7 @@ export function AssignModal({
             onClick={() => onOpenChange(false)}
             className="w-full sm:flex-1 rounded-xl h-11"
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button
             onClick={handleAssign}
@@ -337,10 +345,10 @@ export function AssignModal({
             {isAssigning ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Assigning...
+                {t("shipments:assign_modal.assigning_button")}
               </>
             ) : (
-              "Assign"
+              t("shipments:assign_modal.assign_button")
             )}
           </Button>
         </DialogFooter>

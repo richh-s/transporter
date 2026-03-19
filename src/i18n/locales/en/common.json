@@ -1,0 +1,58 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "shipments": "Shipments",
+    "fleet": "Fleet",
+    "drivers": "Drivers",
+    "gps": "GPS Devices",
+    "quotes": "Price Quotes",
+    "pod": "POD Documents",
+    "org_docs": "Organization Documents",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "change_password": "Change Password"
+  },
+  "labels": {
+    "dashboard": "Dashboard",
+    "shipments": "Shipments",
+    "fleet": "Fleet",
+    "drivers": "Drivers",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "change_password": "Change Password",
+    "all": "All",
+    "date": "Date",
+    "filters": "Filters",
+    "step_x": "Step {{step}} of {{total}}: {{label}}"
+  },
+  "buttons": {
+    "add": "Add",
+    "next": "Next",
+    "cancel": "Cancel",
+    "done": "Done",
+    "creating": "Creating...",
+    "uploading": "Uploading...",
+    "clear_filters": "Clear Filters",
+    "clear": "Clear",
+    "view_details": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "actions": "Actions",
+    "save_changes": "Save Changes",
+    "upload_doc": "Upload Document"
+  },
+  "messages": {
+    "saving": "Saving..."
+  },
+  "actions": {
+    "open_menu": "Open menu"
+  },
+  "auth_dialogs": {
+    "logout_title": "Confirm Logout",
+    "logout_description": "Are you sure you want to log out of your account?",
+    "logout_button": "Log Out"
+  }
+}

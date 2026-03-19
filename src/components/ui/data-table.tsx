@@ -86,6 +86,14 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean;
   // Row click handler
   onRowClick?: (row: TData) => void;
+  // Custom mobile card renderer (when provided, used instead of default MobileCardView)
+  renderMobileCard?: (item: TData) => React.ReactNode;
+  // Clean/minimal table styling
+  variant?: "default" | "clean";
+  // Hide column visibility toggle
+  hideColumnVisibility?: boolean;
+  // Optional section rendered between search/filters and table/cards (e.g. stats + tabs)
+  topSection?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -111,6 +119,10 @@ export function DataTable<TData, TValue>({
   mobileAddButton,
   isLoading = false,
   onRowClick,
+  renderMobileCard,
+  variant = "default",
+  hideColumnVisibility = false,
+  topSection,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -215,20 +227,26 @@ export function DataTable<TData, TValue>({
   // Mobile Card View Component - Renders table rows as cards on mobile screens
   const MobileCardView = ({ row }: { row: Row<TData> }) => {
     const visibleCells = row.getVisibleCells().filter((cell) => {
-      // Always show plate_number and actions, filter others based on visibility
-      if (cell.column.id === "actions" || cell.column.id === "plate_number")
+      // Always show plate_number, id, and actions, filter others based on visibility
+      if (
+        cell.column.id === "actions" ||
+        cell.column.id === "plate_number" ||
+        cell.column.id === "id"
+      )
         return true;
       if (cell.column.columnDef.enableHiding === false) return true;
       return columnVisibility[cell.column.id] !== false;
     });
 
-    // Find plate_number cell for header
+    // Find primary header cell (plate_number for fleet, id for ships)
     const plateCell = visibleCells.find(
       (cell) =>
         cell.column.id === "plate_number" ||
         (cell.column.columnDef as { accessorKey?: string }).accessorKey ===
         "plate_number",
     );
+    const idCell = visibleCells.find((cell) => cell.column.id === "id");
+    const primaryHeaderCell = plateCell ?? idCell;
 
     // Find actions cell
     const actionsCell = visibleCells.find(
@@ -239,6 +257,7 @@ export function DataTable<TData, TValue>({
     const bodyCells = visibleCells.filter(
       (cell) =>
         cell.column.id !== "plate_number" &&
+        cell.column.id !== "id" &&
         cell.column.id !== "actions" &&
         (cell.column.columnDef as { accessorKey?: string }).accessorKey !==
         "plate_number",
@@ -252,6 +271,10 @@ export function DataTable<TData, TValue>({
         make: "Make / Model",
         capacity_quintal: "Capacity",
         status: "Status",
+        id: "ID",
+        origin: "Route",
+        pickup_date: "Pickup",
+        delivery_date: "Delivery",
       };
 
       if (column.id && labelMap[column.id]) {
@@ -280,13 +303,13 @@ export function DataTable<TData, TValue>({
         {/* Brand Tint Overlay */}
         <div className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.05] pointer-events-none" />
 
-        {/* Card Header - Primary Info (Plate Number) */}
+        {/* Card Header - Primary Info (Plate Number or ID) */}
         <div className="flex items-start justify-between pb-2 border-b border-border/50">
           <div className="flex-1 min-w-0 pr-2">
-            {plateCell &&
+            {primaryHeaderCell &&
               flexRender(
-                plateCell.column.columnDef.cell,
-                plateCell.getContext(),
+                primaryHeaderCell.column.columnDef.cell,
+                primaryHeaderCell.getContext(),
               )}
           </div>
           {/* Actions Button */}
@@ -442,7 +465,7 @@ export function DataTable<TData, TValue>({
                 onChange={(event) => handleSearchChange(event.target.value)}
                 onFocus={() => onSearchFocus?.(true)}
                 onBlur={() => onSearchFocus?.(false)}
-                className="flex-1 md:max-w-sm h-9 text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 py-2"
+                className="flex-1 md:max-w-sm h-11 text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 py-2.5"
               />
             )}
             <div className="flex flex-1 md:flex-initial items-center gap-2">
@@ -459,16 +482,18 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Mobile Card View - Only visible on mobile screens (< 768px) - 2 Column Grid - Scrollable */}
+      {topSection && <div className="shrink-0">{topSection}</div>}
+
+      {/* Mobile Card View - Only visible on mobile screens (< 768px) - Single column scrollable */}
       <div
         ref={mobileScrollRef}
         onScroll={handleScroll}
         className="md:hidden w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <div className="grid grid-cols-2 gap-2 p-1 pb-2">
+        <div className="flex flex-col gap-3 px-4 pb-4">
           {isLoading ? (
-            <div className="col-span-2 flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-8">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="text-sm">Loading...</span>
@@ -476,13 +501,19 @@ export function DataTable<TData, TValue>({
             </div>
           ) : visibleRows.length ? (
             <>
-              {visibleRows.map((row) => (
-                <MobileCardView key={row.id} row={row} />
-              ))}
+              {visibleRows.map((row) =>
+                renderMobileCard ? (
+                  <React.Fragment key={row.id}>
+                    {renderMobileCard(row.original)}
+                  </React.Fragment>
+                ) : (
+                  <MobileCardView key={row.id} row={row} />
+                ),
+              )}
 
               {/* Pagination Buttons - After cards */}
               {(page > 1 || hasMore) && (
-                <div className="col-span-2 mt-3 mb-2 flex items-center justify-center gap-3 sticky bottom-4 py-2 z-10">
+                <div className="mt-3 flex items-center justify-center gap-3 py-2 z-10">
                   {/* Previous Button */}
                   <Button
                     onClick={handleSeePrevious}
@@ -519,7 +550,7 @@ export function DataTable<TData, TValue>({
               )}
             </>
           ) : (
-            <div className="col-span-2 bg-card border rounded-lg p-8 text-center text-muted-foreground">
+            <div className="bg-card border rounded-lg p-8 text-center text-muted-foreground">
               No results.
             </div>
           )}
@@ -527,16 +558,35 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Table View - Hidden on mobile, visible on tablet and desktop (>= 768px) */}
-      <div className="hidden md:flex bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(75,169,77,0.05)] w-full flex-col h-[200px] sm:h-[450px] overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_40px_rgba(75,169,77,0.1)]">
+      <div
+        className={cn(
+          "hidden md:flex w-full flex-col h-[200px] sm:h-[450px] overflow-hidden rounded-lg border",
+          variant === "clean"
+            ? "bg-background border-border"
+            : "bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-2xl border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(75,169,77,0.05)] transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_40px_rgba(75,169,77,0.1)]",
+        )}
+      >
         {/* Table Container - Single scrollable container for header and body */}
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
           <div className="min-w-full">
             <Table className="min-w-full w-full">
-              <TableHeader className="bg-background sticky top-0 z-20 shadow-sm">
+              <TableHeader
+                className={cn(
+                  "sticky top-0 z-20",
+                  variant === "clean"
+                    ? "bg-muted"
+                    : "bg-white dark:bg-background shadow-sm border-b",
+                )}
+              >
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
                     key={headerGroup.id}
-                    className="border-b border-border/40 hover:bg-transparent"
+                    className={cn(
+                      "border-b hover:bg-transparent",
+                      variant === "clean"
+                        ? "border-border"
+                        : "border-border/40",
+                    )}
                   >
                     {headerGroup.headers.map((header, index) => {
                       const isSticky = (
@@ -546,10 +596,11 @@ export function DataTable<TData, TValue>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            "bg-transparent h-12",
+                            "h-11 font-medium text-muted-foreground",
+                            variant === "clean" ? "bg-muted" : "bg-white dark:bg-background",
                             isSticky &&
                             "sticky left-0 z-30 bg-muted/80 backdrop-blur-md border-r",
-                            index === 0 ? "pl-4 pr-2" : "px-2",
+                            index === 0 ? "pl-4 pr-3" : "px-3",
                             "align-middle",
                           )}
                         >
@@ -585,9 +636,14 @@ export function DataTable<TData, TValue>({
                       data-state={row.getIsSelected() && "selected"}
                       onClick={() => onRowClick?.(row.original)}
                       className={cn(
-                        "group border-b border-border/30 last:border-0 transition-all duration-300",
+                        "group border-b last:border-0 transition-colors",
+                        variant === "clean"
+                          ? "border-border/50"
+                          : "border-border/30",
+                        onRowClick && "cursor-pointer hover:bg-muted/50",
+                        variant === "clean" &&
                         onRowClick &&
-                        "cursor-pointer hover:bg-primary/[0.02] hover:shadow-[inset_4px_0_0_0_var(--primary)]",
+                        "hover:bg-muted/30",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -600,7 +656,8 @@ export function DataTable<TData, TValue>({
                             className={cn(
                               isSticky &&
                               "sticky left-0 z-10 bg-background border-r",
-                              "align-middle",
+                              "align-middle py-3",
+                              variant === "clean" ? "px-3" : "px-2",
                             )}
                           >
                             {flexRender(
@@ -689,36 +746,38 @@ export function DataTable<TData, TValue>({
               </Popover>
             </div>
           )}
-          <DropdownMenu open={isColumnsOpen} onOpenChange={setIsColumnsOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-8 sm:h-9 text-xs sm:text-sm"
-              >
-                Columns <ChevronDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px] sm:w-auto">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize text-xs sm:text-sm"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => {
-                        column.toggleVisibility(!!value);
-                        setIsColumnsOpen(false);
-                      }}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!hideColumnVisibility && (
+            <DropdownMenu open={isColumnsOpen} onOpenChange={setIsColumnsOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-8 sm:h-9 text-xs sm:text-sm"
+                >
+                  Columns <ChevronDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px] sm:w-auto">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize text-xs sm:text-sm"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => {
+                          column.toggleVisibility(!!value);
+                          setIsColumnsOpen(false);
+                        }}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
           {manualPagination && onPageChange ? (

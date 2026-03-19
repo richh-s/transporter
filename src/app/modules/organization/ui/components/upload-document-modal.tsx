@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
-import { Loader2, Upload, X, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,9 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Label } from "@/components/ui/label";
+import { Upload, X, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -35,293 +35,158 @@ export function UploadDocumentModal({
   onUpload,
   isUploading,
 }: UploadDocumentModalProps) {
+  const { t } = useTranslation(["organization", "common"]);
+  const [file, setFile] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [documentType, setDocumentType] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      validateAndSetFile(file);
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
   };
-
-  const validateAndSetFile = (file: File) => {
-    // Validate file type
-    const validTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-    ];
-
-    if (!validTypes.includes(file.type)) {
-      setError(
-        "Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG files.",
-      );
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      setError("File size exceeds 10MB limit. Please choose a smaller file.");
-      return;
-    }
-
-    setSelectedFile(file);
-    setError(null);
-  };
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      validateAndSetFile(file);
-    }
-  }, []);
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setError("Please select a file");
-      return;
-    }
-
-    if (!documentType.trim()) {
-      setError("Please select a document type");
-      return;
-    }
-
-    setError(null);
-    // Reset form optimistically
-    setSelectedFile(null);
-    setDocumentType("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    // Close modal optimistically - parent will handle success/error
-    onOpenChange(false);
-    // Call onUpload (it now handles the mutation and closes modal)
-    onUpload(selectedFile, documentType.trim());
-  };
-
-  const handleClose = () => {
-    if (!isUploading) {
-      setSelectedFile(null);
+    if (file && documentType) {
+      await onUpload(file, documentType);
+      // Reset state if successful (parent handles success/closing)
+      setFile(null);
       setDocumentType("");
-      setError(null);
-      setIsDragging(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      onOpenChange(false);
     }
   };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  };
-
-  const getFileIcon = (fileName: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const ext = fileName.split(".").pop()?.toLowerCase();
-    return <FileText className="h-5 w-5 text-muted-foreground shrink-0" />;
-  };
-
-  /** Truncate long filenames so the modal layout stays stable */
-  const truncateFileName = (name: string, maxLen = 35) => {
-    if (name.length <= maxLen) return name;
-    const ext = name.includes(".") ? name.slice(name.lastIndexOf(".")) : "";
-    const base = name.slice(0, name.length - ext.length);
-    const keep = maxLen - ext.length - 3; // 3 for "..."
-    return keep > 0 ? `${base.slice(0, keep)}...${ext}` : `...${ext}`;
+  const resetAndClose = () => {
+    setFile(null);
+    setDocumentType("");
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-w-[min(600px,calc(100vw-2rem))] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Upload Document</DialogTitle>
-          <DialogDescription>
-            Select a document type and upload your file. Supported formats: PDF,
-            DOC, DOCX, JPG, PNG (Max 10MB)
+    <Dialog open={isOpen} onOpenChange={resetAndClose}>
+      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none rounded-2xl bg-background shadow-2xl">
+        <DialogHeader className="p-6 bg-brand-primary text-white">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Upload className="h-6 w-6" />
+              {t("organization:buttons.upload_doc")}
+            </DialogTitle>
+            <button
+              onClick={resetAndClose}
+              className="p-1.5 hover:bg-white/10 rounded-full transition-colors outline-none"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <DialogDescription className="text-white/80 pt-2 text-xs sm:text-sm">
+            {t("organization:subtitle")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4 overflow-hidden">
+        <div className="p-6 space-y-6">
           {/* Document Type Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="document-type" className="text-sm font-medium">
-              Document Type <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={documentType}
-              onValueChange={(value) => {
-                setDocumentType(value);
-                setError(null);
-              }}
-              disabled={isUploading}
+          <div className="space-y-3">
+            <Label
+              htmlFor="doc-type"
+              className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              <SelectTrigger id="document-type" className="h-11">
-                <SelectValue placeholder="Choose document type" />
+              {t("organization:fields.document_type")}
+            </Label>
+            <Select value={documentType} onValueChange={setDocumentType}>
+              <SelectTrigger id="doc-type" className="h-12 rounded-xl">
+                <SelectValue placeholder={t("organization:fields.select_type")} />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+              <SelectContent className="rounded-xl shadow-xl border-border/50">
+                <SelectItem value="trade_licence" className="rounded-lg">
+                  {t("organization:types.trade_licence")}
+                </SelectItem>
+                <SelectItem value="id" className="rounded-lg">
+                  {t("organization:types.id")}
+                </SelectItem>
+                <SelectItem value="other" className="rounded-lg">
+                  {t("organization:types.other")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* File Upload Area */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              File <span className="text-destructive">*</span>
+          <div className="space-y-3">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t("organization:fields.file")}
             </Label>
-            <input
-              ref={fileInputRef}
-              id="file"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              disabled={isUploading}
-            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                "group relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300",
+                file
+                  ? "bg-brand-primary/5 border-brand-primary"
+                  : "bg-muted/30 border-border hover:bg-muted/50 hover:border-brand-primary/50",
+              )}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleFileChange}
+              />
 
-            {!selectedFile ? (
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={cn(
-                  "relative border-2 border-dashed rounded-lg p-8 transition-all cursor-pointer",
-                  "hover:border-brand-primary hover:bg-brand-primary/5",
-                  isDragging && "border-brand-primary bg-brand-primary/10",
-                  isUploading && "opacity-50 cursor-not-allowed",
-                )}
-                onClick={handleFileSelect}
-              >
-                <div className="flex flex-col items-center justify-center gap-4 text-center">
-                  <div
-                    className={cn(
-                      "rounded-full p-4 transition-colors",
-                      isDragging ? "bg-brand-primary/20" : "bg-muted",
-                    )}
-                  >
-                    <Upload
-                      className={cn(
-                        "h-8 w-8 transition-colors",
-                        isDragging
-                          ? "text-brand-primary"
-                          : "text-muted-foreground",
-                      )}
-                    />
+              {file ? (
+                <div className="flex flex-col items-center gap-2 animate-in zoom-in-95 duration-300">
+                  <div className="p-3 rounded-2xl bg-brand-primary/10">
+                    <FileText className="h-8 w-8 text-brand-primary" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      {isDragging
-                        ? "Drop your file here"
-                        : "Click to upload or drag and drop"}
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-brand-primary max-w-[200px] truncate">
+                      {file.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                    <p className="text-[10px] text-muted-foreground">
+                      {(file.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="border rounded-lg p-4 bg-muted/50 overflow-hidden max-w-full">
-                <div className="flex items-center gap-3 min-w-0 w-full">
-                  <div className="flex-shrink-0">
-                    {getFileIcon(selectedFile.name)}
+              ) : (
+                <>
+                  <div className="p-3 rounded-2xl bg-muted/50 group-hover:bg-brand-primary/10 transition-colors">
+                    <Upload className="h-8 w-8 text-muted-foreground group-hover:text-brand-primary" />
                   </div>
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <p
-                      className="text-sm font-medium truncate block"
-                      title={selectedFile.name}
-                    >
-                      {truncateFileName(selectedFile.name)}
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-foreground">
+                      {t("common:buttons.upload_doc", { defaultValue: "Click to upload" })}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(selectedFile.size)}
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      PDF, JPG, PNG (Max 10MB)
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRemoveFile}
-                    disabled={isUploading}
-                    className="h-8 w-8 flex-shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="p-6 bg-muted/30 flex flex-row gap-3">
           <Button
-            variant="outline"
-            onClick={handleClose}
+            type="button"
+            variant="ghost"
+            onClick={resetAndClose}
+            className="flex-1 h-12 rounded-xl text-muted-foreground hover:bg-muted font-bold transition-all"
             disabled={isUploading}
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button
+            type="button"
             onClick={handleUpload}
-            disabled={!selectedFile || !documentType || isUploading}
-            className="min-w-[120px]"
+            disabled={!file || !documentType || isUploading}
+            className="flex-1 h-12 rounded-xl bg-brand-primary hover:bg-brand-secondary text-white font-bold shadow-lg shadow-brand-primary/20 transition-all active:scale-[0.98]"
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Uploading...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("common:messages.saving")}
               </>
             ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Document
-              </>
+              t("organization:buttons.upload_doc")
             )}
           </Button>
         </DialogFooter>

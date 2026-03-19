@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   Trash2,
   Edit,
@@ -114,6 +115,7 @@ function DetailSkeleton() {
 
 function PriceQuoteDetailContent() {
   const router = useRouter();
+  const { t } = useTranslation(["price_quotes", "common"]);
   const params = useParams();
   const searchParams = useSearchParams();
   const rawId = searchParams.get("id") || (params.id as string);
@@ -172,11 +174,11 @@ function PriceQuoteDetailContent() {
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
         <p className="text-sm text-muted-foreground text-center">
-          Failed to load quote
+          {t("price_quotes:error.failed_load")}
         </p>
         <Link href="/price-quotes">
           <Button variant="outline" size="sm">
-            Go to Quotes
+            {t("price_quotes:error.go_back")}
           </Button>
         </Link>
       </div>
@@ -193,14 +195,16 @@ function PriceQuoteDetailContent() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="p-4 space-y-2">
           <CompactBreadcrumb
-            parentLabel="Price Quotes"
+            parentLabel={t("price_quotes:title")}
             parentHref="/price-quotes"
-            currentLabel={`Quote #${quote.id}`}
+            currentLabel={`${t("price_quotes:details.quote_number")} #${quote.id}`}
           />
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold">Quote #{quote.id}</h1>
+                <h1 className="text-lg font-bold">
+                  {t("price_quotes:details.quote_number")} #{quote.id}
+                </h1>
                 <StatusBadge status={quote.status} />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -218,7 +222,7 @@ function PriceQuoteDetailContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                Total Amount
+                {t("price_quotes:create.labels.amount")}
               </p>
               <p className="text-3xl font-bold text-primary">
                 {formatCurrency(quote.amount, quote.currency)}
@@ -236,7 +240,7 @@ function PriceQuoteDetailContent() {
         {/* Route Card */}
         <InfoCard
           icon={MapPin}
-          title="Route"
+          title={t("price_quotes:create.sections.route")}
           accent="bg-red-500/10 text-red-500"
         >
           <div className="flex items-center gap-3">
@@ -248,7 +252,7 @@ function PriceQuoteDetailContent() {
             <div className="flex-1 space-y-4">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  Origin
+                  {t("price_quotes:create.labels.origin")}
                 </p>
                 <p className="text-sm font-semibold">
                   {formatLocation(quote.origin)}
@@ -256,7 +260,7 @@ function PriceQuoteDetailContent() {
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  Destination
+                  {t("price_quotes:create.labels.destination")}
                 </p>
                 <p className="text-sm font-semibold">
                   {formatLocation(quote.destination)}
@@ -290,7 +294,7 @@ function PriceQuoteDetailContent() {
                 <Package className="h-3.5 w-3.5 text-purple-500" />
               </div>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Container
+                {t("price_quotes:details.container")}
               </span>
             </div>
             <p className="text-sm font-semibold">
@@ -302,13 +306,13 @@ function PriceQuoteDetailContent() {
         {/* Weight Range */}
         <InfoCard
           icon={Scale}
-          title="Weight Range"
+          title={t("price_quotes:create.sections.weight")}
           accent="bg-amber-500/10 text-amber-600"
         >
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                Minimum
+                {t("price_quotes:create.labels.min_weight")}
               </p>
               <p className="text-lg font-bold">
                 {quote.gross_weight_min.toLocaleString()}
@@ -317,7 +321,7 @@ function PriceQuoteDetailContent() {
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                Maximum
+                {t("price_quotes:create.labels.max_weight")}
               </p>
               <p className="text-lg font-bold">
                 {quote.gross_weight_max.toLocaleString()}
@@ -331,7 +335,7 @@ function PriceQuoteDetailContent() {
         {quote.created_at && (
           <InfoCard
             icon={Calendar}
-            title="Created"
+            title={t("price_quotes:details.created_at")}
             accent="bg-gray-500/10 text-gray-600"
           >
             <p className="text-sm font-medium">
@@ -352,7 +356,7 @@ function PriceQuoteDetailContent() {
             className="flex-1 rounded-xl h-11"
           >
             <Edit className="mr-2 h-4 w-4" />
-            Edit
+            {t("common:buttons.edit")}
           </Button>
           <Button
             variant="destructive"

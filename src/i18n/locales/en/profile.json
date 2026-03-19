@@ -1,0 +1,17 @@
+{
+  "change_password": "Change Password",
+  "change_password_description": "Enter your current password and choose a new password.",
+  "current_password": "Current Password",
+  "current_password_placeholder": "Enter current password",
+  "new_password": "New Password",
+  "new_password_placeholder": "Enter new password",
+  "confirm_password": "Confirm New Password",
+  "confirm_password_placeholder": "Confirm new password",
+  "password_hint": "Password must be at least 8 characters long.",
+  "saving": "Saving...",
+  "success_password": "Password changed successfully",
+  "error_session_expired": "Your session has expired. Please log in again.",
+  "error_incorrect_password": "Current password is incorrect",
+  "error_reset_failed": "Failed to reset password",
+  "error_try_again": "Failed to reset password. Please try again."
+}

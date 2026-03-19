@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/ships";
 import { CreateOrderRequest } from "@/types/ship";
 import { toast } from "sonner";
+import { humanizeError } from "@/lib/utils/error-humanizer";
 
 export const shipKeys = {
   all: ["ships"] as const,
@@ -26,7 +27,7 @@ export const shipKeys = {
     [...shipKeys.all, "documents", shipId] as const,
 };
 
-export function useShips(params: GetShipsParams = {}) {
+export function useShips(params: GetShipsParams = {}, options: { refetchInterval?: number | false } = {}) {
   return useQuery({
     queryKey: shipKeys.list(params),
     queryFn: async () => {
@@ -34,6 +35,7 @@ export function useShips(params: GetShipsParams = {}) {
       if (response.error) throw new Error(response.error);
       return response.data;
     },
+    ...options,
   });
 }
 
@@ -99,7 +101,7 @@ export function useAssignTruck(shipId: string | number) {
       toast.success("Truck assigned successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to assign truck");
+      toast.error(humanizeError(error.message) || "Failed to assign truck");
     },
   });
 }
@@ -142,7 +144,7 @@ export function useAssignDriver(shipId: string | number) {
       toast.success("Driver assigned successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to assign driver");
+      toast.error(humanizeError(error.message) || "Failed to assign driver");
     },
   });
 }
@@ -175,7 +177,7 @@ export function useMarkAsDelivered(shipId: string | number) {
       toast.success("Ship item marked as delivered");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to mark as delivered");
+      toast.error(humanizeError(error.message) || "Failed to mark as delivered");
     },
   });
 }
@@ -189,10 +191,25 @@ export function useShipPayments(shipId: string | number) {
     queryFn: async () => {
       if (!shipId) return null;
       const response = await shipApi.getPayments(shipId);
-      if (response.error) throw new Error(response.error);
+      if (response.error) {
+        // Handle network errors gracefully - don't throw for network issues
+        if (response.status === 0 || response.error.includes("Network error")) {
+          console.warn("⚠️ Payments endpoint unavailable:", response.error);
+          return null; // Return null instead of throwing for network errors
+        }
+        throw new Error(response.error);
+      }
       return response.data;
     },
     enabled: !!shipId,
+    retry: (failureCount, error) => {
+      // Don't retry on network errors (status 0) or if error message indicates network issue
+      if (error instanceof Error && error.message.includes("Network error")) {
+        return false;
+      }
+      return failureCount < 2; // Retry up to 2 times for other errors
+    },
+    retryDelay: 1000,
   });
 }
 
@@ -261,6 +278,7 @@ export function useManualPaymentConfirmation(shipId: string | number) {
       date?: string;
       note?: string;
       reference_doc_file?: File;
+      transaction_receipt?: File;
     }) => {
       return shipApi.requestManualConfirmation(data);
     },
@@ -270,7 +288,9 @@ export function useManualPaymentConfirmation(shipId: string | number) {
       toast.success("Manual confirmation request submitted successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to submit manual confirmation request");
+      toast.error(
+        error.message || "Failed to submit manual confirmation request",
+      );
     },
   });
 }
@@ -283,6 +303,22 @@ export function useShipDocuments(shipId: string | number) {
     queryFn: async () => {
       if (!shipId) return null;
       const response = await shipApi.getDocuments(shipId);
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    enabled: !!shipId,
+  });
+}
+
+/**
+ * Hook to track a ship for transporter
+ */
+export function useTrackShip(shipId: string | number) {
+  return useQuery({
+    queryKey: [...shipKeys.all, "track", shipId] as const,
+    queryFn: async () => {
+      if (!shipId) return null;
+      const response = await shipApi.trackShipForTransporter(shipId);
       if (response.error) throw new Error(response.error);
       return response.data;
     },

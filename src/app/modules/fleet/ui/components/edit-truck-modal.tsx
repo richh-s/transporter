@@ -42,6 +42,7 @@ import { humanizeError } from "@/lib/utils/error-humanizer";
 import type { Truck } from "@/lib/api/trucks";
 import { toast } from "sonner";
 import { useUpdateTruck, ApiError } from "@/app/modules/fleet/server/hooks/use-update-truck";
+import { useTranslation } from "react-i18next";
 
 const truckFormSchema = z.object({
   vin: z
@@ -92,6 +93,7 @@ export function EditTruckModal({
   onOpenChange,
   onSuccess,
 }: EditTruckModalProps) {
+  const { t } = useTranslation(["fleet", "common"]);
   const [isTypePopoverOpen, setIsTypePopoverOpen] = useState(false);
   const [isStatusPopoverOpen, setIsStatusPopoverOpen] = useState(false);
 
@@ -152,7 +154,7 @@ export function EditTruckModal({
         data: values,
       });
       // Only close modal and show success on actual success
-      toast.success("Truck updated successfully");
+      toast.success(t("fleet:messages.truck_updated"));
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
@@ -168,7 +170,7 @@ export function EditTruckModal({
         toast.error(humanizeError(firstError as string));
       } else {
         console.error("Failed to update truck:", err);
-        toast.error(err instanceof Error ? err.message : "Failed to update truck");
+        toast.error(err instanceof Error ? err.message : t("common:messages.error_generic"));
       }
     }
   };
@@ -182,13 +184,12 @@ export function EditTruckModal({
         className="sm:max-w-[600px] max-w-[95vw] h-auto max-h-[85vh] sm:h-[500px] flex flex-col p-0 overflow-hidden"
       >
         <DialogHeader className="p-4 sm:p-6 pb-2">
-          <DialogTitle className="text-lg sm:text-xl">Edit Truck</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{t("fleet:labels.edit_truck")}</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Update the truck details.
+            {t("fleet:subtitle")}
           </DialogDescription>
           <p className="text-xs text-muted-foreground mt-1">
-            Fields marked with <span className="text-red-500">*</span> are
-            required.
+            {t("common:labels.required_fields_hint", { defaultValue: "Fields marked with * are required." })}
           </p>
         </DialogHeader>
 
@@ -218,7 +219,7 @@ export function EditTruckModal({
                   <AlertDescription className="text-sm">
                     {updateTruckMutation.error instanceof Error
                       ? updateTruckMutation.error.message
-                      : "Failed to update truck. Please try again."}
+                      : t("common:messages.error_generic")}
                   </AlertDescription>
                 </Alert>
               )}
@@ -230,7 +231,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Vehicle Identification Number (VIN) <span className="text-red-500">*</span>
+                        {t("fleet:fields.vin")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -249,7 +250,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Plate Number <span className="text-red-500">*</span>
+                        {t("fleet:fields.plate_number")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -268,7 +269,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>
-                        Truck Type <span className="text-red-500">*</span>
+                        {t("fleet:fields.truck_type")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <Popover
                         open={isTypePopoverOpen}
@@ -285,10 +286,8 @@ export function EditTruckModal({
                               )}
                             >
                               {field.value
-                                ? TRUCK_TYPES.find(
-                                  (type) => type.value === field.value,
-                                )?.label
-                                : "Select type..."}
+                                ? t(`fleet:types.${field.value.toLowerCase()}`, { defaultValue: field.value })
+                                : t("common:labels.select")}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
@@ -301,13 +300,13 @@ export function EditTruckModal({
                           }}
                         >
                           <Command>
-                            <CommandInput placeholder="Search type..." />
+                            <CommandInput placeholder={t("common:labels.search_placeholder", { defaultValue: "Search..." })} />
                             <CommandList>
-                              <CommandEmpty>No type found.</CommandEmpty>
+                              <CommandEmpty>{t("common:labels.no_results", { defaultValue: "No results found." })}</CommandEmpty>
                               <CommandGroup>
                                 {TRUCK_TYPES.map((type) => (
                                   <CommandItem
-                                    value={type.label}
+                                    value={type.value}
                                     key={type.value}
                                     onSelect={() => {
                                       form.setValue("truck_type", type.value);
@@ -322,7 +321,7 @@ export function EditTruckModal({
                                           : "opacity-0",
                                       )}
                                     />
-                                    {type.label}
+                                    {t(`fleet:types.${type.value.toLowerCase()}`, { defaultValue: type.label })}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -340,7 +339,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>
-                        Status <span className="text-red-500">*</span>
+                        {t("fleet:fields.status")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <Popover
                         open={isStatusPopoverOpen}
@@ -357,10 +356,8 @@ export function EditTruckModal({
                               )}
                             >
                               {field.value
-                                ? TRUCK_STATUSES.find(
-                                  (status) => status.value === field.value,
-                                )?.label
-                                : "Select status..."}
+                                ? t(`fleet:status.${field.value.toLowerCase()}`, { defaultValue: field.value })
+                                : t("common:labels.select")}
                               <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
@@ -373,13 +370,13 @@ export function EditTruckModal({
                           }}
                         >
                           <Command>
-                            <CommandInput placeholder="Search status..." />
+                            <CommandInput placeholder={t("common:labels.search_placeholder")} />
                             <CommandList>
-                              <CommandEmpty>No status found.</CommandEmpty>
+                              <CommandEmpty>{t("common:labels.no_results")}</CommandEmpty>
                               <CommandGroup>
                                 {TRUCK_STATUSES.map((status) => (
                                   <CommandItem
-                                    value={status.label}
+                                    value={status.value}
                                     key={status.value}
                                     onSelect={() => {
                                       form.setValue("status", status.value);
@@ -394,7 +391,7 @@ export function EditTruckModal({
                                           : "opacity-0",
                                       )}
                                     />
-                                    {status.label}
+                                    {t(`fleet:status.${status.value.toLowerCase()}`, { defaultValue: status.label })}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -413,7 +410,7 @@ export function EditTruckModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Capacity (Kg){" "}
+                        {t("fleet:fields.capacity")} ({t("fleet:labels.unit_kg")}){" "}
                         <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
@@ -439,7 +436,7 @@ export function EditTruckModal({
                   name="make"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Make (Optional)</FormLabel>
+                      <FormLabel>{t("fleet:fields.make")} ({t("common:labels.optional")})</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -458,7 +455,7 @@ export function EditTruckModal({
                     name="model"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Model (Optional)</FormLabel>
+                        <FormLabel>{t("fleet:fields.model")} ({t("common:labels.optional")})</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -475,7 +472,7 @@ export function EditTruckModal({
                     name="gps_device_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>GPS Device ID (Optional)</FormLabel>
+                        <FormLabel>{t("fleet:fields.gps_id")} ({t("common:labels.optional")})</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -500,7 +497,7 @@ export function EditTruckModal({
                     name="year"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Year (Optional)</FormLabel>
+                        <FormLabel>{t("fleet:fields.year")} ({t("common:labels.optional")})</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -522,7 +519,7 @@ export function EditTruckModal({
                     name="color"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Color (Optional)</FormLabel>
+                        <FormLabel>{t("common:fields.color", { defaultValue: "Color" })} ({t("common:labels.optional")})</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -541,7 +538,7 @@ export function EditTruckModal({
                   name="gov_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Government ID (Optional)</FormLabel>
+                      <FormLabel>{t("fleet:fields.gov_id")} ({t("common:labels.optional")})</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -558,7 +555,7 @@ export function EditTruckModal({
                   name="libre_key"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Libre Key (Optional)</FormLabel>
+                      <FormLabel>{t("common:fields.libre_key", { defaultValue: "Libre Key" })} ({t("common:labels.optional")})</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -579,7 +576,7 @@ export function EditTruckModal({
                 type="button"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -589,7 +586,7 @@ export function EditTruckModal({
                 {updateTruckMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Save Changes
+                {t("common:buttons.save_changes", { defaultValue: "Save Changes" })}
               </Button>
             </DialogFooter>
           </form>

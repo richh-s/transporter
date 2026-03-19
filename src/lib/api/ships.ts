@@ -9,6 +9,7 @@ import {
   CreateOrderRequest,
   CreateOrderResponse,
   ShipDocumentsResponse,
+  TrackShipResponse,
 } from "@/types/ship";
 
 /**
@@ -106,6 +107,7 @@ export interface ManualConfirmationRequest {
   date?: string; // ISO date string
   note?: string;
   reference_doc_file?: File;
+  transaction_receipt?: File;
 }
 
 export const shipApi = {
@@ -440,6 +442,7 @@ export const shipApi = {
     if (data.date) formData.append("date", data.date);
     if (data.note) formData.append("note", data.note);
     if (data.reference_doc_file) formData.append("reference_doc_file", data.reference_doc_file);
+    if (data.transaction_receipt) formData.append("transaction_receipt", data.transaction_receipt);
 
     return apiRequest<Record<string, unknown>>(`/transporter/manual-confirmation-request`, {
       method: "PATCH",
@@ -457,6 +460,55 @@ export const shipApi = {
 
     return request<ShipperInfoResponse>(
       `/transporter/shipper-info?${queryParams.toString()}`,
+    );
+  },
+
+  /**
+   * Get receipt PDF for a payment
+   * GET /api/v1/payment/receipt/{payment_id}
+   * Returns a PDF blob
+   */
+  getReceipt: async (paymentId: number | string): Promise<Blob> => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const url = `${API_URL}/payment/receipt/${paymentId}`;
+    console.log("📄 [Receipt API] Fetching receipt from:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+        Accept: "application/pdf",
+      },
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          const errorData = (await response.json()) as Record<string, unknown>;
+          throw new Error(
+            (errorData.error as string) ||
+            (errorData.message as string) ||
+            "Failed to fetch receipt",
+          );
+        } catch {
+          /* ignore */
+        }
+      }
+      throw new Error(`Failed to fetch receipt: ${response.statusText}`);
+    }
+
+    return response.blob();
+  },
+
+  /**
+   * Track a ship for transporter
+   * GET /api/v1/ship/transporter/track-for-transporter/{ship_id}
+   */
+  trackShipForTransporter: async (shipId: number | string) => {
+    return request<TrackShipResponse>(
+      `/ship/transporter/track-for-transporter/${shipId}`,
     );
   },
 };

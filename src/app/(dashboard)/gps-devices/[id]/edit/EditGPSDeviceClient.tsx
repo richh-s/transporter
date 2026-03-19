@@ -186,7 +186,7 @@ function EditGPSDeviceContent() {
       updateData.truck_id = null;
     } else if (values.truck_id && values.truck_id !== device?.truck_id) {
       updateData.truck_id = values.truck_id;
-      updateData.last_synced_at = new Date().toISOString();
+      updateData.last_synced_at = new Date(Date.now() - 10000).toISOString();
     }
 
     updateMutation.mutate(

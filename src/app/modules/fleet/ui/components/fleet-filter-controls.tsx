@@ -46,24 +46,33 @@ interface FleetFilterControlsProps {
   onClearFilters: () => void;
 }
 
+import { useTranslation } from "react-i18next";
+
 export function FleetFilterControls({
   filters,
   onStatusFilter,
   onTypeFilter,
   onClearFilters,
 }: FleetFilterControlsProps) {
+  const { t } = useTranslation(["fleet", "common"]);
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [isTypeFilterOpen, setIsTypeFilterOpen] = useState(false);
+
+  // Use keys for translation
+  const statusLabel = filters.status
+    ? t(`fleet:status.${filters.status.toLowerCase()}`)
+    : t("common:labels.all");
+
+  const typeLabel = filters.truck_type
+    ? t(`fleet:types.${filters.truck_type.toLowerCase()}`)
+    : t("common:labels.all");
 
   return (
     <>
       <Popover open={isStatusFilterOpen} onOpenChange={setIsStatusFilterOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-9 text-xs sm:text-sm">
-            Status:{" "}
-            {filters.status
-              ? TRUCK_STATUSES.find((s) => s.value === filters.status)?.label
-              : "All"}
+            {t("fleet:fields.status")}: {statusLabel}
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -87,13 +96,13 @@ export function FleetFilterControls({
                     !filters.status && "bg-amber-100 text-amber-700 font-medium"
                   )}
                 >
-                  All
+                  {t("common:labels.all")}
                 </CommandItem>
                 {TRUCK_STATUSES.map((status) => (
                   <CommandItem
                     key={status.value}
                     onSelect={() => {
-                      onStatusFilter(status.value);
+                      onStatusFilter(status.value as any);
                       setIsStatusFilterOpen(false);
                     }}
                     className={cn(
@@ -101,7 +110,7 @@ export function FleetFilterControls({
                         "bg-amber-100 text-amber-700 font-medium"
                     )}
                   >
-                    {status.label}
+                    {t(`fleet:status.${status.value.toLowerCase()}`)}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -113,10 +122,7 @@ export function FleetFilterControls({
       <Popover open={isTypeFilterOpen} onOpenChange={setIsTypeFilterOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-9 text-xs sm:text-sm">
-            Type:{" "}
-            {filters.truck_type
-              ? TRUCK_TYPES.find((t) => t.value === filters.truck_type)?.label
-              : "All"}
+            {t("fleet:fields.truck_type")}: {typeLabel}
             <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -141,13 +147,13 @@ export function FleetFilterControls({
                       "bg-amber-100 text-amber-700 font-medium"
                   )}
                 >
-                  All
+                  {t("common:labels.all")}
                 </CommandItem>
                 {TRUCK_TYPES.map((type) => (
                   <CommandItem
                     key={type.value}
                     onSelect={() => {
-                      onTypeFilter(type.value);
+                      onTypeFilter(type.value as any);
                       setIsTypeFilterOpen(false);
                     }}
                     className={cn(
@@ -155,7 +161,7 @@ export function FleetFilterControls({
                         "bg-amber-100 text-amber-700 font-medium"
                     )}
                   >
-                    {type.label}
+                    {t(`fleet:types.${type.value.toLowerCase()}`)}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -171,7 +177,7 @@ export function FleetFilterControls({
           onClick={onClearFilters}
           className="h-9 text-xs sm:text-sm"
         >
-          Clear Filters
+          {t("common:buttons.clear_filters")}
         </Button>
       )}
     </>

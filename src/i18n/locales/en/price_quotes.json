@@ -1,0 +1,117 @@
+{
+  "title": "Price Quotes",
+  "subtitle": "Manage biweekly price quotes",
+  "stats": {
+    "total": "Total",
+    "active": "Active",
+    "draft": "Draft",
+    "inactive": "Inactive"
+  },
+  "buttons": {
+    "create_quote": "Create Quote",
+    "new_short": "New"
+  },
+  "filters": {
+    "title": "Filter Quotes",
+    "origin": "Origin",
+    "destination": "Destination",
+    "truck_type": "Truck Type",
+    "status": "Status",
+    "all": "All",
+    "all_origins": "All Origins",
+    "all_destinations": "All Destinations",
+    "all_types": "All Types",
+    "all_status": "All Status",
+    "apply": "Apply Filters",
+    "origin_placeholder": "All Origins",
+    "dest_placeholder": "All Destinations",
+    "truck_type_placeholder": "All Types",
+    "status_placeholder": "All Status"
+  },
+  "create": {
+    "title": "Create New Quote",
+    "breadcrumb": "Create Quote",
+    "sections": {
+      "route": "Route",
+      "vehicle": "Vehicle",
+      "weight": "Weight Range",
+      "pricing": "Pricing"
+    },
+    "labels": {
+      "origin": "Origin",
+      "destination": "Destination",
+      "truck_type": "Truck Type",
+      "container_size": "Container Size",
+      "axle_type": "Axle Type (Optional)",
+      "weight_min": "Min (kg)",
+      "weight_max": "Max (kg)",
+      "amount": "Amount",
+      "currency": "Currency"
+    },
+    "placeholders": {
+      "select": "Select",
+      "weight_min": "1000",
+      "weight_max": "20000",
+      "amount": "50000"
+    },
+    "truck_types": {
+      "flatbed": "Flatbed Truck",
+      "trailer": "Trailer Truck",
+      "flatbed_desc": "Ideal for heavy loads and 40ft containers.",
+      "trailer_desc": "Standard transport for 20ft containers.",
+      "available": "Available"
+    },
+    "axle_types": {
+      "none": "None",
+      "single": "Single",
+      "double": "Double",
+      "triple": "Triple"
+    },
+    "warnings": {
+      "best_match": "Best Match",
+      "capacity": "Capacity Warning: 40ft containers typically exceed Trailer weight limits and require Flatbed trucks.",
+      "no_trucks": "No active {{type}} trucks are currently available in your fleet."
+    },
+    "validation": {
+      "origin_required": "Origin is required",
+      "destination_required": "Destination is required",
+      "same_location": "Origin and destination must be different",
+      "weight_min_required": "Min weight is required",
+      "weight_max_required": "Max weight is required",
+      "weight_order": "Max weight must be >= min weight",
+      "amount_required": "Amount is required",
+      "positive": "Must be > 0"
+    },
+    "alerts": {
+      "doc_required": "Document Required",
+      "doc_missing": "The required Trade License document is missing or has not been approved.",
+      "go_to_docs": "Go to Documents"
+    }
+  },
+  "list": {
+    "columns": {
+      "id_route": "ID / Route",
+      "vehicle": "Vehicle",
+      "container": "Container",
+      "weight": "Weight (kg)",
+      "price": "Price",
+      "status": "Status",
+      "actions": "Actions",
+      "open_menu": "Open menu"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "draft": "Draft",
+      "inactive": "Inactive"
+    }
+  },
+  "messages": {
+    "delete_success": "Price quote deleted successfully"
+  }
+}

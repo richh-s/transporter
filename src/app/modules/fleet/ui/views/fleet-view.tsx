@@ -21,9 +21,11 @@ import {
   TrucksTable,
 } from "../components";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export const FleetView = () => {
   const router = useRouter();
+  const { t } = useTranslation(["fleet", "common"]);
   // Pagination state - Use 10 for mobile, 5 for desktop
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -92,7 +94,7 @@ export const FleetView = () => {
   };
 
   const handleSuccess = () => {
-    toast.success("Operation completed successfully!");
+    toast.success(t("fleet:messages.success_operation"));
     // Invalidate and refetch trucks data
     queryClient.invalidateQueries({ queryKey: ["trucks"] });
   };
@@ -110,10 +112,10 @@ export const FleetView = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-            Fleet Management
+            {t("fleet:title")}
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage your trucks and fleet capacity.
+            {t("fleet:subtitle")}
           </p>
         </div>
       </div>

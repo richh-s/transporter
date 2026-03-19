@@ -1,0 +1,52 @@
+{
+  "title": "Organization Documents",
+  "subtitle": "Upload and manage organization-related documents securely",
+  "stats": {
+    "total_docs": "Total Documents",
+    "pending_docs": "Pending Reviews",
+    "approved_docs": "Approved Documents",
+    "rejected_docs": "Rejected/Inactive"
+  },
+  "tabs": {
+    "all": "All Documents",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected/Inactive"
+  },
+  "fields": {
+    "document_type": "Document Type",
+    "entity_type": "Entity Type",
+    "status": "Status",
+    "created_at": "Upload Date",
+    "file": "Document File",
+    "select_type": "Select document type",
+    "select_entity": "Select entity type"
+  },
+  "types": {
+    "trade_licence": "Trade Licence",
+    "id": "Personal ID",
+    "other": "Other Document"
+  },
+  "entities": {
+    "truck": "Truck",
+    "driver": "Driver"
+  },
+  "messages": {
+    "upload_success": "Document uploaded successfully",
+    "upload_error": "Failed to upload document",
+    "update_success": "Document updated successfully",
+    "update_error": "Failed to update document",
+    "delete_success": "Document deleted successfully",
+    "delete_error": "Failed to delete document",
+    "view_error": "Failed to view document",
+    "url_error": "Document URL not available",
+    "search_placeholder": "Search documents by type...",
+    "confirm_delete_title": "Delete Document",
+    "confirm_delete_desc": "Are you sure you want to delete this document? This action cannot be undone."
+  },
+  "buttons": {
+    "upload_doc": "Upload Document",
+    "edit_doc": "Edit Document",
+    "delete_doc": "Delete Document"
+  }
+}

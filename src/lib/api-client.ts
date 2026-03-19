@@ -1,3 +1,5 @@
+import { extractErrorMessage } from "./utils/error-humanizer";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_URL) {
@@ -147,11 +149,28 @@ export async function request<T>(
       console.log("📡 Request:", options.method || "GET", url);
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      credentials: "include", // Still include for backwards compatibility
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: "include", // Still include for backwards compatibility
+      });
+    } catch (fetchError) {
+      // Handle network errors (CORS, offline, server unreachable, etc.)
+      console.error("❌ Fetch failed:", fetchError);
+      if (
+        fetchError instanceof TypeError &&
+        fetchError.message === "Failed to fetch"
+      ) {
+        return {
+          error:
+            "Network error - Unable to connect to server. Please check your connection and ensure the API server is running.",
+          status: 0,
+        };
+      }
+      throw fetchError; // Re-throw if it's not a network error
+    }
 
     const status = response.status;
 
@@ -192,15 +211,19 @@ export async function request<T>(
 
     if (!response.ok) {
       return {
-        error:
-          ((result as unknown) as Record<string, unknown>)?.error as string ||
-          ((result as unknown) as Record<string, unknown>)?.detail as string ||
-          ((result as unknown) as Record<string, unknown>)?.message as string ||
-          (typeof result === "string" ? result : "Something went wrong"),
+        error: extractErrorMessage(result),
         status,
-        errorCode: ((result as unknown) as Record<string, unknown>)?.code as string || undefined,
-        code: (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString(),
-        fields: ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
+        errorCode:
+          ((result as unknown as Record<string, unknown>)?.code as string) ||
+          undefined,
+        code:
+          ((result as unknown as Record<string, unknown>)?.code as string) ||
+          (
+            (result as unknown as Record<string, unknown>)
+              ?.status_code as string
+          )?.toString(),
+        fields: (result as unknown as Record<string, unknown>)
+          ?.fields as Record<string, string>,
       };
     }
 

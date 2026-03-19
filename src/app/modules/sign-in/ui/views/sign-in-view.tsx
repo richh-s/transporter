@@ -3,15 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  OctagonAlert,
-  Loader2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-} from "lucide-react";
+import { OctagonAlert, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,18 +20,21 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import CaptchaComponent from "@/components/captcha/CaptchaComponent";
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid business email"),
+  email: z.string().email("validation:email_invalid"),
   password: z
     .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+    .min(6, "validation:password_min"),
 });
 
 export const SignInView = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation(["auth", "common"]);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -72,13 +67,11 @@ export const SignInView = () => {
     // Make captcha errors more user-friendly
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
-      setError(
-        "Unable to load security code. Please refresh the page and try again."
-      );
+      setError(t("auth:errors.captcha_load_error"));
     } else {
       setError(msg);
     }
-  }, []);
+  }, [t]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -103,9 +96,7 @@ export const SignInView = () => {
           (lowerErrorMessage.includes("captcha") ||
             lowerErrorMessage.includes("code")))
       ) {
-        setError(
-          "The security code you entered is incorrect. Please enter the code from the new image below."
-        );
+        setError(t("auth:errors.captcha_incorrect"));
         // Refresh captcha on error
         setCaptchaSolution("");
         setCaptchaId("");
@@ -116,7 +107,6 @@ export const SignInView = () => {
         return;
       }
 
-
       // Network/Connection errors
       if (
         lowerErrorMessage.includes("failed to fetch") ||
@@ -124,9 +114,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("cannot connect") ||
         lowerErrorMessage.includes("connection")
       ) {
-        setError(
-          "Unable to connect to the server. Please check your internet connection and try again."
-        );
+        setError(t("auth:errors.network_error"));
       }
       // Invalid credentials (but not captcha)
       else if (
@@ -141,9 +129,7 @@ export const SignInView = () => {
           !lowerErrorMessage.includes("captcha")) ||
         lowerErrorMessage.includes("401")
       ) {
-        setError(
-          "The email or password you entered is incorrect. Please check your credentials and try again."
-        );
+        setError(t("auth:errors.invalid_credentials"));
       }
       // Account-related errors
       else if (
@@ -151,17 +137,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("doesn't exist") ||
         lowerErrorMessage.includes("user not found")
       ) {
-        setError(
-          "No account found with this email address. Please check your email or contact support."
-        );
+        setError(t("auth:errors.account_not_found"));
       } else if (
         lowerErrorMessage.includes("disabled") ||
         lowerErrorMessage.includes("suspended") ||
         lowerErrorMessage.includes("inactive")
       ) {
-        setError(
-          "Your account has been disabled. Please contact support for assistance."
-        );
+        setError(t("auth:errors.account_disabled"));
       }
       // Server errors
       else if (
@@ -169,7 +151,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("server error") ||
         lowerErrorMessage.includes("internal server")
       ) {
-        setError("A server error occurred. Please try again in a few moments.");
+        setError(t("auth:errors.server_error"));
       }
       // Rate limiting
       else if (
@@ -177,15 +159,11 @@ export const SignInView = () => {
         lowerErrorMessage.includes("rate limit") ||
         lowerErrorMessage.includes("429")
       ) {
-        setError(
-          "Too many login attempts. Please wait a few minutes before trying again."
-        );
+        setError(t("auth:errors.rate_limit"));
       }
       // Generic fallback
       else {
-        setError(
-          "Login failed. Please check your credentials and try again. If the problem persists, contact support."
-        );
+        setError(t("auth:errors.generic_login_failed"));
       }
     } finally {
       setPending(false);
@@ -198,7 +176,7 @@ export const SignInView = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{t("common:buttons.loading")}</p>
         </div>
       </div>
     );
@@ -211,7 +189,7 @@ export const SignInView = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            Redirecting to dashboard...
+            {t("common:buttons.loading")}
           </p>
         </div>
       </div>
@@ -232,27 +210,29 @@ export const SignInView = () => {
                 >
                   <div className="space-y-2">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary text-center md:text-left">
-                      WeTruck Sign In
+                      {t("auth:sign_in.title")}
                     </h1>
                     <p className="text-muted-foreground text-sm text-center md:text-left">
-                      Enter your credentials to manage freight operations.
+                      {t("auth:sign_in.subtitle")}
                     </p>
                   </div>
-
                   <div className="space-y-3 sm:space-y-4">
                     <FormField
                       control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            Work Email
+                          <FormLabel
+                            required
+                            className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                          >
+                            {t("auth:sign_in.email_label")}
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                               <Input
-                                placeholder="name@wetruck.com"
+                                placeholder={t("auth:sign_in.email_placeholder")}
                                 {...field}
                                 className="pl-9 h-11 border border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary focus-visible:ring-offset-0"
                               />
@@ -263,30 +243,31 @@ export const SignInView = () => {
                       )}
                     />
 
-
-
                     <FormField
                       control={form.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between">
-                            <FormLabel required className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                              Password
+                            <FormLabel
+                              required
+                              className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                            >
+                              {t("auth:sign_in.password_label")}
                             </FormLabel>
-                            <a
-                              href="#"
+                            <Link
+                              href="/forgot-password"
                               className="text-xs text-primary hover:text-primary/80 hover:underline"
                             >
-                              Forgot?
-                            </a>
+                              {t("auth:sign_in.forgot_password")}
+                            </Link>
                           </div>
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                               <Input
                                 type={showPassword ? "text" : "password"}
-                                placeholder="••••••••"
+                                placeholder={t("auth:sign_in.password_placeholder")}
                                 {...field}
                                 className="pl-9 pr-10 h-11 border border-gray-200 focus-visible:border-brand-secondary focus-visible:ring-1 focus-visible:ring-brand-secondary focus-visible:ring-offset-0 transition-all"
                               />
@@ -309,7 +290,6 @@ export const SignInView = () => {
                       )}
                     />
                   </div>
-
                   {/* CAPTCHA Component */}
                   <div className="pt-2">
                     <CaptchaComponent
@@ -322,7 +302,6 @@ export const SignInView = () => {
                       }}
                     />
                   </div>
-
                   {error && (
                     <Alert
                       variant="destructive"
@@ -336,8 +315,6 @@ export const SignInView = () => {
                       </div>
                     </Alert>
                   )}
-
-
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
@@ -350,34 +327,12 @@ export const SignInView = () => {
                     {pending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Authenticating...
+                        {t("auth:sign_in.authenticating")}
                       </>
                     ) : (
-                      "Sign In to Dashboard"
+                      t("auth:sign_in.submit")
                     )}
-                  </Button>
-
-                  <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                      Contact support to request access to the platform.
-                    </span>
-                  </div>
-
-                  {/* Mock Credentials Hint */}
-                  <div className="rounded-lg border border-dashed border-primary/50 bg-primary/5 p-3 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <ShieldCheck className="h-3 w-3 text-primary" />
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-primary/60">
-                        Dev Access
-                      </p>
-                    </div>
-                    <p className="text-xs text-primary/80">
-                      <span className="font-semibold">Email:</span>{" "}
-                      transporter@wetruck.ai <br />
-                      <span className="font-semibold">Password:</span>{" "}
-                      transporter123
-                    </p>
-                  </div>
+                  </Button>{" "}
                 </form>
               </Form>
             </div>
@@ -406,32 +361,30 @@ export const SignInView = () => {
 
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-                    Move Forward, <br />
-                    <span>Go Wide!</span>
+                    {t("auth:sign_in.hero_title")} <br />
+                    <span>{t("auth:sign_in.hero_subtitle")}</span>
                   </h2>
                   <div className="h-1 w-20 bg-white mx-auto rounded-full" />
                 </div>
 
                 <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-medium italic">
-                  &quot;Streamline your logistics operations with the most
-                  powerful transport dashboard.&quot;
+                  &quot;{t("auth:sign_in.hero_description")}&quot;
                 </p>
               </div>
-
 
               {/* Bottom Accent */}
               <div className="absolute bottom-8 left-8 right-8 z-10">
                 <div className="flex justify-between items-center text-[10px] text-white/40 uppercase tracking-[0.2em]">
                   <span className="font-bold text-xl text-white/70">
-                    Logistics
+                    {t("auth:sign_in.accents.logistics")}
                   </span>
                   <span className="text-xl text-brand-accent">•</span>
                   <span className="font-bold text-xl text-white/70">
-                    Efficiency
+                    {t("auth:sign_in.accents.efficiency")}
                   </span>
                   <span className="text-xl text-brand-accent">•</span>
                   <span className="font-bold text-xl text-white/70">
-                    Control
+                    {t("auth:sign_in.accents.control")}
                   </span>
                 </div>
               </div>
@@ -442,8 +395,8 @@ export const SignInView = () => {
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
           &copy; {new Date().getFullYear()}{" "}
-          <span className="text-primary font-medium">WeTruck</span>{" "}
-          TechEnable Solutions PLC.
+          <span className="text-primary font-medium">WeTruck</span> TechEnable
+          Solutions PLC.
           <a
             href="#"
             className="ml-2 text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
@@ -462,4 +415,3 @@ export const SignInView = () => {
     </div>
   );
 };
-

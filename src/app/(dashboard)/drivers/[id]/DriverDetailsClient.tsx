@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 import { useDriver } from "@/app/modules/drivers/server/hooks/use-driver";
 import { DriverDocuments } from "@/app/modules/drivers/ui/components/driver-documents";
 import { CompactBreadcrumb } from "@/components/ui/mobile-breadcrumb";
+import { useTranslation } from "react-i18next";
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation(["drivers"]);
   const config: Record<string, { bg: string; text: string; dot: string }> = {
     active: {
       bg: "bg-emerald-500/10",
@@ -37,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
       )}
     >
       <span className={cn("h-1.5 w-1.5 rounded-full", currentConfig.dot)} />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {t(`drivers:status.${status.toLowerCase()}`, { defaultValue: status })}
     </span>
   );
 }
@@ -113,6 +115,7 @@ function DetailSkeleton() {
 }
 
 function DriverDetailsContent() {
+  const { t } = useTranslation(["drivers", "common"]);
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -144,18 +147,18 @@ function DriverDetailsContent() {
         </div>
         <div className="text-center space-y-2">
           <p className="font-bold text-foreground text-red-600">
-            {error instanceof Error ? error.message : "Driver Not Found"}
+            {error instanceof Error ? error.message : t("drivers:labels.not_found")}
           </p>
           <p className="text-xs text-muted-foreground">
             ID: {driverId || "None"} | Raw: {rawId || "Empty"}
           </p>
           <p className="text-xs text-red-500/80 max-w-xs mx-auto">
-            Try searching for this driver in the list.
+            {t("drivers:labels.search_hint")}
           </p>
         </div>
         <Link href="/drivers">
           <Button variant="outline" size="sm">
-            Go to Drivers
+            {t("common:buttons.go_to_drivers", { defaultValue: "Go to Drivers" })}
           </Button>
         </Link>
       </div>
@@ -168,14 +171,14 @@ function DriverDetailsContent() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="p-4 space-y-2">
           <CompactBreadcrumb
-            parentLabel="Drivers"
+            parentLabel={t("drivers:labels.drivers")}
             parentHref="/drivers"
             currentLabel={`${driver.first_name} ${driver.last_name}`}
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold">
-                {driver.first_name || "Unknown"} {driver.last_name || ""}
+                {driver.first_name || t("drivers:messages.unknown")} {driver.last_name || ""}
               </h1>
               <StatusBadge status={driver.status || "unknown"} />
             </div>
@@ -192,10 +195,10 @@ function DriverDetailsContent() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-bold text-foreground">
-                {driver.first_name || "Unknown"} {driver.last_name || ""}
+                {driver.first_name || t("drivers:messages.unknown")} {driver.last_name || ""}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {driver.driver_license_number || "No License"}
+                {driver.driver_license_number || t("drivers:messages.no_license")}
               </p>
             </div>
           </div>
@@ -204,23 +207,23 @@ function DriverDetailsContent() {
         {/* Contact Info */}
         <InfoCard
           icon={Phone}
-          title="Contact Information"
+          title={t("drivers:labels.contact_info")}
           accent="bg-blue-500/10 text-blue-500"
         >
           <div className="space-y-0">
-            <DetailRow label="Phone Number" value={driver.phone_number || "—"} />
-            <DetailRow label="Email" value={driver.email || "—"} />
+            <DetailRow label={t("drivers:fields.phone_number")} value={driver.phone_number || "—"} />
+            <DetailRow label={t("drivers:fields.email")} value={driver.email || "—"} />
           </div>
         </InfoCard>
 
         {/* License Info */}
         <InfoCard
           icon={CreditCard}
-          title="License Information"
+          title={t("drivers:labels.license_info")}
           accent="bg-amber-500/10 text-amber-600"
         >
           <DetailRow
-            label="License Number"
+            label={t("drivers:fields.license_number")}
             value={driver.driver_license_number || "—"}
             mono
           />

@@ -51,6 +51,7 @@ import { openInApp } from "@/lib/utils/open-in-app";
 import { format } from "date-fns";
 
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const DRIVER_DOCUMENT_TYPES = ["driver_id", "driver_license", "other"] as const;
 type DriverDocumentType = (typeof DRIVER_DOCUMENT_TYPES)[number];
@@ -62,6 +63,7 @@ type UploadErrors = {
 
 // Document Type Badge
 function DocumentTypeBadge({ type }: { type: string }) {
+  const { t } = useTranslation(["drivers"]);
   const colors: Record<string, string> = {
     driver_id: "bg-blue-500/10 text-blue-600",
     driver_license: "bg-emerald-500/10 text-emerald-600",
@@ -77,7 +79,7 @@ function DocumentTypeBadge({ type }: { type: string }) {
         colors[type] || colors.other,
       )}
     >
-      {type.replace(/_/g, " ")}
+      {t(`drivers:documents.types.${type}`, { defaultValue: type.replace(/_/g, " ") })}
     </span>
   );
 }
@@ -94,6 +96,7 @@ function DocumentCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation(["drivers", "common"]);
   return (
     <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 shadow-sm">
       <div className="flex items-center gap-3 min-w-0">
@@ -116,16 +119,16 @@ function DocumentCard({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36 rounded-xl">
           <DropdownMenuItem onClick={onView} className="rounded-lg">
-            <Eye className="mr-2 h-4 w-4" /> View
+            <Eye className="mr-2 h-4 w-4" /> {t("common:buttons.view")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onEdit} className="rounded-lg">
-            <Pencil className="mr-2 h-4 w-4" /> Edit
+            <Pencil className="mr-2 h-4 w-4" /> {t("common:buttons.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}
             className="rounded-lg text-red-600"
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
+            <Trash2 className="mr-2 h-4 w-4" /> {t("common:buttons.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -148,6 +151,7 @@ function DocumentSkeleton() {
 }
 
 export function DriverDocuments({ driverId }: { driverId: number }) {
+  const { t } = useTranslation(["drivers", "common", "validation"]);
   const qc = useQueryClient();
 
   const { data: documents = [], isLoading } = useDriverDocuments(driverId);
@@ -187,10 +191,10 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
     const newErrors: UploadErrors = {};
 
     if (!documentType) {
-      newErrors.documentType = "Select a document type";
+      newErrors.documentType = t("validation:required", { field: t("drivers:fields.document_type") });
     }
     if (!file && !editDocId) {
-      newErrors.file = "Select a file";
+      newErrors.file = t("validation:required", { field: t("drivers:fields.file") });
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -210,24 +214,24 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           onSuccess: () => {
             resetForm();
             setUploadOpen(false);
-            toast.success("Document updated successfully");
+            toast.success(t("drivers:documents.update_success"));
           },
           onError: (error: unknown) => {
-            toast.error(error instanceof Error ? error.message : "Failed to update document");
+            toast.error(error instanceof Error ? error.message : t("drivers:documents.update_error"));
           },
         },
       );
     } else {
       uploadMutation.mutate(
-        { driverId, document_type: documentType, file: file! },
+        { driverId, document_type: documentType as DriverDocumentType, file: file! },
         {
           onSuccess: () => {
             resetForm();
             setUploadOpen(false);
-            toast.success("Document uploaded successfully");
+            toast.success(t("drivers:documents.upload_success"));
           },
           onError: (error: unknown) => {
-            toast.error(error instanceof Error ? error.message : "Failed to upload document");
+            toast.error(error instanceof Error ? error.message : t("drivers:documents.upload_error"));
           },
         },
       );
@@ -257,7 +261,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
             <FileText className="h-3.5 w-3.5 text-purple-500" />
           </div>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Documents
+            {t("drivers:documents.title")}
           </h2>
         </div>
         <Button
@@ -267,7 +271,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
           className="h-8 px-3 rounded-xl text-xs"
         >
           <Plus className="mr-1 h-3.5 w-3.5" />
-          Upload
+          {t("drivers:documents.upload")}
         </Button>
       </div>
 
@@ -278,14 +282,14 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
         ) : documents.length === 0 ? (
           <div className="text-center py-8 rounded-xl bg-muted/30 border border-dashed border-border/50">
             <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">No documents yet</p>
+            <p className="text-xs text-muted-foreground">{t("drivers:documents.no_docs")}</p>
             <Button
               variant="link"
               size="sm"
               onClick={() => openUpload()}
               className="mt-1"
             >
-              Upload first document
+              {t("drivers:documents.add_first")}
             </Button>
           </div>
         ) : (
@@ -335,12 +339,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                 </div>
                 <div>
                   <h2 className="text-base font-bold">
-                    {editDocId ? "Edit Document" : "Upload Document"}
+                    {editDocId ? t("common:buttons.edit") : t("common:buttons.upload")}
                   </h2>
                   <p className="text-xs text-muted-foreground">
                     {editDocId
-                      ? "Update document details"
-                      : "Add a new document"}
+                      ? t("drivers:documents.update_success")
+                      : t("drivers:documents.upload")}
                   </p>
                 </div>
               </div>
@@ -365,7 +369,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
             <div className="space-y-2">
               <Label className="text-xs">
-                Document Type <span className="text-red-500">*</span>
+                {t("drivers:fields.document_type")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={documentType}
@@ -380,12 +384,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                     errors.documentType && "border-red-500",
                   )}
                 >
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t("drivers:documents.select_type")} />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {DRIVER_DOCUMENT_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.replace(/_/g, " ").toUpperCase()}
+                      {t(`drivers:documents.types.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -397,7 +401,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
 
             <div className="space-y-2">
               <Label className="text-xs">
-                File {!editDocId && <span className="text-red-500">*</span>}
+                {t("drivers:fields.file")} {!editDocId && <span className="text-red-500">*</span>}
               </Label>
               <Input
                 type="file"
@@ -428,7 +432,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               className="flex-1 h-11 rounded-xl"
               disabled={uploadMutation.isPending || updateMutation.isPending}
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -438,12 +442,12 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               {uploadMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {t("common:messages.saving")}
                 </>
               ) : editDocId ? (
-                "Save Changes"
+                t("common:buttons.save_changes")
               ) : (
-                "Upload"
+                t("drivers:documents.upload")
               )}
             </Button>
           </div>
@@ -454,10 +458,9 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-sm w-[95vw] rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Delete Document</DialogTitle>
+            <DialogTitle>{t("drivers:documents.delete_confirm")}</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. The document will be permanently
-              removed.
+              {t("drivers:documents.delete_description")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -466,7 +469,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               onClick={() => setDeleteOpen(false)}
               className="rounded-xl"
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -477,7 +480,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
                     documentId: docToDelete,
                   }, {
                     onSuccess: () => {
-                      toast.success("Document deleted successfully");
+                      toast.success(t("drivers:documents.delete_success"));
                     }
                   });
                 }
@@ -486,7 +489,7 @@ export function DriverDocuments({ driverId }: { driverId: number }) {
               }}
               className="rounded-xl"
             >
-              Delete
+              {t("common:buttons.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

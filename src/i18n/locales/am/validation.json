@@ -1,0 +1,11 @@
+{
+  "required": "ይህ ቦታ ባዶ መሆን የለበትም",
+  "email_invalid": "እባክዎ ትክክለኛ ኢሜይል ያስገቡ",
+  "password_min": "የይለፍ ቃል ቢያንስ 6 ፊደላት መሆን አለበት",
+  "password_match": "የይለፍ ቃሎቹ አይዛመዱም",
+  "phone_invalid": "እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ",
+  "number_positive": "እባክዎ ከአምስት በላይ የሆነ ቁጥር ያስገቡ",
+  "max_length": "ከ {{max}} ፊደላት መብለጥ የለበትም",
+  "min_length": "ቢያንስ {{min}} ቁምፊዎች መሆን አለበት",
+  "invalid_format": "ልክ ያልሆነ ቅርጸት፡ {{format}}"
+}

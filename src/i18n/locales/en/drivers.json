@@ -1,0 +1,74 @@
+{
+  "title": "Driver Management",
+  "subtitle": "Manage your drivers and their documents.",
+  "labels": {
+    "add_driver": "Add Driver",
+    "edit_driver": "Edit Driver",
+    "delete_driver": "Delete Driver",
+    "driver_details": "Driver Details",
+    "search_placeholder": "Search name or license...",
+    "no_drivers": "No drivers found.",
+    "total_drivers": "Total Drivers",
+    "active_drivers": "Active Drivers",
+    "suspended_drivers": "Suspended Drivers",
+    "upload_docs": "Upload Documents",
+    "driver_info": "Driver Information",
+    "license_no": "License No",
+    "phone": "Phone",
+    "email": "Email",
+    "driver_added": "Driver Added!",
+    "upload_docs_msg": "Upload the required documents for the driver.",
+    "scroll_hint": "Scroll for more fields",
+    "delete_driver_confirm": "Delete Driver",
+    "delete_driver_description": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+    "contact_info": "Contact Information",
+    "license_info": "License Information",
+    "not_found": "Driver Not Found",
+    "search_hint": "Try searching for this driver in the list.",
+    "drivers": "Drivers"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "all": "All Status"
+  },
+  "fields": {
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "license_number": "License Number",
+    "phone_number": "Phone Number",
+    "email": "Email",
+    "status": "Status",
+    "document_type": "Document Type",
+    "file": "File"
+  },
+  "messages": {
+    "success_update": "Driver updated successfully",
+    "success_create": "Driver created successfully. Now upload documents.",
+    "error_create": "Driver created but unexpected response from server.",
+    "error_duplicate": "Driver already exists",
+    "error_save": "Failed to save driver",
+    "driver_deleted": "Driver deleted successfully",
+    "no_license": "No License",
+    "unknown": "Unknown"
+  },
+  "documents": {
+    "title": "Documents",
+    "upload": "Upload",
+    "add_first": "Upload first document",
+    "no_docs": "No documents yet",
+    "delete_confirm": "Delete Document",
+    "delete_description": "This action cannot be undone. The document will be permanently removed.",
+    "upload_success": "Document uploaded successfully",
+    "upload_error": "Failed to upload document",
+    "update_success": "Document updated successfully",
+    "update_error": "Failed to update document",
+    "delete_success": "Document deleted successfully",
+    "select_type": "Select type",
+    "types": {
+      "driver_id": "Driver ID",
+      "driver_license": "Driver License",
+      "other": "Other"
+    }
+  }
+}
