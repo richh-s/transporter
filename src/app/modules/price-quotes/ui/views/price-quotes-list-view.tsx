@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   FileText,
@@ -125,6 +126,7 @@ function TableLoadingSkeleton() {
 }
 
 export function PriceQuotesListView() {
+  const { t } = useTranslation(["price_quotes", "common"]);
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -198,7 +200,7 @@ export function PriceQuotesListView() {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setQuoteToDelete(null);
-          toast.success("Price quote deleted successfully");
+          toast.success(t("price_quotes:messages.delete_success"));
         },
       });
     }
@@ -221,10 +223,10 @@ export function PriceQuotesListView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0 px-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Price Quotes
+            {t("price_quotes:title")}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage biweekly price quotes
+            {t("price_quotes:subtitle")}
           </p>
         </div>
         <Button
@@ -233,8 +235,8 @@ export function PriceQuotesListView() {
           className="rounded-xl h-9 gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Create Quote</span>
-          <span className="sm:hidden">New</span>
+          <span className="hidden sm:inline">{t("price_quotes:buttons.create_quote")}</span>
+          <span className="sm:hidden">{t("price_quotes:buttons.new_short")}</span>
         </Button>
       </div>
 
@@ -244,7 +246,7 @@ export function PriceQuotesListView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={FileText}
-              label="Total"
+              label={t("price_quotes:stats.total")}
               value={total}
               accent="bg-primary/10 text-primary"
             />
@@ -252,7 +254,7 @@ export function PriceQuotesListView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={CheckCircle}
-              label="Active"
+              label={t("price_quotes:stats.active")}
               value={activeCount}
               accent="bg-primary/10 text-primary"
             />
@@ -260,7 +262,7 @@ export function PriceQuotesListView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={Clock}
-              label="Draft"
+              label={t("price_quotes:stats.draft")}
               value={draftCount}
               accent="bg-amber-500/10 text-amber-600"
             />
@@ -268,7 +270,7 @@ export function PriceQuotesListView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={XCircle}
-              label="Inactive"
+              label={t("price_quotes:stats.inactive")}
               value={inactiveCount}
               accent="bg-gray-500/10 text-gray-600"
             />
@@ -323,7 +325,7 @@ export function PriceQuotesListView() {
                       )}
                     >
                       <Filter className="h-4 w-4" />
-                      Filters
+                      {t("common:labels.filters")}
                       {hasActiveFilters && (
                         <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                           {
@@ -337,13 +339,13 @@ export function PriceQuotesListView() {
                   </SheetTrigger>
                   <SheetContent side="bottom" className="rounded-t-3xl">
                     <SheetHeader className="pb-4">
-                      <SheetTitle>Filter Quotes</SheetTitle>
+                      <SheetTitle>{t("price_quotes:filters.title")}</SheetTitle>
                     </SheetHeader>
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <MapPin className="h-3 w-3" /> Origin
+                            <MapPin className="h-3 w-3" /> {t("price_quotes:filters.origin")}
                           </label>
                           <Select
                             value={filters.origin || "all"}
@@ -361,7 +363,7 @@ export function PriceQuotesListView() {
                               <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="all">All Origins</SelectItem>
+                              <SelectItem value="all">{t("price_quotes:filters.all_origins")}</SelectItem>
                               {LOCATION_OPTIONS.map((loc) => (
                                 <SelectItem key={loc.value} value={loc.value}>
                                   {loc.label}
@@ -372,7 +374,7 @@ export function PriceQuotesListView() {
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <MapPin className="h-3 w-3" /> Destination
+                            <MapPin className="h-3 w-3" /> {t("price_quotes:filters.destination")}
                           </label>
                           <Select
                             value={filters.destination || "all"}
@@ -391,7 +393,7 @@ export function PriceQuotesListView() {
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
                               <SelectItem value="all">
-                                All Destinations
+                                {t("price_quotes:filters.all_destinations")}
                               </SelectItem>
                               {LOCATION_OPTIONS.map((loc) => (
                                 <SelectItem key={loc.value} value={loc.value}>
@@ -406,7 +408,7 @@ export function PriceQuotesListView() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <Truck className="h-3 w-3" /> Truck Type
+                            <Truck className="h-3 w-3" /> {t("price_quotes:filters.truck_type")}
                           </label>
                           <Select
                             value={filters.truck_type || "all"}
@@ -424,19 +426,21 @@ export function PriceQuotesListView() {
                               <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="all">All Types</SelectItem>
+                              <SelectItem value="all">
+                                {t("price_quotes:filters.all_types")}
+                              </SelectItem>
                               <SelectItem value={TruckTypeEnum.FLATBED}>
-                                Flatbed
+                                {t("price_quotes:create.truck_types.flatbed")}
                               </SelectItem>
                               <SelectItem value={TruckTypeEnum.TRAILER}>
-                                Trailer
+                                {t("price_quotes:create.truck_types.trailer")}
                               </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <DollarSign className="h-3 w-3" /> Status
+                            <DollarSign className="h-3 w-3" /> {t("price_quotes:filters.status")}
                           </label>
                           <Select
                             value={filters.status || "all"}
@@ -454,15 +458,17 @@ export function PriceQuotesListView() {
                               <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="all">
+                                {t("price_quotes:filters.all_status")}
+                              </SelectItem>
                               <SelectItem value={PriceQuoteStatusEnum.DRAFT}>
-                                Draft
+                                {t("price_quotes:list.stats.draft")}
                               </SelectItem>
                               <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>
-                                Active
+                                {t("price_quotes:list.stats.active")}
                               </SelectItem>
                               <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>
-                                Inactive
+                                {t("price_quotes:list.stats.inactive")}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -475,13 +481,13 @@ export function PriceQuotesListView() {
                           onClick={handleClearFilters}
                           className="flex-1 rounded-xl"
                         >
-                          Clear
+                          {t("common:buttons.clear")}
                         </Button>
                         <Button
                           onClick={handleApplyFilters}
                           className="flex-1 rounded-xl"
                         >
-                          Apply Filters
+                          {t("price_quotes:filters.apply")}
                         </Button>
                       </div>
                     </div>
@@ -495,7 +501,7 @@ export function PriceQuotesListView() {
                     onClick={handleClearFilters}
                     className="text-xs text-muted-foreground"
                   >
-                    Clear all
+                    {t("common:buttons.clear_filters")}
                   </Button>
                 )}
               </div>

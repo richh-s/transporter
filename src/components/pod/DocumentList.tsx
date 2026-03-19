@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ShipItemDocument, ShipItemDocumentTypeEnum } from "@/types/ship";
 import { Button } from "@/components/ui/button";
 import { FileText, Eye } from "lucide-react";
@@ -11,11 +12,12 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ documents }: DocumentListProps) {
+  const { t } = useTranslation(["pod", "common"]);
   if (documents.length === 0) {
     return (
       <div className="text-center py-6 bg-muted/20 rounded-lg border border-dashed">
         <p className="text-sm text-muted-foreground">
-          No documents uploaded yet.
+          {t("pod:labels.no_documents")}
         </p>
       </div>
     );
@@ -53,7 +55,7 @@ export function DocumentList({ documents }: DocumentListProps) {
             <span>{format(new Date(doc.created_at), "MMM d, yyyy")}</span>
             {doc.container_id && (
               <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px]">
-                Container #{doc.container_id}
+                {t("pod:labels.container")} #{doc.container_id}
               </span>
             )}
           </div>
@@ -64,13 +66,13 @@ export function DocumentList({ documents }: DocumentListProps) {
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          title={doc.presigned_url ? "View Document" : "No URL available"}
+          title={doc.presigned_url ? t("pod:labels.view_document") : t("pod:labels.no_url")}
           disabled={!doc.presigned_url}
           onClick={async () => {
             if (doc.presigned_url) {
               await openInApp(doc.presigned_url);
             } else {
-              toast.error("Document URL not available");
+              toast.error(t("pod:messages.no_url_error"));
             }
           }}
         >
@@ -85,7 +87,7 @@ export function DocumentList({ documents }: DocumentListProps) {
       {podDocs.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Proof of Delivery
+            {t("pod:labels.pod")}
           </h4>
           {podDocs.map(renderDocItem)}
         </div>
@@ -94,7 +96,7 @@ export function DocumentList({ documents }: DocumentListProps) {
       {returnDocs.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">
-            Return Receipts
+            {t("pod:labels.return_receipts")}
           </h4>
           {returnDocs.map(renderDocItem)}
         </div>
@@ -103,7 +105,7 @@ export function DocumentList({ documents }: DocumentListProps) {
       {podDocumentDocs.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">
-            Proof of Delivery of Document
+            {t("pod:labels.pod_of_document")}
           </h4>
           {podDocumentDocs.map(renderDocItem)}
         </div>

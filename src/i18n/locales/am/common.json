@@ -1,0 +1,58 @@
+{
+  "navigation": {
+    "dashboard": "ዳሽቦርድ",
+    "shipments": "ጭነቶች",
+    "fleet": "ተሽከርካሪዎች",
+    "drivers": "አሽከርካሪዎች",
+    "gps": "የጂፒኤስ መሣሪያዎች",
+    "quotes": "የዋጋ ግምቶች",
+    "pod": "የPOD ሰነዶች",
+    "org_docs": "የድርጅት ሰነዶች",
+    "profile": "መገለጫ",
+    "settings": "ቅንብሮች",
+    "logout": "ውጣ",
+    "change_password": "የይለፍ ቃል ቀይር"
+  },
+  "labels": {
+    "dashboard": "ዳሽቦርድ",
+    "shipments": "ጭነቶች",
+    "fleet": "ተሽከርካሪዎች",
+    "drivers": "አሽከርካሪዎች",
+    "settings": "ቅንብሮች",
+    "profile": "መገለጫ",
+    "logout": "ውጣ",
+    "change_password": "የይለፍ ቃል ቀይር",
+    "all": "ሁሉም",
+    "date": "ቀን",
+    "filters": "ማጣሪያዎች",
+    "step_x": "ደረጃ {{step}} ከ {{total}}፡ {{label}}"
+  },
+  "buttons": {
+    "add": "ጨምር",
+    "next": "ቀጣይ",
+    "cancel": "ሰርዝ",
+    "done": "ተጠናቅቋል",
+    "creating": "በመፍጠር ላይ...",
+    "uploading": "በመጫን ላይ...",
+    "clear_filters": "ማጣሪያዎችን አጽዳ",
+    "clear": "አጽዳ",
+    "view_details": "ዝርዝር ይመልከቱ",
+    "edit": "አሻሽል",
+    "delete": "ሰርዝ",
+    "view": "ተመልከት",
+    "actions": "ተግባራት",
+    "save_changes": "ለውጦችን አስቀምጥ",
+    "upload_doc": "ሰነድ ይጫኑ"
+  },
+  "messages": {
+    "saving": "በመቀመጥ ላይ..."
+  },
+  "actions": {
+    "open_menu": "ምናሌ ክፈት"
+  },
+  "auth_dialogs": {
+    "logout_title": "መውጣቱን ያረጋግጡ",
+    "logout_description": "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ?",
+    "logout_button": "ውጣ"
+  }
+}

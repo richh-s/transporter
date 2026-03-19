@@ -13,12 +13,14 @@ import { cn } from "@/lib/utils";
 import { Driver } from "../../server/types";
 
 type Actions = {
+  t: (key: string, options?: any) => string;
   onView: (driver: Driver) => void;
   onEdit: (driver: Driver) => void;
   onDelete: (driver: Driver) => void;
 };
 
 export const driverColumns = ({
+  t,
   onView,
   onEdit,
   onDelete,
@@ -27,7 +29,7 @@ export const driverColumns = ({
     accessorKey: "driver_license_number",
     header: () => (
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        License No
+        {t("drivers:labels.license_no")}
       </span>
     ),
     cell: ({ row }) => (
@@ -40,18 +42,20 @@ export const driverColumns = ({
     accessorKey: "first_name",
     header: () => (
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Driver Name
+        {t("drivers:labels.driver_info")}
       </span>
     ),
     cell: ({ row }) => (
-      <div className="text-sm font-medium">{row.original.first_name}</div>
+      <div className="text-sm font-medium">
+        {row.original.first_name} {row.original.last_name}
+      </div>
     ),
   },
   {
     accessorKey: "phone_number",
     header: () => (
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Phone
+        {t("drivers:labels.phone")}
       </span>
     ),
     cell: ({ row }) => (
@@ -64,7 +68,7 @@ export const driverColumns = ({
     accessorKey: "status",
     header: () => (
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Status
+        {t("drivers:fields.status")}
       </span>
     ),
     cell: ({ row }) => {
@@ -79,14 +83,14 @@ export const driverColumns = ({
               "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
           )}
         >
-          {status}
+          {t(`drivers:status.${status.toLowerCase()}`, { defaultValue: status })}
         </span>
       );
     },
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{t("common:actions.actions", { defaultValue: "Actions" })}</span>,
     cell: ({ row }) => {
       const driver = row.original;
 
@@ -111,7 +115,7 @@ export const driverColumns = ({
                 }}
               >
                 <Eye className="mr-2 h-4 w-4" />
-                View
+                {t("common:buttons.view")}
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -121,7 +125,7 @@ export const driverColumns = ({
                 }}
               >
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t("common:buttons.edit")}
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -132,7 +136,7 @@ export const driverColumns = ({
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("common:buttons.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

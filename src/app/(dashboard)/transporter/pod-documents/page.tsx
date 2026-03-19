@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ShipItem, Ship, Container } from "@/types/ship";
 import { shipApi } from "@/lib/api/ships";
 import { ShipItemPodCard } from "@/components/pod/ShipItemPodCard";
@@ -77,6 +78,7 @@ function PodPageSkeleton() {
 }
 
 export default function PodDocumentsPage() {
+  const { t } = useTranslation(["pod", "common"]);
   const [loading, setLoading] = useState(true);
   const [groupedShips, setGroupedShips] = useState<GroupedShip[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -225,10 +227,10 @@ export default function PodDocumentsPage() {
     <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-300 pb-10 sm:pb-6 w-full overflow-x-hidden">
       <div className="shrink-0 px-0">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-          POD & Returning Documents
+          {t("pod:title")}
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Upload and manage Proof of Delivery and Container Return Receipts.
+          {t("pod:subtitle")}
         </p>
       </div>
 
@@ -237,19 +239,19 @@ export default function PodDocumentsPage() {
           <div className="grid grid-cols-3 gap-3 w-full">
             <StatsCard
               icon={FileText}
-              label="Shipments"
+              label={t("pod:stats.shipments")}
               value={groupedShips.length}
               accent="bg-primary/10 text-primary"
             />
             <StatsCard
               icon={Package}
-              label="Items"
+              label={t("pod:stats.items")}
               value={totalItems}
               accent="bg-primary/10 text-primary"
             />
             <StatsCard
               icon={Box}
-              label="Containers"
+              label={t("pod:stats.containers")}
               value={totalContainers}
               accent="bg-primary/10 text-primary"
             />
@@ -260,7 +262,7 @@ export default function PodDocumentsPage() {
       {error && (
         <Alert variant="destructive" className="shrink-0">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t("common:labels.error")}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -269,10 +271,10 @@ export default function PodDocumentsPage() {
         {groupedShips.length === 0 && !error ? (
           <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed border-border">
             <h3 className="text-lg font-medium text-muted-foreground">
-              No eligible shipments found
+              {t("pod:labels.no_shipments")}
             </h3>
             <p className="text-sm text-muted-foreground mt-2">
-              Shipments with assigned truck and driver will appear here.
+              {t("pod:labels.no_shipments_detail")}
             </p>
           </div>
         ) : (
@@ -287,14 +289,13 @@ export default function PodDocumentsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-muted/50 px-3 py-2 rounded-lg border border-border/50">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <h2 className="text-base font-bold">
-                        Shipment #{group.id}
+                        {t("pod:labels.shipment_tag", { id: group.id })}
                       </h2>
                       <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
-                        {group.items.length}{" "}
-                        {group.items.length === 1 ? "Item" : "Items"}
+                        {t("pod:labels.item_count", { count: group.items.length })}
                       </span>
                       <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-medium">
-                        {containerCount} Containers
+                        {t("pod:labels.container_count", { count: containerCount })}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-right">
@@ -309,7 +310,7 @@ export default function PodDocumentsPage() {
                         </span>
                       </span>
                       <span className="sm:ml-1">
-                        Pickup:{" "}
+                        {t("pod:labels.pickup")}:{" "}
                         {new Date(group.pickup_date).toLocaleDateString()}
                       </span>
                     </div>

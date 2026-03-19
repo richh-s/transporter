@@ -1,0 +1,122 @@
+{
+  "title": "GPS Devices",
+  "subtitle": "Manage and track your GPS devices",
+  "stats": {
+    "total": "Total",
+    "active": "Active",
+    "inactive": "Inactive",
+    "assigned": "Assigned"
+  },
+  "buttons": {
+    "new_device": "New Device",
+    "new_short": "New"
+  },
+  "filters": {
+    "title": "Filter Devices",
+    "external_id": "External ID",
+    "imei": "IMEI",
+    "device_name": "Device Name",
+    "status": "Status",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "apply": "Apply Filters"
+  },
+  "messages": {
+    "deactivate_confirm": "Are you sure you want to deactivate this GPS device?"
+  },
+  "create_form": {
+    "title": "Create New GPS Device",
+    "breadcrumb_parent": "GPS Devices",
+    "breadcrumb_current": "Create Device",
+    "sections": {
+      "device_info": "Device Info",
+      "truck_assignment": "Truck Assignment",
+      "expiration_status": "Expiration & Status"
+    },
+    "labels": {
+      "external_id": "External Device ID",
+      "imei": "IMEI Number",
+      "device_name": "Device Name",
+      "device_model": "Device Model",
+      "truck": "Assign to Truck",
+      "expire_date": "Expire Date",
+      "status": "Status"
+    },
+    "placeholders": {
+      "enter_id": "Enter device ID",
+      "imei": "15-digit IMEI",
+      "optional": "Optional",
+      "select_truck": "Select a truck",
+      "select_date": "Select date"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "truck_states": {
+      "loading": "Loading trucks...",
+      "no_available": "No available trucks",
+      "all_assigned": "All trucks are already assigned to GPS devices"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Device",
+      "creating": "Creating..."
+    },
+    "validation": {
+      "external_id_required": "External Device ID is required",
+      "imei_required": "IMEI Number is required",
+      "imei_invalid": "Invalid IMEI (must be a number)",
+      "expire_date_required": "Expiration date is required",
+      "status_required": "Status is required"
+    }
+  },
+  "list": {
+    "columns": {
+      "device_id_imei": "Device ID / IMEI",
+      "device_info": "Device Info",
+      "expiration": "Expiration",
+      "assignment": "Assignment",
+      "status": "Status"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "open_menu": "Open menu"
+    }
+  },
+  "card": {
+    "imei": "IMEI",
+    "assigned": "Assigned",
+    "unassigned": "Unassigned"
+  },
+  "details": {
+    "title": "Device Information",
+    "external_id": "External ID",
+    "imei": "IMEI Number",
+    "device_name": "Device Name",
+    "device_model": "Device Model",
+    "truck_assignment": "Truck Assignment",
+    "assigned": "Assigned",
+    "unassigned": "Not assigned to any truck",
+    "view_truck": "View Truck",
+    "expires": "Expires",
+    "last_synced": "Last Synced",
+    "timestamps": "Timestamps",
+    "created": "Created",
+    "updated": "Updated",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "deactivate_title": "Deactivate Device",
+    "deactivate_desc": "Are you sure you want to deactivate this GPS device?",
+    "deactivate_note": "This will set the device status to inactive and unlink it from any truck.",
+    "deactivating": "Deactivating...",
+    "success_msg": "GPS device deactivated successfully"
+  },
+  "error": {
+    "failed_load": "Failed to load device",
+    "go_to_devices": "Go to Devices"
+  }
+}

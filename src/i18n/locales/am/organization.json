@@ -1,0 +1,52 @@
+{
+  "title": "የድርጅት ሰነዶች",
+  "subtitle": "የድርጅት ሰነዶችን ደህንነቱ በተጠበቀ ሁኔታ ይጫኑ እና ያስተዳድሩ",
+  "stats": {
+    "total_docs": "ጠቅላላ ሰነዶች",
+    "pending_docs": "በግምገማ ላይ",
+    "approved_docs": "የጸደቁ ሰነዶች",
+    "rejected_docs": "ውድቅ የሆኑ/የማይንቀሳቀሱ"
+  },
+  "tabs": {
+    "all": "ሁሉም ሰነዶች",
+    "pending": "በሂደት ላይ",
+    "approved": "የጸደቁ",
+    "rejected": "ውድቅ የሆኑ/የማይንቀሳቀሱ"
+  },
+  "fields": {
+    "document_type": "የሰነድ አይነት",
+    "entity_type": "የአካል አይነት",
+    "status": "ሁኔታ",
+    "created_at": "የተጫነበት ቀን",
+    "file": "የሰነድ ፋይል",
+    "select_type": "የሰነድ አይነት ይምረጡ",
+    "select_entity": "የአካል አይነት ይምረጡ"
+  },
+  "types": {
+    "trade_licence": "የንግድ ፈቃድ",
+    "id": "መታወቂያ",
+    "other": "ሌላ ሰነድ"
+  },
+  "entities": {
+    "truck": "ተሽከርካሪ",
+    "driver": "አሽከርካሪ"
+  },
+  "messages": {
+    "upload_success": "ሰነዱ በተሳካ ሁኔታ ተጭኗል",
+    "upload_error": "ሰነዱን መጫን አልተቻለም",
+    "update_success": "ሰነዱ በተሳካ ሁኔታ ተሻሽሏል",
+    "update_error": "ሰነዱን ማሻሻል አልተቻለም",
+    "delete_success": "ሰነዱ በተሳካ ሁኔታ ተሰርዟል",
+    "delete_error": "ሰነዱን መሰረዝ አልተቻለም",
+    "view_error": "ሰነዱን ማየት አልተቻለም",
+    "url_error": "የሰነዱ ሊንክ አልተገኘም",
+    "search_placeholder": "ሰነዶችን በአይነት ይፈልጉ...",
+    "confirm_delete_title": "ሰነድ ሰርዝ",
+    "confirm_delete_desc": "ይህንን ሰነድ ለመሰረዝ እርግጠኛ ነዎት? ይህ ተግባር ሊመለስ አይችልም።"
+  },
+  "buttons": {
+    "upload_doc": "ሰነድ ይጫኑ",
+    "edit_doc": "ሰነድ ያስተካክሉ",
+    "delete_doc": "ሰነድ ሰርዝ"
+  }
+}

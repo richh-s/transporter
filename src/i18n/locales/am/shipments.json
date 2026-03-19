@@ -1,0 +1,184 @@
+{
+  "title": "የጭነት አስተዳደር",
+  "subtitle": "የጭነት ዕቃዎችዎን በሁሉም ደረጃዎች ይከታተሉ እና ያስተዳድሩ።",
+  "labels": {
+    "all_shipments": "ሁሉም ጭነቶች",
+    "status_filters": "የሁኔታ ማጣሪያዎች",
+    "search_placeholder": "ጭነቶች ፈልግ...",
+    "no_results": "ምንም ጭነቶች አልተገኙም።",
+    "no_results_detail": "ፍለጋዎን ወይም ማጣሪያዎን ለማስተካከል ይሞክሩ።"
+  },
+  "columns": {
+    "shipment_id": "የጭነት መለያ",
+    "origin": "መነሻ",
+    "destination": "መድረሻ",
+    "quantity": "ብዛት",
+    "status": "ሁኔታ",
+    "date": "የተፈጠረበት ቀን",
+    "actions": "ድርጊቶች"
+  },
+  "status": {
+    "created": "ተፈጠረ",
+    "price_requested": "ዋጋ ተጠየቀ",
+    "priced": "ዋጋ ተሰጠው",
+    "accepted_by_shipper": "በላኪው ተቀባይነት አገኘ",
+    "rejected_by_shipper": "በላኪው አልተቀበለም",
+    "allocated": "ተመደበ",
+    "ready_for_pickup": "ለመጫን ተዘጋጅቷል",
+    "in_transit": "በጉዞ ላይ",
+    "delivered": "የደረሰ",
+    "completed": "ተጠናቅቋል"
+  },
+  "details": {
+    "loading": "በመጫን ላይ...",
+    "ship_id_label": "ጭነት #{{id}}",
+    "track_shipment": "ጭነቱን ተከታተል",
+    "payment": {
+      "title": "የክፍያ አጠቃላይ እይታ",
+      "fees": "ክፍያዎች",
+      "vat": "ተጨማሪ እሴት ታክስ",
+      "pending": "በመጠባበቅ ላይ",
+      "paid": "የተከፈለ",
+      "invoice_id": "የክፍያ መጠየቂያ መለያ",
+      "invoice": "የክፍያ መጠየቂያ",
+      "submitted": "ተልኳል",
+      "confirm": "አረጋግጥ",
+      "pay_now": "አሁን ክፈል",
+      "receipt": "ደረሰኝ",
+      "telebirr_preparing": "ክፍያዎን በቴሌብድር በማዘጋጀት ላይ",
+      "gateway_preparing": "የክፍያ መግቢያውን በማዘጋጀት ላይ...",
+      "gateway_description": "ክፍያዎን በቴሌብድር በማዘጋጀት ላይ"
+    },
+    "route": {
+      "title": "መንገድ",
+      "from": "ከ",
+      "to": "ወደ"
+    },
+    "pickup": {
+      "title": "መጫኛ",
+      "driver": "ሾፌር"
+    },
+    "delivery": {
+      "title": "ርክክብ",
+      "truck_id": "የጭነት መኪና መለያ"
+    },
+    "shipment_info": {
+      "title": "የጭነት ዝርዝሮች",
+      "bill_of_lading": "የመጫኛ ሰነድ (Bill of Lading)",
+      "packing_list": "የጭነት ዝርዝር (Packing List)",
+      "pickup_number": "የመጫኛ ቁጥር",
+      "delivery_number": "የመውረጃ ቁጥር",
+      "available": "ይገኛል",
+      "document_only": "ሰነድ ብቻ"
+    },
+    "shipper_details": {
+      "title": "የላኪ ዝርዝሮች",
+      "name": "የላኪ ስም",
+      "email": "ኢሜይል",
+      "phone": "ስልክ",
+      "no_details": "ምንም የላኪ ዝርዝሮች አልተገኙም።"
+    },
+    "ship_items": {
+      "title": "የጭነት ዕቃዎች"
+    },
+    "errors": {
+      "no_unpaid": "ምንም ያልተከፈሉ ክፍያዎች አልተገኙም",
+      "generic": "ችግር ተፈጥሯል",
+      "failed_download": "ማውረድ አልተቻለም",
+      "invoice_opened": "የክፍያ መጠየቂያው ተከፍቷል",
+      "invoice_downloaded": "የክፍያ መጠየቂያው ወርዷል",
+      "loading_invoice": "የክፍያ መጠየቂያውን በመጫን ላይ..."
+    },
+    "buttons": {
+      "go_to_ships": "ወደ ጭነቶች ተመለስ"
+    },
+    "assign_modal": {
+      "title": "የጭነት እቃ መድብ #{{id}}",
+      "description": "ለዚህ ጭነት መኪና እና ሾፌር ይምረጡ",
+      "containers_count": "{{count}} ኮንቴይነር",
+      "containers_count_plural": "{{count}} ኮንቴይነሮች",
+      "total_weight": "{{weight}} ኪ.ግ በጠቅላላ",
+      "truck_label": "መኪና",
+      "truck_placeholder": "መኪና ይምረጡ...",
+      "truck_selected": "መኪና ተመርጧል",
+      "no_trucks": "ምንም የሚገኙ መኪናዎች የሉም",
+      "driver_label": "ሾፌር",
+      "driver_placeholder": "ሾፌር ይምረጡ...",
+      "driver_selected": "ሾፌር ተመርጧል",
+      "no_drivers": "ምንም የሚገኙ ሾፌሮች የሉም",
+      "assign_button": "መድብ",
+      "assigning_button": "በመመደብ ላይ..."
+    },
+    "manual_confirmation": {
+      "title": "የክፍያ ማረጋገጫ በድጋሚ",
+      "description": "ለእጅ ማረጋገጫ የክፍያ ማጣቀሻ ዝርዝሮችን ያቅርቡ።",
+      "payment_id": "የክፍያ መለያ",
+      "ship_id": "የጭነት መለያ",
+      "reference_id": "የማጣቀሻ መለያ",
+      "reference_id_placeholder": "ምሳሌ፡ TXN-123456",
+      "reference_url": "የማጣቀሻ ድረ-ገጽ",
+      "reference_url_placeholder": "https://...",
+      "payment_date": "የክፍያ ቀን",
+      "note": "ማስታወሻ",
+      "note_placeholder": "ስለ ክፍያው ተጨማሪ ዝርዝሮች...",
+      "reference_doc": "የማጣቀሻ ሰነድ",
+      "remove": "አስወግድ",
+      "upload_text": "ለመጫን እዚህ ይንኩ ወይም ፋይሉን ጎትተው ያስገቡ",
+      "upload_hint": "PDF, JPG, PNG (ከ10MB ያልበለጠ)",
+      "submit_button": "አስገባ"
+    },
+    "containers_modal": {
+      "title": "ኮንቴይነሮች",
+      "no_containers": "ምንም ኮንቴይነሮች አልተገኙም",
+      "no_containers_description": "ለዚህ የጭነት እቃ እስካሁን የተመደበ ኮንቴይነር የለም።",
+      "truck_type": "የመኪና ዓይነት",
+      "weight": "ክብደት",
+      "volume": "መጠነ-ይዘት",
+      "return_trip": "ደርሶ መልስ",
+      "required": "ያስፈልጋል",
+      "one_way": "አንድ አቅጣጫ",
+      "commodities": "ሸቀጦች",
+      "instructions": "መመሪያዎች",
+      "standard": "መደበኛ"
+    },
+    "tracking_view": {
+      "title": "ጭነቱን ይከታተሉ",
+      "origin": "መነሻ",
+      "destination": "መድረሻ",
+      "shipment_id": "የጭነት መለያ",
+      "trucks_assigned": "የተመደቡ መኪናዎች",
+      "containers": "ኮንቴይነሮች",
+      "live_tracking_map": "የቀጥታ መከታተያ ካርታ",
+      "assigned_trucks": "የተመደቡ መኪናዎች",
+      "fetching_data": "የመከታተያ መረጃ በመፈለግ ላይ...",
+      "fetch_error": "የመከታተያ መረጃ ማግኘት አልተቻለም",
+      "no_data": "ለጭነት #{{id}} ምንም የመከታተያ መረጃ አልተገኘም",
+      "back_to_details": "ወደ ጭነት ዝርዝር ተመለስ",
+      "status_timeline": "የሁኔታ የጊዜ መስመር",
+      "gps_points": "{{count}} የጂፒኤስ ነጥቦች"
+    },
+    "containers_table": {
+      "container_number": "የኮንቴይነር ቁጥር",
+      "type": "ዓይነት",
+      "weight": "ክብደት",
+      "volume": "መጠነ-ይዘት",
+      "status": "ሁኔታ"
+    },
+    "ship_items_table": {
+      "details_header": "የጭነት ዝርዝሮች",
+      "assignment_header": "ምደባ",
+      "status_header": "ሁኔታ",
+      "actions_header": "ተግባራት",
+      "container_one": "ኮንቴይነር",
+      "container_other": "ኮንቴይነሮች",
+      "no_truck": "ምንም መኪና የለም",
+      "no_driver": "ምንም አሽከርካሪ የለም",
+      "mark_delivered": "እንደደረሰ ምልክት አድርግ",
+      "assign_action": "መኪና/አሽከርካሪ መድብ",
+      "view_containers": "ኮንቴይነሮችን እይ",
+      "assigned": "ተመድቧል",
+      "partial": "በከፊል",
+      "unassigned": "ያልተመደበ"
+    }
+  }
+}

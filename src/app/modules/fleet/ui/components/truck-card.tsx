@@ -4,27 +4,25 @@ import { ChevronRight, Truck as TruckIcon, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Truck } from "@/lib/api/trucks";
 
+import { useTranslation } from "react-i18next";
+
 const STATUS_CONFIG: Record<
   string,
-  { label: string; className: string; accent: string }
+  { className: string; accent: string }
 > = {
   active: {
-    label: "Active",
     className: "bg-primary/10 text-primary",
     accent: "bg-primary/40",
   },
   inactive: {
-    label: "Inactive",
     className: "bg-muted text-muted-foreground",
     accent: "bg-muted-foreground/30",
   },
   maintenance: {
-    label: "Maintenance",
     className: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
     accent: "bg-amber-500/40",
   },
   out_of_service: {
-    label: "Out of Service",
     className: "bg-red-500/10 text-red-700 dark:text-red-400",
     accent: "bg-red-500/40",
   },
@@ -37,18 +35,20 @@ export function TruckCard({
   truck: Truck;
   onClick?: () => void;
 }) {
-  const status = STATUS_CONFIG[truck.status] ?? {
-    label: String(truck.status || "—").replace(/_/g, " "),
+  const { t } = useTranslation(["fleet", "common"]);
+  const statusKey = truck.status?.toLowerCase() || "inactive";
+  const statusCfg = STATUS_CONFIG[statusKey] ?? {
     className: "bg-muted text-muted-foreground",
     accent: "bg-muted-foreground/20",
   };
 
-  const typeLabel =
-    truck.truck_type === "flatbed"
-      ? "Flatbed"
-      : truck.truck_type === "trailer"
-        ? "Trailer"
-        : truck.truck_type;
+  const statusLabel = t(`fleet:status.${statusKey}`, {
+    defaultValue: statusKey.replace(/_/g, " ").charAt(0).toUpperCase() + statusKey.replace(/_/g, " ").slice(1)
+  });
+
+  const typeLabel = truck.truck_type 
+    ? t(`fleet:types.${truck.truck_type.toLowerCase()}`, { defaultValue: truck.truck_type })
+    : "—";
 
   return (
     <article
@@ -64,7 +64,7 @@ export function TruckCard({
       <div
         className={cn(
           "absolute left-0 top-0 bottom-0 w-1 shrink-0",
-          status.accent,
+          statusCfg.accent,
         )}
         aria-hidden
       />
@@ -77,10 +77,10 @@ export function TruckCard({
           <span
             className={cn(
               "inline-flex px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wide",
-              status.className,
+              statusCfg.className,
             )}
           >
-            {status.label}
+            {statusLabel}
           </span>
         </div>
 
@@ -101,7 +101,7 @@ export function TruckCard({
           <span className="text-border">·</span>
           <span className="flex items-center gap-1">
             <Package className="h-3 w-3" />
-            {truck.capacity_quintal} Kg
+            {truck.capacity_quintal} {t("fleet:labels.unit_kg")}
           </span>
         </div>
       </div>

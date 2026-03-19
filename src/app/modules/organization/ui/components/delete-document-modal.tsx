@@ -1,85 +1,86 @@
 "use client";
 
-import { Loader2, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import type { OrganizationDocument } from "@/lib/api/organization";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DeleteDocumentModalProps {
-  document: OrganizationDocument | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: (documentId: number) => Promise<void>;
+  document: { id: number; document_type: string } | null;
+  onDelete: (id: number) => Promise<void>;
   isDeleting: boolean;
 }
 
 export function DeleteDocumentModal({
-  document,
   isOpen,
   onOpenChange,
+  document,
   onDelete,
   isDeleting,
 }: DeleteDocumentModalProps) {
-  const handleDelete = async () => {
-    if (!document) return;
-
-    try {
-      await onDelete(document.id);
-      onOpenChange(false);
-    } catch (err: unknown) {
-      console.error("Failed to delete document:", err);
-      // Modal stays open to show error message
-    }
-  };
+  const { t } = useTranslation(["organization", "common"]);
 
   if (!document) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive text-lg">
-            <AlertTriangle className="h-5 w-5" />
-            Delete Document
-          </DialogTitle>
-          <DialogDescription className="pt-2">
-            Are you sure you want to delete this{" "}
-            <span className="font-bold text-brand-primary capitalize">
-              {document.document_type?.replace(/_/g, " ") || "document"}
-            </span>
-            ? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="pt-4 gap-2 sm:gap-0 flex-col sm:flex-row">
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl">
+        <div className="p-6 pt-8 text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center">
+            <AlertTriangle className="h-8 w-8 text-rose-500" />
+          </div>
+
+          <div className="space-y-2">
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              {t("organization:messages.confirm_delete_title")}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              {t("organization:messages.confirm_delete_desc")}
+              <br />
+              <span className="mt-2 inline-block font-bold text-rose-600 px-3 py-1 rounded-lg bg-rose-50 border border-rose-100 uppercase text-xs">
+                {t(`organization:types.${document.document_type}`, { defaultValue: document.document_type })}
+              </span>
+            </DialogDescription>
+          </div>
+        </div>
+
+        <DialogFooter className="p-6 bg-slate-50 flex flex-row gap-3">
           <Button
-            variant="outline"
+            type="button"
+            variant="ghost"
             onClick={() => onOpenChange(false)}
+            className="flex-1 h-12 rounded-xl text-slate-600 hover:bg-slate-200 font-bold transition-all"
             disabled={isDeleting}
-            className="w-full sm:w-auto"
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button
+            type="button"
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => onDelete(document.id)}
             disabled={isDeleting}
-            className="w-full sm:w-auto"
+            className="flex-1 h-12 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-lg shadow-rose-200 transition-all active:scale-[0.98]"
           >
-            {isDeleting && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("common:messages.saving")}
+              </>
+            ) : (
+              t("common:buttons.delete")
             )}
-            Delete Document
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

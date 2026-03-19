@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useCreateTruck, ApiError } from "../../server/hooks/use-create-truck";
 import { useUploadTruckDocument } from "../../server/hooks/use-truck-documents";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { humanizeError } from "@/lib/utils/error-humanizer";
 import {
@@ -90,6 +91,8 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
   const createTruckMutation = useCreateTruck();
   const uploadDocumentMutation = useUploadTruckDocument();
 
+  const { t } = useTranslation(["fleet", "common", "validation"]);
+
   const form = useForm<TruckFormValues>({
     resolver: zodResolver(truckFormSchema),
     defaultValues: {
@@ -126,19 +129,16 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
       };
       const result = await createTruckMutation.mutateAsync(payload as Parameters<typeof createTruckMutation.mutateAsync>[0]);
 
-      // Log the result to help debug response structure issues
-      console.log("🚛 Truck creation response:", result);
-
       // Robust check for the truck ID in the response (could be in result.id or result.result.id)
       const newTruckId = (result as { id?: number; result?: { id: number } })?.id || (result as { result?: { id: number } })?.result?.id;
 
       if (newTruckId) {
         setCreatedTruckId(newTruckId);
         setStep(2);
-        toast.success("Truck created successfully. Now upload documents.");
+        toast.success(t("fleet:messages.truck_created_upload"));
       } else {
         console.error("❌ Failed to find truck ID in response:", result);
-        toast.error("Truck created but unexpected response from server.");
+        toast.error(t("fleet:messages.truck_created_error"));
       }
     } catch (error) {
       if (error instanceof ApiError && error.fields) {
@@ -152,10 +152,10 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
         const firstError = Object.values(error.fields)[0];
         toast.error(humanizeError(firstError as string));
       } else if (error instanceof ApiError) {
-        toast.error(error.message || "Failed to create truck");
+        toast.error(error.message || t("common:messages.error_generic", { defaultValue: "An unexpected error occurred" }));
       } else {
         console.error("Failed to create truck:", error);
-        toast.error("An unexpected error occurred");
+        toast.error(t("common:messages.error_generic", { defaultValue: "An unexpected error occurred" }));
       }
     }
   }
@@ -170,7 +170,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
         ) : (
           <Button className="h-10 px-4 rounded-xl gap-2 font-medium">
             <Plus className="h-4 w-4" />
-            Add Truck
+            {t("fleet:labels.add_truck")}
           </Button>
         )}
       </DialogTrigger>
@@ -192,10 +192,13 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
               </div>
               <div>
                 <DialogTitle className="text-base font-bold">
-                  {step === 1 ? "Add New Truck" : "Upload Documents"}
+                  {step === 1 ? t("fleet:labels.add_truck") : t("fleet:labels.upload_docs")}
                 </DialogTitle>
                 <p className="text-xs text-muted-foreground">
-                  {step === 1 ? "Step 1: Vehicle Details" : "Step 2: Legal Documents"}
+                  {step === 1 
+                    ? t("common:labels.step_x", { step: 1, total: 2, label: t("fleet:labels.vehicle_details") })
+                    : t("common:labels.step_x", { step: 2, total: 2, label: t("fleet:labels.legal_docs") })
+                  }
                 </p>
               </div>
             </div>
@@ -242,7 +245,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                           const error = createTruckMutation.error;
                           if (error instanceof Error) return error.message;
                           if (typeof error === "string") return error;
-                          return "Failed to create truck. Please try again.";
+                          return t("common:messages.error_generic", { defaultValue: "Failed to create. Please try again." });
                         })()}
                       </AlertDescription>
                     </Alert>
@@ -254,7 +257,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="vin"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Vehicle Identification Number (VIN) <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.vin")} <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input
                               placeholder="JTDBR32..."
@@ -273,7 +276,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="plate_number"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Plate Number <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.plate_number")} <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input placeholder="ET-A12345" {...field} className="h-11 rounded-xl" />
                           </FormControl>
@@ -289,16 +292,16 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="truck_type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Type <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.truck_type")} <span className="text-red-500">*</span></FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-11 rounded-xl">
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder={t("common:labels.select")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="rounded-xl">
                               {TRUCK_TYPES.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                <SelectItem key={type.value} value={type.value}>{t(`fleet:types.${type.value.toLowerCase()}`, { defaultValue: type.label })}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -311,7 +314,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="capacity_quintal"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Capacity (Kg) <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.capacity")} ({t("fleet:labels.unit_kg")}) <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -333,7 +336,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="make"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Make</FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.make")}</FormLabel>
                           <FormControl>
                             <Input placeholder="e.g. Volvo" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
                           </FormControl>
@@ -346,7 +349,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="model"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Model</FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.model")}</FormLabel>
                           <FormControl>
                             <Input placeholder="e.g. FH16" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
                           </FormControl>
@@ -362,7 +365,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="year"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Year</FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.year")}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -382,7 +385,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="status"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Status <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.status")} <span className="text-red-500">*</span></FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
@@ -390,17 +393,17 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                           >
                             <FormControl>
                               <SelectTrigger className="h-11 rounded-xl bg-muted/50">
-                                <SelectValue placeholder="Status" />
+                                <SelectValue placeholder={t("fleet:fields.status")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="rounded-xl">
                               {TRUCK_STATUSES.map((status) => (
-                                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                                <SelectItem key={status.value} value={status.value}>{t(`fleet:status.${status.value.toLowerCase()}`, { defaultValue: status.label })}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                           <p className="text-[10px] text-muted-foreground mt-1">
-                            Set to inactive initially. Will be active after Libre is uploaded.
+                            {t("fleet:labels.inactive_initial_hint", { defaultValue: "Set to inactive initially. Will be active after Libre is uploaded." })}
                           </p>
                           <FormMessage />
                         </FormItem>
@@ -414,9 +417,9 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="gov_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Gov ID</FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.gov_id")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Optional" {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
+                            <Input placeholder={t("common:labels.optional", { defaultValue: "Optional" })} {...field} value={field.value ?? ""} className="h-11 rounded-xl" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -427,7 +430,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       name="gps_device_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">GPS ID</FormLabel>
+                          <FormLabel className="text-xs">{t("fleet:fields.gps_id")}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -448,7 +451,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                 <div className="sm:hidden absolute bottom-16 left-0 right-0 h-10 pointer-events-none bg-gradient-to-t from-background via-background/60 to-transparent flex items-end justify-center pb-2 z-10">
                   <div className="flex items-center gap-1.5 px-3 py-1 bg-background/50 backdrop-blur-[2px] rounded-full border border-border/50 text-[10px] font-medium text-muted-foreground animate-bounce">
                     <ChevronDown className="h-3 w-3" />
-                    <span>Scroll for more fields</span>
+                    <span>{t("common:labels.scroll_for_more", { defaultValue: "Scroll for more fields" })}</span>
                   </div>
                 </div>
 
@@ -460,7 +463,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                     onClick={() => setIsOpen(false)}
                     className="flex-1 h-11 rounded-xl"
                   >
-                    Cancel
+                    {t("common:buttons.cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -470,11 +473,11 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                     {createTruckMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        {t("common:buttons.creating")}
                       </>
                     ) : (
                       <>
-                        Next
+                        {t("common:buttons.next")}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
@@ -489,28 +492,28 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                   <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                     <Truck className="h-6 w-6 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-bold">Truck Registered!</h3>
+                  <h3 className="text-lg font-bold">{t("fleet:labels.truck_registered")}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Now, upload the necessary documents to complete the profile.
+                    {t("fleet:labels.upload_document_msg")}
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="document-type">Document Type</Label>
+                    <Label htmlFor="document-type">{t("fleet:fields.document_type")}</Label>
                     <Select value={documentType} onValueChange={setDocumentType}>
                       <SelectTrigger id="document-type" className="h-11 rounded-xl">
-                        <SelectValue placeholder="Select document type" />
+                        <SelectValue placeholder={t("common:labels.select_document_type", { defaultValue: "Select document type" })} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
                         <SelectItem value="libre">Libre</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="other">{t("common:labels.other", { defaultValue: "Other" })}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="file">File</Label>
+                    <Label htmlFor="file">{t("common:labels.file", { defaultValue: "File" })}</Label>
                     <input
                       ref={fileInputRef}
                       id="file"
@@ -535,7 +538,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                       ) : (
                         <>
                           <Upload className="h-5 w-5 text-muted-foreground" />
-                          <span className="text-xs font-medium">Click to select file</span>
+                          <span className="text-xs font-medium">{t("fleet:labels.click_to_select")}</span>
                         </>
                       )}
                     </Button>
@@ -553,12 +556,12 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                             file: selectedFile,
                             documentType,
                           });
-                          toast.success("Document uploaded successfully");
+                          toast.success(t("fleet:messages.upload_success"));
                           setSelectedFile(null);
                           setDocumentType("");
                           if (fileInputRef.current) fileInputRef.current.value = "";
                         } catch {
-                          toast.error("Failed to upload document");
+                          toast.error(t("fleet:messages.upload_error"));
                         }
                       }
                     }}
@@ -566,12 +569,12 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                     {uploadDocumentMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
+                        {t("common:buttons.uploading")}
                       </>
                     ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" />
-                        Upload Document
+                        {t("fleet:labels.upload_docs")}
                       </>
                     )}
                   </Button>
@@ -580,9 +583,9 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                 <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-start gap-3">
                   <XCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <p className="text-xs font-bold text-amber-900">Required Documents</p>
+                    <p className="text-xs font-bold text-amber-900">{t("fleet:labels.required_docs")}</p>
                     <p className="text-[10px] text-amber-700 leading-relaxed">
-                      A valid Libre is required to activate the truck and assign it to shipments. The status will update automatically after upload.
+                      {t("fleet:labels.required_docs_msg")}
                     </p>
                   </div>
                 </div>
@@ -592,7 +595,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
               <div className="sm:hidden absolute bottom-16 left-0 right-0 h-10 pointer-events-none bg-gradient-to-t from-background via-background/60 to-transparent flex items-end justify-center pb-2 z-10">
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-background/50 backdrop-blur-[2px] rounded-full border border-border/50 text-[10px] font-medium text-muted-foreground animate-bounce">
                   <ChevronDown className="h-3 w-3" />
-                  <span>Scroll for more</span>
+                  <span>{t("common:labels.scroll_for_more")}</span>
                 </div>
               </div>
 
@@ -610,7 +613,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                     }
                   }}
                 >
-                  Go to Details
+                  {t("fleet:labels.go_to_details")}
                 </Button>
                 <Button
                   type="button"
@@ -620,7 +623,7 @@ export function AddTruckModal({ onSuccess, variant = "default" }: AddTruckModalP
                     onSuccess?.();
                   }}
                 >
-                  Done
+                  {t("common:buttons.done")}
                 </Button>
               </div>
             </div>

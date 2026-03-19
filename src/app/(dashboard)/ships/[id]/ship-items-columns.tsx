@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 import {
   Package,
   Truck as TruckIcon,
@@ -71,6 +72,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // Assignment Status Badge
 function AssignmentBadge({ item }: { item: ShipItem }) {
+  const { t } = useTranslation(["shipments", "common"]);
   const hasTruck = !!(item.truck || item.truck_id || item.assigned_truck_id);
   const hasDriver = !!(
     item.driver ||
@@ -83,7 +85,7 @@ function AssignmentBadge({ item }: { item: ShipItem }) {
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600">
         <TruckIcon className="h-3 w-3" />
         <User className="h-3 w-3" />
-        Assigned
+        {t("shipments:ship_items_table.assigned")}
       </span>
     );
   } else if (hasTruck || hasDriver) {
@@ -94,195 +96,203 @@ function AssignmentBadge({ item }: { item: ShipItem }) {
         ) : (
           <User className="h-3 w-3" />
         )}
-        Partial
+        {t("shipments:ship_items_table.partial")}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-600">
-      Unassigned
+      {t("shipments:ship_items_table.unassigned")}
     </span>
   );
 }
 
-export const columns: ColumnDef<ShipItem>[] = [
-  {
-    id: "details",
-    header: () => (
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Shipment Details
-      </span>
-    ),
-    cell: ({ row }) => {
-      const item = row.original;
-      const containers =
-        item.containers || (item.container ? [item.container] : []);
-      const totalWeight = containers.reduce(
-        (acc, c) => acc + (c.gross_weight || c.weight || 0),
-        0,
-      );
+export function useShipItemsColumns() {
+  const { t } = useTranslation(["shipments", "common"]);
 
-      return (
-        <div className="flex items-start gap-2.5">
-          <div className="flex-shrink-0 p-1.5 rounded-lg bg-primary/10 text-primary mt-0.5">
-            <Package className="h-3.5 w-3.5" />
+  const columns: ColumnDef<ShipItem>[] = [
+    {
+      id: "details",
+      header: () => (
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("shipments:ship_items_table.details_header")}
+        </span>
+      ),
+      cell: ({ row }) => {
+        const item = row.original;
+        const containers =
+          item.containers || (item.container ? [item.container] : []);
+        const totalWeight = containers.reduce(
+          (acc, c) => acc + (c.gross_weight || c.weight || 0),
+          0,
+        );
+
+        return (
+          <div className="flex items-start gap-2.5">
+            <div className="flex-shrink-0 p-1.5 rounded-lg bg-primary/10 text-primary mt-0.5">
+              <Package className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="text-[10px] font-medium text-muted-foreground/90 bg-muted/40 px-2 py-0.5 rounded-md w-fit whitespace-nowrap">
+                {containers.length}{" "}
+                {containers.length === 1 
+                  ? t("shipments:ship_items_table.container_one") 
+                  : t("shipments:ship_items_table.container_other")}
+              </span>
+              <span className="text-[11px] font-bold text-primary px-0.5">
+                {totalWeight.toLocaleString()} Kg
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="text-[10px] font-medium text-muted-foreground/90 bg-muted/40 px-2 py-0.5 rounded-md w-fit whitespace-nowrap">
-              {containers.length}{" "}
-              {containers.length === 1 ? "Container" : "Containers"}
-            </span>
-            <span className="text-[11px] font-bold text-primary px-0.5">
-              {totalWeight.toLocaleString()} Kg
-            </span>
+        );
+      },
+    },
+    {
+      id: "assignment",
+      header: () => (
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("shipments:ship_items_table.assignment_header")}
+        </span>
+      ),
+      cell: ({ row }) => {
+        const item = row.original;
+        const truck = item.truck || item.assigned_truck;
+        const driver = item.driver || item.assigned_driver;
+
+        return (
+          <div className="space-y-1">
+            {truck ? (
+              <div className="flex items-center gap-1.5 text-xs">
+                <TruckIcon className="h-3 w-3 text-muted-foreground" />
+                <span className="font-medium truncate max-w-[100px]">
+                  {truck.plate_number}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <TruckIcon className="h-3 w-3" />
+                <span>{t("shipments:ship_items_table.no_truck")}</span>
+              </div>
+            )}
+            {driver ? (
+              <div className="flex items-center gap-1.5 text-xs">
+                <User className="h-3 w-3 text-muted-foreground" />
+                <span className="font-medium truncate max-w-[100px]">
+                  {driver.first_name} {driver.last_name}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <User className="h-3 w-3" />
+                <span>{t("shipments:ship_items_table.no_driver")}</span>
+              </div>
+            )}
           </div>
-        </div>
-      );
+        );
+      },
     },
-  },
-  {
-    id: "assignment",
-    header: () => (
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Assignment
-      </span>
-    ),
-    cell: ({ row }) => {
-      const item = row.original;
-      const truck = item.truck || item.assigned_truck;
-      const driver = item.driver || item.assigned_driver;
-
-      return (
-        <div className="space-y-1">
-          {truck ? (
-            <div className="flex items-center gap-1.5 text-xs">
-              <TruckIcon className="h-3 w-3 text-muted-foreground" />
-              <span className="font-medium truncate max-w-[100px]">
-                {truck.plate_number}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <TruckIcon className="h-3 w-3" />
-              <span>No truck</span>
-            </div>
-          )}
-          {driver ? (
-            <div className="flex items-center gap-1.5 text-xs">
-              <User className="h-3 w-3 text-muted-foreground" />
-              <span className="font-medium truncate max-w-[100px]">
-                {driver.first_name} {driver.last_name}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <User className="h-3 w-3" />
-              <span>No driver</span>
-            </div>
-          )}
-        </div>
-      );
+    {
+      accessorKey: "status",
+      id: "status",
+      header: () => (
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("shipments:ship_items_table.status_header")}
+        </span>
+      ),
+      cell: ({ row }) => {
+        const item = row.original;
+        return (
+          <div className="space-y-1">
+            <StatusBadge status={row.getValue("status") as string} />
+            <AssignmentBadge item={item} />
+          </div>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "status",
-    id: "status",
-    header: () => (
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Status
-      </span>
-    ),
-    cell: ({ row }) => {
-      const item = row.original;
-      return (
-        <div className="space-y-1">
-          <StatusBadge status={row.getValue("status") as string} />
-          <AssignmentBadge item={item} />
-        </div>
-      );
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    header: () => (
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Actions
-      </span>
-    ),
-    cell: ({ row, table }) => {
-      const item = row.original;
-      const meta = table.options.meta as unknown as ShipItemsTableMeta;
-      const containers =
-        item.containers || (item.container ? [item.container] : []);
-      const isDelivered = (item.status?.toUpperCase() ?? "") === "DELIVERED";
-      const showMarkDelivered =
-        meta?.isTransporter && meta?.onMarkAsDelivered && !isDelivered;
+    {
+      id: "actions",
+      enableHiding: false,
+      header: () => (
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("shipments:ship_items_table.actions_header")}
+        </span>
+      ),
+      cell: ({ row, table }) => {
+        const item = row.original;
+        const meta = table.options.meta as unknown as ShipItemsTableMeta;
+        const containers =
+          item.containers || (item.container ? [item.container] : []);
+        const isDelivered = (item.status?.toUpperCase() ?? "") === "DELIVERED";
+        const showMarkDelivered =
+          meta?.isTransporter && meta?.onMarkAsDelivered && !isDelivered;
 
-      return (
-        <div
-          className="flex items-center justify-start gap-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {showMarkDelivered && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-8 min-[391px]:w-auto gap-1 rounded-lg text-[11px] font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600 p-0 min-[391px]:px-2.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                meta.onMarkAsDelivered?.(item);
-              }}
-              disabled={meta?.isMarkingDelivered}
-            >
-              <CheckCircle className="h-3 w-3 min-[391px]:hidden" />
-              <span className="hidden min-[391px]:inline whitespace-nowrap">
-                Mark Delivered
-              </span>
-            </Button>
-          )}
+        return (
+          <div
+            className="flex items-center justify-start gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {showMarkDelivered && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-8 min-[391px]:w-auto gap-1 rounded-lg text-[11px] font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600 p-0 min-[391px]:px-2.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  meta.onMarkAsDelivered?.(item);
+                }}
+                disabled={meta?.isMarkingDelivered}
+              >
+                <CheckCircle className="h-3 w-3 min-[391px]:hidden" />
+                <span className="hidden min-[391px]:inline whitespace-nowrap">
+                  {t("shipments:ship_items_table.mark_delivered")}
+                </span>
+              </Button>
+            )}
 
-          <div className="flex-shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors rounded-lg"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                <DropdownMenuItem
-                  className="rounded-lg cursor-pointer text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    meta?.onAssignClick(item);
-                  }}
-                  disabled={meta?.isAssigning}
-                >
-                  <TruckIcon className="mr-2 h-3.5 w-3.5" />
-                  Assign Truck/Driver
-                </DropdownMenuItem>
-
-                {containers.length > 0 && (
+            <div className="flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors rounded-lg"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44 rounded-xl">
                   <DropdownMenuItem
                     className="rounded-lg cursor-pointer text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
-                      meta?.onViewContainers(containers);
+                      meta?.onAssignClick(item);
                     }}
+                    disabled={meta?.isAssigning}
                   >
-                    <Eye className="mr-2 h-3.5 w-3.5" />
-                    View Containers
+                    <TruckIcon className="mr-2 h-3.5 w-3.5" />
+                    {t("shipments:ship_items_table.assign_action")}
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                  {containers.length > 0 && (
+                    <DropdownMenuItem
+                      className="rounded-lg cursor-pointer text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        meta?.onViewContainers(containers);
+                      }}
+                    >
+                      <Eye className="mr-2 h-3.5 w-3.5" />
+                      {t("shipments:ship_items_table.view_containers")}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-      );
+        );
+      },
     },
-  },
-];
+  ];
+
+  return columns;
+}

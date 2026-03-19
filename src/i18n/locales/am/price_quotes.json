@@ -1,0 +1,118 @@
+{
+  "title": "የዋጋ ጥቅሶች",
+  "subtitle": "የሁለት ሳምንት የዋጋ ጥቅሶችን ያስተዳድሩ",
+  "stats": {
+    "total": "ጠቅላላ",
+    "active": "ንቁ",
+    "draft": "ረቂቅ",
+    "inactive": "አልነቃም"
+  },
+  "buttons": {
+    "create_quote": "ጥቅስ ፍጠር",
+    "new_short": "አዲስ",
+    "cancel": "ሰርዝ"
+  },
+  "filters": {
+    "title": "ጥቅሶችን አጣራ",
+    "origin": "መነሻ",
+    "destination": "መድረሻ",
+    "truck_type": "የጭነት መኪና ዓይነት",
+    "status": "ሁኔታ",
+    "all": "ሁሉም",
+    "all_origins": "ሁሉም መነሻዎች",
+    "all_destinations": "ሁሉም መድረሻዎች",
+    "all_types": "ሁሉም ዓይነቶች",
+    "all_status": "ሁሉም ሁኔታዎች",
+    "apply": "አጣራ",
+    "origin_placeholder": "ሁሉም መነሻዎች",
+    "dest_placeholder": "ሁሉም መድረሻዎች",
+    "truck_type_placeholder": "ሁሉም ዓይነቶች",
+    "status_placeholder": "ሁሉም ሁኔታዎች"
+  },
+  "create": {
+    "title": "አዲስ የዋጋ ጥቅስ ፍጠር",
+    "breadcrumb": "ጥቅስ ፍጠር",
+    "sections": {
+      "route": "መንገድ",
+      "vehicle": "ተሽከርካሪ",
+      "weight": "የክብደት መጠን",
+      "pricing": "ዋጋ"
+    },
+    "labels": {
+      "origin": "መነሻ",
+      "destination": "መድረሻ",
+      "truck_type": "የጭነት መኪና ዓይነት",
+      "container_size": "የኮንቴይነር መጠን",
+      "axle_type": "የአክሰል ዓይነት (ከተፈለገ)",
+      "weight_min": "ቢያንስ (ኪ.ግ)",
+      "weight_max": "ቢበዛ (ኪ.ግ)",
+      "amount": "መጠን",
+      "currency": "ምንዛሬ"
+    },
+    "placeholders": {
+      "select": "ይምረጡ",
+      "weight_min": "1000",
+      "weight_max": "20000",
+      "amount": "50000"
+    },
+    "truck_types": {
+      "flatbed": "ፍላትቤድ የጭነት መኪና",
+      "trailer": "ትሬለር የጭነት መኪና",
+      "flatbed_desc": "ለከባድ ጭነቶች እና ለ 40 ጫማ ኮንቴይነሮች ተስማሚ።",
+      "trailer_desc": "ለ 20 ጫማ ኮንቴይነሮች መደበኛ መጓጓዣ።",
+      "available": "ይገኛል"
+    },
+    "axle_types": {
+      "none": "ምንም",
+      "single": "ነጠላ",
+      "double": "ድርብ",
+      "triple": "triple"
+    },
+    "warnings": {
+      "best_match": "ምርጥ ምርጫ",
+      "capacity": "የአቅም ማስጠንቀቂያ፡ 40 ጫማ ኮንቴይነሮች ብዙውን ጊዜ ከትሬለር የክብደት ገደብ በላይ ስለሚሆኑ ፍላትቤድ የጭነት መኪና ያስፈልጋቸዋል።",
+      "no_trucks": "በአሁኑ ጊዜ በእርስዎ መርከቦች ውስጥ ምንም ንቁ {{type}} የጭነት መኪናዎች የሉም።"
+    },
+    "validation": {
+      "origin_required": "መነሻ ያስፈልጋል",
+      "destination_required": "መድረሻ ያስፈልጋል",
+      "same_location": "መነሻ እና መድረሻ የተለየ መሆን አለባቸው",
+      "weight_min_required": "ዝቅተኛ ክብደት ያስፈልጋል",
+      "weight_max_required": "ከፍተኛ ክብደት ያስፈልጋል",
+      "weight_order": "ከፍተኛው ክብደት ከዝቅተኛው ክብደት የበለጠ ወይም እኩል መሆን አለበት",
+      "amount_required": "መጠን ያስፈልጋል",
+      "positive": "ከ 0 መብለጥ አለበት"
+    },
+    "alerts": {
+      "doc_required": "ሰነድ ያስፈልጋል",
+      "doc_missing": "አስፈላጊው የንግድ ፈቃድ ሰነድ የለም ወይም አልተፈቀደም።",
+      "go_to_docs": "ወደ ሰነዶች ይሂዱ"
+    }
+  },
+  "list": {
+    "columns": {
+      "id_route": "መለያ / መንገድ",
+      "vehicle": "ተሽከርካሪ",
+      "container": "ኮንቴይነር",
+      "weight": "ክብደት (ኪ.ግ)",
+      "price": "ዋጋ",
+      "status": "ሁኔታ",
+      "actions": "እርምጃዎች",
+      "open_menu": "ምናሌን ክፈት"
+    },
+    "actions": {
+      "view": "ተመልከት",
+      "edit": "አስተካክል",
+      "delete": "ሰርዝ"
+    },
+    "stats": {
+      "total": "ጠቅላላ",
+      "active": "ንቁ",
+      "draft": "ረቂቅ",
+      "inactive": "አልነቃም"
+    }
+  },
+  "messages": {
+    "delete_success": "የዋጋ ጥቅስ በተሳካ ሁኔታ ተሰርዟል"
+  }
+}

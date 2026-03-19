@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   Truck,
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,17 +47,15 @@ import { Button } from "@/components/ui/button";
 import { PasswordResetDialog } from "@/components/profile/password-reset-dialog";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Shipments", href: "/ships", icon: Anchor },
-  { name: "Fleet Management", href: "/fleet", icon: Truck },
-  { name: "Driver Management", href: "/drivers", icon: Users },
-  { name: "GPS Device Management", href: "/gps-devices", icon: Satellite },
-  // { name: "Active Orders", href: "/orders", icon: ClipboardList }, // Page not implemented yet
-  { name: "Biweekly Quotes", href: "/price-quotes", icon: Tag },
-  // { name: "Payments", href: "/payments", icon: CreditCard }, // Page not implemented yet
-  { name: "POD Documents", href: "/transporter/pod-documents", icon: FileText },
+  { name: "navigation.dashboard", href: "/", icon: LayoutDashboard },
+  { name: "navigation.shipments", href: "/ships", icon: Anchor },
+  { name: "navigation.fleet", href: "/fleet", icon: Truck },
+  { name: "navigation.drivers", href: "/drivers", icon: Users },
+  { name: "navigation.gps", href: "/gps-devices", icon: Satellite },
+  { name: "navigation.quotes", href: "/price-quotes", icon: Tag },
+  { name: "navigation.pod", href: "/transporter/pod-documents", icon: FileText },
   {
-    name: "Organization Documents",
+    name: "navigation.org_docs",
     href: "/organization/documents",
     icon: ShieldCheck,
   },
@@ -69,6 +69,7 @@ export function Sidebar({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useTranslation(["common"]);
 
   return (
     <div
@@ -114,7 +115,7 @@ export function Sidebar({
                 )}
                 aria-hidden="true"
               />
-              {item.name}
+              {t(`common:${item.name}`)}
             </Link>
           );
         })}
@@ -124,19 +125,20 @@ export function Sidebar({
 }
 
 export default function Shell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const { t } = useTranslation(["common"]);
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
   };
 
-  const confirmLogout = () => {
-    logout();
+  const confirmLogout = async () => {
+    await logout();
     router.push("/sign-in");
     setShowLogoutDialog(false);
   };
@@ -184,6 +186,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center gap-x-4 lg:gap-x-6 ml-auto">
+              <LanguageSwitcher />
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -191,7 +194,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold uppercase text-xs">
                       {user?.name?.[0] || "T"}
                     </div>
-                    <span className="hidden lg:inline">Profile</span>
+                    <span className="hidden lg:inline">{t("common:navigation.profile")}</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -209,7 +212,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     className="cursor-pointer"
                   >
                     <Lock className="mr-2 h-4 w-4" />
-                    <span>Change Password</span>
+                    <span>{t("common:navigation.change_password")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -217,7 +220,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                     className="text-destructive focus:text-destructive cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
+                    <span>{t("common:navigation.logout")}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -228,10 +231,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-xl">Confirm Logout</DialogTitle>
+              <DialogTitle className="text-xl">{t("common:auth_dialogs.logout_title")}</DialogTitle>
               <DialogDescription className="py-4">
-                Are you sure you want to log out? You will need to login again
-                to access your dashboard.
+                {t("common:auth_dialogs.logout_description")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -240,14 +242,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 onClick={() => setShowLogoutDialog(false)}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmLogout}
                 className="w-full sm:w-auto bg-destructive hover:bg-destructive/90"
               >
-                Logout
+                {t("common:navigation.logout")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -284,7 +286,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 >
                   <item.icon className="h-6 w-6" />
                   <span className="text-[10px] font-medium leading-none">
-                    {item.name.split(" ")[0]}
+                    {t(`common:${item.name}`)}
                   </span>
                 </Link>
               );

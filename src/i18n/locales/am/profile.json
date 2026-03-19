@@ -1,0 +1,17 @@
+{
+  "change_password": "የይለፍ ቃል ቀይር",
+  "change_password_description": "የአሁኑን የይለፍ ቃልዎን ያስገቡ እና አዲስ የይለፍ ቃል ይምረጡ።",
+  "current_password": "የአሁኑ የይለፍ ቃል",
+  "current_password_placeholder": "የአሁኑን የይለፍ ቃል ያስገቡ",
+  "new_password": "አዲስ የይለፍ ቃል",
+  "new_password_placeholder": "አዲስ የይለፍ ቃል ያስገቡ",
+  "confirm_password": "አዲሱን የይለፍ ቃል ያረጋግጡ",
+  "confirm_password_placeholder": "አዲሱን የይለፍ ቃል ያረጋግጡ",
+  "password_hint": "የይለፍ ቃል ቢያንስ 8 ቁምፊዎች መሆን አለበት።",
+  "saving": "በመቀመጥ ላይ...",
+  "success_password": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል",
+  "error_session_expired": "ክፍለ-ጊዜዎ አልፎበታል። እባክዎ እንደገና ይግቡ።",
+  "error_incorrect_password": "የአሁኑ የይለፍ ቃል ትክክል አይደለም",
+  "error_reset_failed": "የይለፍ ቃል መቀየር አልተቻለም",
+  "error_try_again": "የይለፍ ቃል መቀየር አልተቻለም። እባክዎ እንደገና ይሞክሩ።"
+}

@@ -1,0 +1,11 @@
+{
+  "required": "This field is required",
+  "email_invalid": "Please enter a valid email address",
+  "password_min": "Password must be at least 6 characters",
+  "password_match": "Passwords do not match",
+  "phone_invalid": "Please enter a valid phone number",
+  "number_positive": "Value must be a positive number",
+  "max_length": "Must be {{max}} characters or less",
+  "min_length": "Must be at least {{min}} characters",
+  "invalid_format": "Invalid format: {{format}}"
+}

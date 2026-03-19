@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -76,6 +77,7 @@ function ActionsCell({
   meta?: {
     onEdit?: (quote: PriceQuote) => void;
     onDelete?: (quote: PriceQuote) => void;
+    t?: (key: string) => string;
   };
 }) {
   const router = useRouter();
@@ -100,7 +102,7 @@ function ActionsCell({
             }}
             className="rounded-lg"
           >
-            <Eye className="mr-2 h-4 w-4" /> View
+            <Eye className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.view") || "View"}
           </DropdownMenuItem>
           {meta?.onEdit && (
             <DropdownMenuItem
@@ -110,7 +112,7 @@ function ActionsCell({
               }}
               className="rounded-lg"
             >
-              <Edit className="mr-2 h-4 w-4" /> Edit
+              <Edit className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.edit") || "Edit"}
             </DropdownMenuItem>
           )}
           {meta?.onDelete && (
@@ -121,7 +123,7 @@ function ActionsCell({
                 meta.onDelete?.(quote);
               }}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
+              <Trash2 className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.delete") || "Delete"}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -133,15 +135,18 @@ function ActionsCell({
 export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   {
     accessorKey: "id",
-    header: ({ column }) => (
-      <span
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="text-xs font-semibold uppercase tracking-wider flex items-center cursor-pointer"
-      >
-        ID / Route
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </span>
-    ),
+    header: ({ column }) => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <span
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs font-semibold uppercase tracking-wider flex items-center cursor-pointer"
+        >
+          {t("list.columns.id_route")}
+          <ArrowUpDown className="ml-2 h-3 w-3" />
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const quote = row.original;
       return (
@@ -163,11 +168,14 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   },
   {
     accessorKey: "truck_type",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Vehicle
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.vehicle")}
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const quote = row.original;
       return (
@@ -184,11 +192,14 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   },
   {
     accessorKey: "container_size",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Container
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.container")}
+        </span>
+      );
+    },
     cell: ({ row }) => (
       <span className="text-xs whitespace-nowrap">
         {formatContainerSize(row.getValue("container_size"))}
@@ -197,11 +208,14 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   },
   {
     accessorKey: "gross_weight_max",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider text-right">
-        Weight (kg)
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider text-right">
+          {t("list.columns.weight")}
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const quote = row.original;
       return (
@@ -214,17 +228,20 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   },
   {
     accessorKey: "amount",
-    header: ({ column }) => (
-      <div className="text-right">
-        <span
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs font-semibold uppercase tracking-wider flex items-center justify-end cursor-pointer"
-        >
-          Price
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </span>
-      </div>
-    ),
+    header: ({ column }) => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <div className="text-right">
+          <span
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs font-semibold uppercase tracking-wider flex items-center justify-end cursor-pointer"
+          >
+            {t("list.columns.price")}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </span>
+        </div>
+      );
+    },
     cell: ({ row }) => {
       const quote = row.original;
       return (
@@ -241,13 +258,17 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
   },
   {
     accessorKey: "status",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Status
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("price_quotes");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.status")}
+        </span>
+      );
+    },
     cell: ({ row, table }) => {
       const quote = row.original;
+      const { t } = useTranslation("price_quotes");
       const meta = table.options.meta as {
         onStatusChange?: (id: number, status: PriceQuoteStatusEnum) => void;
       };
@@ -264,12 +285,14 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
               <StatusBadge status={quote.status} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value={PriceQuoteStatusEnum.DRAFT}>Draft</SelectItem>
+              <SelectItem value={PriceQuoteStatusEnum.DRAFT}>
+                {t("list.stats.draft")}
+              </SelectItem>
               <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>
-                Active
+                {t("list.stats.active")}
               </SelectItem>
               <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>
-                Inactive
+                {t("list.stats.inactive")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -284,6 +307,7 @@ export const priceQuoteColumns: ColumnDef<PriceQuoteTableRow>[] = [
       const meta = table.options.meta as {
         onEdit?: (quote: PriceQuote) => void;
         onDelete?: (quote: PriceQuote) => void;
+        t?: (key: string) => string;
       };
 
       return <ActionsCell quote={quote} meta={meta} />;

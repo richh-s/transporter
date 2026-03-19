@@ -1,118 +1,148 @@
 "use client";
 
-import { FileText, Calendar, Eye, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  MoreVertical,
+  Eye,
+  Pencil,
+  Trash2,
+  FileText,
+  Clock,
+  ExternalLink,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { OrganizationDocument } from "@/lib/api/organization";
-
-function getDocumentTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    trade_licence: "Trade Licence",
-    id: "Authorised Contact Person Company ID",
-    other: "Other",
-  };
-  return labels[type] || type.replace(/_/g, " ");
-}
-
-function getStatusStyle(status: string): string {
-  const normalizedStatus = String(status).toLowerCase().replace(/_/g, "");
-  switch (normalizedStatus) {
-    case "approved":
-      return "bg-green-600 text-white";
-    case "rejected":
-    case "inactive":
-      return "bg-red-500 text-white";
-    case "pending":
-    default:
-      return "bg-amber-500 text-white";
-  }
-}
+import { format } from "date-fns";
+import type { OrganizationDocumentTableRow } from "../columns/document-columns";
+import { useTranslation } from "react-i18next";
 
 interface OrganizationDocumentMobileCardProps {
-  document: OrganizationDocument;
+  document: OrganizationDocumentTableRow;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: number) => void;
-  isDeleting?: boolean;
+  isDeleting: boolean;
 }
 
 export function OrganizationDocumentMobileCard({
-  document: doc,
+  document,
   onView,
   onEdit,
   onDelete,
-  isDeleting = false,
+  isDeleting,
 }: OrganizationDocumentMobileCardProps) {
-  const date = doc.created_at
-    ? new Date(doc.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "—";
-  const status = doc.status || "pending";
+  const { t } = useTranslation(["organization", "common"]);
+  const status = (document.status || "").toLowerCase().replace(/_/g, "");
+
+  const getStatusColor = (s: string) => {
+    switch (s) {
+      case "approved":
+        return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+      case "pending":
+        return "bg-amber-500/10 text-amber-600 border-amber-500/20";
+      case "rejected":
+      case "inactive":
+        return "bg-rose-500/10 text-rose-600 border-rose-500/20";
+      default:
+        return "bg-slate-500/10 text-slate-600 border-slate-500/20";
+    }
+  };
 
   return (
-    <div className="rounded-xl p-4 flex flex-col gap-3 bg-green-50/90 dark:bg-green-950/20 border border-green-200/50 dark:border-green-800/30">
-      {/* Row 1: Icon, Title + Subtitle, Status */}
-      <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-green-200/80 dark:bg-green-800/40 text-green-700 dark:text-green-300">
-          <FileText className="h-5 w-5" />
+    <div className="p-4 rounded-2xl bg-card border border-border/50 shadow-sm active:scale-[0.98] transition-all space-y-4">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-brand-primary/10">
+            <FileText className="h-5 w-5 text-brand-primary" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-brand-primary leading-tight truncate">
+              {t(`organization:types.${document.document_type}`, { defaultValue: document.document_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) })}
+            </h3>
+            {document.file_name && (
+              <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                {document.file_name}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200 leading-tight">
-            {getDocumentTypeLabel(doc.document_type)}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-            Organization
-          </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 -mr-2 rounded-full"
+              disabled={isDeleting}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+            <DropdownMenuItem
+              onClick={() => onView(document.id.toString())}
+              className="rounded-lg"
+            >
+              <Eye className="mr-2 h-4 w-4" /> {t("common:buttons.view")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onEdit(document.id.toString())}
+              className="rounded-lg"
+            >
+              <Pencil className="mr-2 h-4 w-4" /> {t("common:buttons.edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDelete(document.id)}
+              className="text-rose-600 focus:text-rose-600 rounded-lg"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> {t("common:buttons.delete")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+            {t("organization:fields.entity_type")}
+          </span>
+          <div className="flex items-center gap-1 text-xs font-medium text-brand-secondary">
+            <span className="capitalize">{t(`organization:entities.${document.entity_type?.toLowerCase() || ""}`, { defaultValue: document.entity_type })}</span>
+            {document.entity_name && (
+              <span className="text-[10px] text-muted-foreground font-normal truncate">
+                ({document.entity_name})
+              </span>
+            )}
+            <ExternalLink className="h-3 w-3 opacity-50" />
+          </div>
         </div>
-        <span
-          className={cn(
-            "shrink-0 rounded-md px-2 py-1 text-xs font-medium capitalize",
-            getStatusStyle(status),
-          )}
-        >
-          {status}
+
+        <div className="space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+            {t("organization:fields.status")}
+          </span>
+          <Badge
+            variant="outline"
+            className={cn("px-2 py-0 text-[10px] h-5", getStatusColor(status))}
+          >
+            {t(`organization:tabs.${status}`, { defaultValue: document.status })}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="pt-2 border-t border-border/30 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
+          <Clock className="h-3 w-3" />
+          <span>{format(new Date(document.created_at), "MMM d, yyyy")}</span>
+        </div>
+        <span className="text-[10px] font-mono text-muted-foreground/60">
+          ID: {document.id}
         </span>
-      </div>
-
-      {/* Row 2: Date */}
-      <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-        <Calendar className="h-4 w-4 text-green-600/80 dark:text-green-400/80" />
-        {date}
-      </div>
-
-      {/* Row 3: View | Edit | Delete - visible at a glance */}
-      <div className="flex items-center gap-2 pt-1 border-t border-green-200/60 dark:border-green-800/30">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-100/80 dark:hover:bg-green-900/30 hover:text-green-800 dark:hover:text-green-300 px-2"
-          onClick={() => onView(String(doc.id))}
-        >
-          <Eye className="h-3.5 w-3.5" />
-          View
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-100/80 dark:hover:bg-green-900/30 hover:text-green-800 dark:hover:text-green-300 px-2"
-          onClick={() => onEdit(String(doc.id))}
-        >
-          <Edit className="h-3.5 w-3.5" />
-          Edit
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 px-2"
-          onClick={() => onDelete(doc.id)}
-          disabled={isDeleting}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Delete
-        </Button>
       </div>
     </div>
   );

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Anchor, MapPin, Package, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
-import { columns } from "./columns";
+import { getColumns } from "./columns";
 import { ShipCard } from "./ship-card";
 import { useShips } from "@/hooks/use-ships";
 import { Ship } from "@/types/ship";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // Stats Card Component
 function StatsCard({
@@ -74,6 +75,7 @@ function StatsCard({
 
 // Stats Cards Section
 function ShipsStatsCards({ ships }: { ships: Ship[] }) {
+  const { t } = useTranslation(["shipments", "common"]);
   const totalShips = ships.length;
   const inTransit = ships.filter(
     (s) => s.status?.toUpperCase() === "IN_TRANSIT",
@@ -90,9 +92,9 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
       <div className="flex sm:grid sm:grid-cols-4 gap-3 sm:gap-4 min-w-0 sm:min-w-full pr-4 sm:pr-0">
         <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
           <StatsCard
-            title="Total Ships"
+            title={t("shipments:columns.shipment_id")}
             value={totalShips}
-            subtitle="Active shipments"
+            subtitle={t("shipments:labels.all_shipments")}
             icon={Anchor}
             gradient="bg-gradient-to-br from-primary to-primary/50"
             iconBg="bg-primary/10 text-primary"
@@ -100,9 +102,9 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
         </div>
         <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
           <StatsCard
-            title="In Transit"
+            title={t("shipments:status.in_transit")}
             value={inTransit}
-            subtitle="On the move"
+            subtitle={t("shipments:status.in_transit")}
             icon={TrendingUp}
             gradient="bg-gradient-to-br from-amber-500 to-amber-500/50"
             iconBg="bg-amber-500/10 text-amber-600"
@@ -110,9 +112,9 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
         </div>
         <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
           <StatsCard
-            title="Delivered"
+            title={t("shipments:status.delivered")}
             value={delivered}
-            subtitle="Arrived at destination"
+            subtitle={t("shipments:status.delivered")}
             icon={Package}
             gradient="bg-gradient-to-br from-blue-500 to-blue-500/50"
             iconBg="bg-blue-500/10 text-blue-600"
@@ -120,9 +122,9 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
         </div>
         <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
           <StatsCard
-            title="Completed"
+            title={t("shipments:status.delivered")}
             value={completed}
-            subtitle="Fully processed"
+            subtitle={t("shipments:status.delivered")}
             icon={MapPin}
             gradient="bg-gradient-to-br from-emerald-500 to-emerald-500/50"
             iconBg="bg-emerald-500/10 text-emerald-600"
@@ -132,6 +134,8 @@ function ShipsStatsCards({ ships }: { ships: Ship[] }) {
     </div>
   );
 }
+
+// ... loading skeletons stay the same ...
 
 // Loading skeleton for stats (scrollable on mobile)
 function StatsLoadingSkeleton() {
@@ -220,8 +224,11 @@ import { ShipStatusEnum } from "@/types/ship";
 // Main content component
 function ShipsContent() {
   const router = useRouter();
+  const { t } = useTranslation(["shipments", "common"]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+
+  const columns = useMemo(() => getColumns(t), [t]);
 
   const { data, isLoading } = useShips(
     { per_page: 100 },
@@ -239,28 +246,28 @@ function ShipsContent() {
     <div className="flex items-center gap-2">
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="h-9 w-[150px] sm:w-[180px] bg-background text-xs sm:text-sm">
-          <SelectValue placeholder="All Status" />
+          <SelectValue placeholder={t("shipments:labels.status_filters")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Status</SelectItem>
-          <SelectItem value={ShipStatusEnum.CREATED}>Created</SelectItem>
+          <SelectItem value="ALL">{t("shipments:labels.all_shipments")}</SelectItem>
+          <SelectItem value={ShipStatusEnum.CREATED}>{t("shipments:status.pending")}</SelectItem>
           <SelectItem value={ShipStatusEnum.PRICE_REQUESTED}>
-            Price Requested
+            {t("shipments:status.pending")}
           </SelectItem>
-          <SelectItem value={ShipStatusEnum.PRICED}>Priced</SelectItem>
+          <SelectItem value={ShipStatusEnum.PRICED}>{t("shipments:status.pending")}</SelectItem>
           <SelectItem value={ShipStatusEnum.ACCEPTED_BY_SHIPPER}>
-            Accepted by Shipper
+            {t("shipments:status.assigned")}
           </SelectItem>
           <SelectItem value={ShipStatusEnum.REJECTED_BY_SHIPPER}>
-            Rejected by Shipper
+            {t("shipments:status.cancelled")}
           </SelectItem>
-          <SelectItem value={ShipStatusEnum.ALLOCATED}>Allocated</SelectItem>
+          <SelectItem value={ShipStatusEnum.ALLOCATED}>{t("shipments:status.assigned")}</SelectItem>
           <SelectItem value={ShipStatusEnum.READY_FOR_PICKUP}>
-            Ready for Pickup
+            {t("shipments:status.assigned")}
           </SelectItem>
-          <SelectItem value={ShipStatusEnum.IN_TRANSIT}>In Transit</SelectItem>
-          <SelectItem value={ShipStatusEnum.DELIVERED}>Delivered</SelectItem>
-          <SelectItem value={ShipStatusEnum.COMPLETED}>Completed</SelectItem>
+          <SelectItem value={ShipStatusEnum.IN_TRANSIT}>{t("shipments:status.in_transit")}</SelectItem>
+          <SelectItem value={ShipStatusEnum.DELIVERED}>{t("shipments:status.delivered")}</SelectItem>
+          <SelectItem value={ShipStatusEnum.COMPLETED}>{t("shipments:status.delivered")}</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -272,10 +279,10 @@ function ShipsContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Ships
+            {t("shipments:title")}
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage and track your shipments
+            {t("shipments:subtitle")}
           </p>
         </div>
       </div>
@@ -303,7 +310,7 @@ function ShipsContent() {
             columns={columns}
             data={filteredShips}
             searchKey="origin"
-            searchPlaceholder="Search routes..."
+            searchPlaceholder={t("shipments:labels.search_placeholder")}
             filterControls={filterControls}
             onRowClick={(row) => router.push(`/ships/placeholder?id=${row.id}`)}
             onScrollChange={setIsScrolled}

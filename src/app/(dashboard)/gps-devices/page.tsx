@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Satellite,
@@ -116,6 +117,7 @@ function TableLoadingSkeleton() {
 }
 
 export default function GPSDevicesPage() {
+  const { t } = useTranslation(["gps", "common"]);
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -180,7 +182,7 @@ export default function GPSDevicesPage() {
   };
 
   const handleDeactivate = (id: number) => {
-    if (!confirm("Are you sure you want to deactivate this GPS device?"))
+    if (!confirm(t("gps:list.messages.deactivate_confirm")))
       return;
     deactivateMutation.mutate(id);
   };
@@ -199,10 +201,10 @@ export default function GPSDevicesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0 px-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            GPS Devices
+            {t("gps:title")}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage and track your GPS devices
+            {t("gps:subtitle")}
           </p>
         </div>
         <Button
@@ -211,8 +213,8 @@ export default function GPSDevicesPage() {
           className="rounded-xl h-9 gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">New Device</span>
-          <span className="sm:hidden">New</span>
+          <span className="hidden sm:inline">{t("gps:buttons.new_device")}</span>
+          <span className="sm:hidden">{t("gps:buttons.new_short")}</span>
         </Button>
       </div>
 
@@ -222,7 +224,7 @@ export default function GPSDevicesPage() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={Satellite}
-              label="Total"
+              label={t("gps:stats.total")}
               value={total}
               accent="bg-primary/10 text-primary"
             />
@@ -230,7 +232,7 @@ export default function GPSDevicesPage() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={CheckCircle}
-              label="Active"
+              label={t("gps:stats.active")}
               value={activeCount}
               accent="bg-primary/10 text-primary"
             />
@@ -238,7 +240,7 @@ export default function GPSDevicesPage() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={XCircle}
-              label="Inactive"
+              label={t("gps:stats.inactive")}
               value={inactiveCount}
               accent="bg-gray-500/10 text-gray-600"
             />
@@ -246,7 +248,7 @@ export default function GPSDevicesPage() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={Truck}
-              label="Assigned"
+              label={t("gps:stats.assigned")}
               value={assignedCount}
               accent="bg-primary/10 text-primary"
             />
@@ -272,6 +274,7 @@ export default function GPSDevicesPage() {
               onStatusChange: handleStatusChange,
               isUpdating: updateMutation.isPending,
               gpsDeviceToTruckMap,
+              t,
             }}
             manualPagination
             page={page}
@@ -304,7 +307,7 @@ export default function GPSDevicesPage() {
                       )}
                     >
                       <Filter className="h-4 w-4" />
-                      Filters
+                      {t("common:labels.filters")}
                       {hasActiveFilters && (
                         <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                           {
@@ -318,13 +321,13 @@ export default function GPSDevicesPage() {
                   </SheetTrigger>
                   <SheetContent side="bottom" className="rounded-t-3xl">
                     <SheetHeader className="pb-4">
-                      <SheetTitle>Filter Devices</SheetTitle>
+                      <SheetTitle>{t("gps:filters.title")}</SheetTitle>
                     </SheetHeader>
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            External ID
+                            {t("gps:filters.external_id")}
                           </label>
                           <Input
                             placeholder="Search..."
@@ -340,7 +343,7 @@ export default function GPSDevicesPage() {
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            IMEI
+                            {t("gps:filters.imei")}
                           </label>
                           <Input
                             placeholder="Search..."
@@ -358,7 +361,7 @@ export default function GPSDevicesPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Device Name
+                            {t("gps:filters.device_name")}
                           </label>
                           <Input
                             placeholder="Search..."
@@ -374,7 +377,7 @@ export default function GPSDevicesPage() {
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Status
+                            {t("gps:filters.status")}
                           </label>
                           <Select
                             value={
@@ -398,9 +401,9 @@ export default function GPSDevicesPage() {
                               <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="all">All</SelectItem>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="all">{t("gps:filters.all")}</SelectItem>
+                              <SelectItem value="active">{t("gps:filters.active")}</SelectItem>
+                              <SelectItem value="inactive">{t("gps:filters.inactive")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -411,13 +414,13 @@ export default function GPSDevicesPage() {
                           onClick={handleClearFilters}
                           className="flex-1 rounded-xl"
                         >
-                          Clear
+                          {t("common:buttons.clear")}
                         </Button>
                         <Button
                           onClick={handleApplyFilters}
                           className="flex-1 rounded-xl"
                         >
-                          Apply Filters
+                          {t("gps:filters.apply")}
                         </Button>
                       </div>
                     </div>
@@ -431,7 +434,7 @@ export default function GPSDevicesPage() {
                     onClick={handleClearFilters}
                     className="text-xs text-muted-foreground"
                   >
-                    Clear all
+                    {t("common:buttons.clear_filters")}
                   </Button>
                 )}
               </div>

@@ -20,6 +20,8 @@ import { truckApi } from "@/lib/api/trucks";
 import { PriceQuoteService } from "@/lib/price-quote-api";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "@/lib/format";
 
 interface DashboardStat {
   name: string;
@@ -34,15 +36,17 @@ interface Activity {
   status: string;
   truck: string;
   time: string;
+  rawStatus: string;
 }
 
 export default function Dashboard() {
   const router = useRouter();
+  const { t } = useTranslation(["dashboard", "common"]);
   const [stats, setStats] = useState<DashboardStat[]>([
-    { name: "Active Trucks", value: "--", icon: Truck },
-    { name: "Total Orders", value: "--", icon: ClipboardList },
-    { name: "Open Quotes", value: "--", icon: Tag },
-    { name: "Revenue (ETB)", value: "--", icon: TrendingUp },
+    { name: t("dashboard:overview.stats.active_trucks"), value: "--", icon: Truck },
+    { name: t("dashboard:overview.stats.total_orders"), value: "--", icon: ClipboardList },
+    { name: t("dashboard:overview.stats.open_quotes"), value: "--", icon: Tag },
+    { name: t("dashboard:overview.stats.revenue"), value: "--", icon: TrendingUp },
   ]);
 
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
@@ -89,15 +93,15 @@ export default function Dashboard() {
       const totalQuotes = quotesRes.total || 0;
 
       setStats([
-        { name: "Active Trucks", value: totalTrucks.toString(), icon: Truck },
+        { name: t("dashboard:overview.stats.active_trucks"), value: totalTrucks.toString(), icon: Truck },
         {
-          name: "Total Orders",
+          name: t("dashboard:overview.stats.total_orders"),
           value: totalOrders.toString(),
           icon: ClipboardList,
         },
-        { name: "Open Quotes", value: totalQuotes.toString(), icon: Tag },
+        { name: t("dashboard:overview.stats.open_quotes"), value: totalQuotes.toString(), icon: Tag },
         {
-          name: "Revenue (ETB)",
+          name: t("dashboard:overview.stats.revenue"),
           value: formatCurrency(revenue, "ETB").replace("ETB", "").trim(),
           icon: TrendingUp,
         },
@@ -137,14 +141,15 @@ export default function Dashboard() {
             id: `ORD-${item.id}`,
             shipId: item.ship_id,
             route: `${item.origin || "N/A"} → ${item.destination || "N/A"}`,
-            status: isFull ? "Full Assigned" : "Partial Assigned",
+            status: isFull ? t("dashboard:recent_activity.status.full_assigned") : t("dashboard:recent_activity.status.partial_assigned"),
+            rawStatus: isFull ? "full" : "partial",
             truck:
               item.assigned_truck?.plate_number ||
               item.truck?.plate_number ||
-              (hasTruck ? "Truck Assigned" : "Driver Assigned"),
+              (hasTruck ? t("dashboard:recent_activity.status.truck_assigned") : t("dashboard:recent_activity.status.driver_assigned")),
             time: item.created_at
-              ? new Date(item.created_at).toLocaleDateString()
-              : "Recent",
+              ? formatDate(item.created_at)
+              : t("common:labels.date"),
           };
         });
       setRecentActivities(activities);
@@ -154,7 +159,7 @@ export default function Dashboard() {
       setLoadingStats(false);
       setLoadingActivity(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -168,10 +173,10 @@ export default function Dashboard() {
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-10 sm:pb-0 w-full overflow-x-hidden">
       <div className="px-0">
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-brand-primary">
-          Fleet Overview
+          {t("dashboard:overview.title")}
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground">
-          Monitoring your transport operations in real-time.
+          {t("dashboard:overview.subtitle")}
         </p>
       </div>
 
@@ -225,19 +230,19 @@ export default function Dashboard() {
           <div className="p-4 border-b border-border">
             <h3 className="font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
-              Quick Actions
+              {t("dashboard:quick_actions.title")}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Jump to key sections
+              {t("dashboard:quick_actions.subtitle")}
             </p>
           </div>
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
             {[
-              { label: "Ships & Orders", href: "/ships", icon: ClipboardList },
-              { label: "Price Quotes", href: "/price-quotes", icon: Tag },
-              { label: "Fleet & Trucks", href: "/fleet", icon: Truck },
-              { label: "Drivers", href: "/drivers", icon: Users },
-              { label: "GPS Devices", href: "/gps-devices", icon: Radio },
+              { label: t("dashboard:quick_actions.items.ships"), href: "/ships", icon: ClipboardList },
+              { label: t("dashboard:quick_actions.items.quotes"), href: "/price-quotes", icon: Tag },
+              { label: t("dashboard:quick_actions.items.fleet"), href: "/fleet", icon: Truck },
+              { label: t("dashboard:quick_actions.items.drivers"), href: "/drivers", icon: Users },
+              { label: t("dashboard:quick_actions.items.gps"), href: "/gps-devices", icon: Radio },
             ].map((item) => (
               <button
                 key={item.href}
@@ -259,13 +264,13 @@ export default function Dashboard() {
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
-              Recent Activity
+              {t("dashboard:recent_activity.title")}
             </h3>
             <button
               onClick={() => router.push("/ships")}
               className="text-xs text-primary hover:underline font-medium"
             >
-              View all
+              {t("dashboard:recent_activity.view_all")}
             </button>
           </div>
 
@@ -303,7 +308,7 @@ export default function Dashboard() {
           ) : recentActivities.length === 0 ? (
             <div className="py-20 text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-              <p className="text-muted-foreground">No recent activity found.</p>
+              <p className="text-muted-foreground">{t("dashboard:recent_activity.no_data")}</p>
             </div>
           ) : (
             <>
@@ -312,16 +317,16 @@ export default function Dashboard() {
                   <thead className="bg-secondary/20 text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3 font-medium text-[11px] uppercase tracking-wider">
-                        ID
+                        {t("dashboard:recent_activity.table.id")}
                       </th>
                       <th className="px-4 py-3 font-medium text-[11px] uppercase tracking-wider">
-                        Status
+                        {t("dashboard:recent_activity.table.status")}
                       </th>
                       <th className="px-4 py-3 font-medium text-[11px] uppercase tracking-wider">
-                        Truck
+                        {t("dashboard:recent_activity.table.truck")}
                       </th>
                       <th className="px-4 py-3 font-medium text-[11px] uppercase tracking-wider">
-                        Date
+                        {t("dashboard:recent_activity.table.date")}
                       </th>
                       <th className="px-4 py-3 font-medium text-right"></th>
                     </tr>
@@ -337,7 +342,7 @@ export default function Dashboard() {
                           {activity.id}
                         </td>
                         <td className="px-4 py-4">
-                          <span className={StatusClasses(activity.status)}>
+                          <span className={StatusClasses(activity.rawStatus || activity.status)}>
                             {activity.status}
                           </span>
                         </td>
@@ -372,7 +377,7 @@ export default function Dashboard() {
                           {activity.truck}
                         </h4>
                       </div>
-                      <span className={StatusClasses(activity.status)}>
+                      <span className={StatusClasses(activity.rawStatus || activity.status)}>
                         {activity.status}
                       </span>
                     </div>

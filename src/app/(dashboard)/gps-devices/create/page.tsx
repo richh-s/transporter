@@ -33,6 +33,7 @@ import { useUnassignedTrucks } from "@/hooks/use-trucks";
 import { useCreateGPSDevice } from "@/hooks/use-gps-devices";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
   external_device_id: z
@@ -72,6 +73,7 @@ function SectionHeader({
 }
 
 export default function CreateGPSDevicePage() {
+  const { t } = useTranslation(["gps", "common"]);
   const router = useRouter();
   const { data: trucks = [], isLoading: loadingTrucks } = useUnassignedTrucks();
   const createMutation = useCreateGPSDevice();
@@ -114,11 +116,11 @@ export default function CreateGPSDevicePage() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="p-4 space-y-2">
           <CompactBreadcrumb
-            parentLabel="GPS Devices"
+            parentLabel={t("gps:create_form.breadcrumb_parent")}
             parentHref="/gps-devices"
-            currentLabel="Create Device"
+            currentLabel={t("gps:create_form.breadcrumb_current")}
           />
-          <h1 className="text-lg font-bold">Create New GPS Device</h1>
+          <h1 className="text-lg font-bold">{t("gps:create_form.title")}</h1>
         </div>
       </div>
 
@@ -131,7 +133,7 @@ export default function CreateGPSDevicePage() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Hash}
-              title="Device Info"
+              title={t("gps:create_form.sections.device_info")}
               accent="bg-blue-500/10 text-blue-500"
             />
             <div className="space-y-3">
@@ -141,11 +143,11 @@ export default function CreateGPSDevicePage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      External Device ID <span className="text-red-500">*</span>
+                      {t("gps:create_form.labels.external_id")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter device ID"
+                        placeholder={t("gps:create_form.placeholders.enter_id")}
                         className="h-11 rounded-xl"
                         {...field}
                       />
@@ -161,11 +163,11 @@ export default function CreateGPSDevicePage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      IMEI Number <span className="text-red-500">*</span>
+                      {t("gps:create_form.labels.imei")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="15-digit IMEI"
+                        placeholder={t("gps:create_form.placeholders.imei")}
                         className="h-11 rounded-xl font-mono"
                         {...field}
                       />
@@ -181,10 +183,10 @@ export default function CreateGPSDevicePage() {
                   name="device_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Device Name</FormLabel>
+                    <FormLabel className="text-xs">{t("gps:create_form.labels.device_name")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Optional"
+                          placeholder={t("gps:create_form.placeholders.optional")}
                           className="h-11 rounded-xl"
                           {...field}
                         />
@@ -199,10 +201,10 @@ export default function CreateGPSDevicePage() {
                   name="device_model"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Device Model</FormLabel>
+                      <FormLabel className="text-xs">{t("gps:create_form.labels.device_model")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Optional"
+                          placeholder={t("gps:create_form.placeholders.optional")}
                           className="h-11 rounded-xl"
                           {...field}
                         />
@@ -219,7 +221,7 @@ export default function CreateGPSDevicePage() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Truck}
-              title="Truck Assignment"
+              title={t("gps:create_form.sections.truck_assignment")}
               accent="bg-emerald-500/10 text-emerald-600"
             />
             <FormField
@@ -228,7 +230,7 @@ export default function CreateGPSDevicePage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs">
-                    Assign to Truck <span className="text-red-500">*</span>
+                    {t("gps:create_form.labels.truck")} <span className="text-red-500">*</span>
                   </FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(Number(value))}
@@ -237,17 +239,17 @@ export default function CreateGPSDevicePage() {
                   >
                     <FormControl>
                       <SelectTrigger className="h-11 rounded-xl">
-                        <SelectValue placeholder="Select a truck" />
+                        <SelectValue placeholder={t("gps:create_form.placeholders.select_truck")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="rounded-xl">
                       {loadingTrucks ? (
                         <SelectItem value="loading" disabled>
-                          Loading trucks...
+                          {t("gps:create_form.truck_states.loading")}
                         </SelectItem>
                       ) : trucks.length === 0 ? (
                         <SelectItem value="no-trucks" disabled>
-                          No available trucks
+                          {t("gps:create_form.truck_states.no_available")}
                         </SelectItem>
                       ) : (
                         trucks.map((truck) => (
@@ -267,7 +269,7 @@ export default function CreateGPSDevicePage() {
                   </Select>
                   {trucks.length === 0 && !loadingTrucks && (
                     <p className="text-[10px] text-red-500 mt-1">
-                      All trucks are already assigned to GPS devices
+                      {t("gps:create_form.truck_states.all_assigned")}
                     </p>
                   )}
                   <FormMessage />
@@ -280,7 +282,7 @@ export default function CreateGPSDevicePage() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Calendar}
-              title="Expiration & Status"
+              title={t("gps:create_form.sections.expiration_status")}
               accent="bg-amber-500/10 text-amber-600"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -290,7 +292,7 @@ export default function CreateGPSDevicePage() {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className="text-xs">
-                      Expire Date <span className="text-red-500">*</span>
+                      {t("gps:create_form.labels.expire_date")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -305,7 +307,7 @@ export default function CreateGPSDevicePage() {
                             {field.value ? (
                               format(field.value, "MMM dd, yyyy")
                             ) : (
-                              <span>Select date</span>
+                              <span>{t("gps:create_form.placeholders.select_date")}</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -334,7 +336,7 @@ export default function CreateGPSDevicePage() {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Status</FormLabel>
+                    <FormLabel className="text-xs">{t("gps:create_form.labels.status")}</FormLabel>
                     <Select
                       onValueChange={(value) =>
                         field.onChange(value === "active")
@@ -347,8 +349,8 @@ export default function CreateGPSDevicePage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="active">{t("gps:create_form.status.active")}</SelectItem>
+                        <SelectItem value="inactive">{t("gps:create_form.status.inactive")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -369,7 +371,7 @@ export default function CreateGPSDevicePage() {
           disabled={createMutation.isPending}
           className="flex-1 h-11 rounded-xl"
         >
-          Cancel
+          {t("gps:create_form.buttons.cancel")}
         </Button>
         <Button
           type="submit"
@@ -380,10 +382,10 @@ export default function CreateGPSDevicePage() {
           {createMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
+              {t("gps:create_form.buttons.creating")}
             </>
           ) : (
-            "Create Device"
+            t("gps:create_form.buttons.create")
           )}
         </Button>
       </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Truck } from "@/lib/api/trucks";
 import { useDeleteTruck } from "@/app/modules/fleet/server/hooks";
+import { useTranslation } from "react-i18next";
 
 interface DeleteTruckModalProps {
   truck: Truck | null;
@@ -27,6 +28,7 @@ export function DeleteTruckModal({
   onOpenChange,
   onSuccess,
 }: DeleteTruckModalProps) {
+  const { t } = useTranslation(["fleet", "common"]);
   const deleteTruckMutation = useDeleteTruck();
 
   const handleDelete = async () => {
@@ -34,7 +36,7 @@ export function DeleteTruckModal({
 
     try {
       await deleteTruckMutation.mutateAsync(truck.id);
-      toast.success("Truck deleted successfully");
+      toast.success(t("fleet:messages.truck_deleted"));
       // Only close modal and show success on actual success
       onOpenChange(false);
       onSuccess?.();
@@ -52,14 +54,10 @@ export function DeleteTruckModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive text-lg">
             <AlertTriangle className="h-5 w-5" />
-            Delete Truck
+            {t("fleet:labels.delete_truck_confirm")}
           </DialogTitle>
           <DialogDescription className="pt-2">
-            Are you sure you want to delete truck{" "}
-            <span className="font-bold text-brand-primary">
-              {truck.plate_number}
-            </span>
-            ? This action cannot be undone.
+            {t("fleet:labels.delete_truck_description", { plate_number: truck.plate_number })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="pt-4 gap-2 sm:gap-0 flex-col sm:flex-row">
@@ -68,7 +66,7 @@ export function DeleteTruckModal({
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto"
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -79,11 +77,10 @@ export function DeleteTruckModal({
             {deleteTruckMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Delete Truck
+            {t("fleet:labels.delete_truck")}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

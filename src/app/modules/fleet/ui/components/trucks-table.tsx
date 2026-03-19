@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { truckColumns, type TruckTableRow } from "../columns/truck-columns";
+import { getTruckColumns, type TruckTableRow } from "../columns/truck-columns";
 import { TruckCard } from "./truck-card";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   truckApi,
@@ -58,6 +59,8 @@ function TrucksTableContent({
   onRowClick,
 }: TrucksTableProps) {
   const router = useRouter();
+  const { t } = useTranslation(["fleet", "common"]);
+  const columns = useMemo(() => getTruckColumns(t), [t]);
   const { data: trucksData } = useSuspenseQuery({
     queryKey: ["trucks", { page, per_page: perPage, ...filters }],
     queryFn: async () => {
@@ -141,10 +144,10 @@ function TrucksTableContent({
 
   return (
     <DataTable
-      columns={truckColumns}
+      columns={columns}
       data={trucks as TruckTableRow[]}
       searchKey="plate_number"
-      searchPlaceholder="Search plate, VIN, or make..."
+      searchPlaceholder={t("fleet:labels.search_placeholder")}
       onRowClick={
         onRowClick || ((row) => router.push(`/fleet/placeholder?id=${row.id}`))
       }

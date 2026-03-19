@@ -54,7 +54,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { columns as shipItemColumns } from "./ship-items-columns";
+import { useShipItemsColumns } from "./ship-items-columns";
 import { AssignModal } from "./assign-modal";
 import { ShipTrackingView } from "./ship-tracking-view";
 import { toast } from "sonner";
@@ -62,11 +62,13 @@ import { shipApi } from "@/lib/api/ships";
 import { cn } from "@/lib/utils";
 import { ShipItem } from "@/types/ship";
 import { useShipperInfo } from "@/hooks/use-shipper-info";
+import { useTranslation } from "react-i18next";
 
 import { OrganizationDocument } from "@/lib/api/organization";
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("shipments");
   const getConfig = (s: string) => {
     const normalized = s?.toLowerCase();
     switch (normalized) {
@@ -173,6 +175,8 @@ function ShipDetailsContent() {
   const rawId = searchParams.get("id") || (params.id as string);
   const id = rawId && rawId !== "placeholder" ? rawId : "";
   const router = useRouter();
+  const { t } = useTranslation(["shipments", "common"]);
+  const shipItemColumns = useShipItemsColumns();
 
   // State
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -318,21 +322,21 @@ function ShipDetailsContent() {
 
   const handlePayNow = () => {
     if (!unpaidPayment) {
-      toast.error("No unpaid payments found");
+      toast.error(t("shipments:details.errors.no_unpaid"));
       return;
     }
     setPaymentModalOpen(true);
     createPaymentOrder.mutate({
       payment_id: unpaidPayment.id,
       ship_id: Number(id),
-      title: "Payment",
+      title: t("shipments:details.payment.title"),
     });
   };
 
   const handleDownloadInvoice = async () => {
     try {
       setIsDownloadingInvoice(true);
-      toast.loading("Loading invoice...");
+      toast.loading(t("shipments:details.errors.loading_invoice"));
       console.log("📄 [Invoice] Starting for ship:", id);
 
       const blob = await shipApi.getInvoice(id);
@@ -374,7 +378,7 @@ function ShipDetailsContent() {
         });
 
         console.log("📄 [Invoice] Opened with PDF viewer");
-        toast.success("Invoice opened");
+        toast.success(t("shipments:details.errors.invoice_opened"));
       } else {
         console.log("📄 [Invoice] Web platform, using download link");
         // Web fallback - use traditional download approach
@@ -387,12 +391,16 @@ function ShipDetailsContent() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         toast.dismiss();
-        toast.success("Invoice downloaded");
+        toast.success(t("shipments:details.errors.invoice_downloaded"));
       }
     } catch (err) {
       console.error("📄 [Invoice] Error:", err);
       toast.dismiss();
-      toast.error(err instanceof Error ? err.message : "Failed to download");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t("shipments:details.errors.failed_download"),
+      );
     } finally {
       setIsDownloadingInvoice(false);
     }
@@ -451,7 +459,7 @@ function ShipDetailsContent() {
         <p className="text-sm text-muted-foreground text-center">{error}</p>
         <Link href="/ships">
           <Button variant="outline" size="sm">
-            Go to Ships
+            {t("shipments:details.buttons.go_to_ships")}
           </Button>
         </Link>
       </div>
@@ -491,9 +499,13 @@ function ShipDetailsContent() {
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 py-3">
         <div className="space-y-2">
           <CompactBreadcrumb
-            parentLabel="Ships"
+            parentLabel={t("common:navigation.shipments")}
             parentHref="/ships"
-            currentLabel={isShipLoading ? "Loading..." : `Ship #${ship?.id}`}
+            currentLabel={
+              isShipLoading
+                ? t("shipments:details.loading")
+                : t("shipments:details.ship_id_label", { id: ship?.id })
+            }
           />
           <div className="flex items-center justify-between">
             <div>
@@ -502,7 +514,7 @@ function ShipDetailsContent() {
                   {isShipLoading ? (
                     <Skeleton className="h-6 w-24" />
                   ) : (
-                    `Ship #${ship?.id}`
+                    t("shipments:details.ship_id_label", { id: ship?.id })
                   )}
                 </h1>
                 {!isShipLoading && ship && <StatusBadge status={ship.status} />}
@@ -515,7 +527,7 @@ function ShipDetailsContent() {
                 onClick={() => setShowTracking(true)}
               >
                 <Navigation2 className="h-4 w-4 mr-1.5" />
-                Track Shipment
+                {t("shipments:details.track_shipment")}
               </Button>
             )}
           </div>
@@ -545,7 +557,7 @@ function ShipDetailsContent() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                          Payment Overview
+                          {t("shipments:details.payment.title")}
                         </p>
                         {isPaymentsLoading ? (
                           <Skeleton className="h-9 w-32" />
@@ -577,7 +589,7 @@ function ShipDetailsContent() {
                                   <div className="flex flex-col gap-0.5">
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
-                                      Fees:{" "}
+                                      {t("shipments:details.payment.fees")}:{" "}
                                       {subtotal.toLocaleString(undefined, {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
@@ -586,7 +598,7 @@ function ShipDetailsContent() {
                                     </p>
                                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                       <span className="w-1.5 h-1.5 rounded-full bg-green-500/30" />
-                                      VAT:{" "}
+                                      {t("shipments:details.payment.vat")}:{" "}
                                       {vat.toLocaleString(undefined, {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
@@ -615,11 +627,13 @@ function ShipDetailsContent() {
                                 : "bg-green-600 text-white",
                             )}
                           >
-                            {hasUnpaidPayment ? "Pending" : "Paid"}
+                            {hasUnpaidPayment
+                              ? t("shipments:details.payment.pending")
+                              : t("shipments:details.payment.paid")}
                           </span>
                           <div className="text-left sm:text-right">
                             <p className="text-xs text-muted-foreground">
-                              Invoice ID
+                              {t("shipments:details.payment.invoice_id")}
                             </p>
                             <p className="text-sm font-semibold text-foreground">
                               {invoiceId}
@@ -656,7 +670,7 @@ function ShipDetailsContent() {
                                 <Download className="h-3.5 w-3.5" />
                               )}
                               <span className="ml-1.5 gap-1.5 flex items-center">
-                                Invoice
+                                {t("shipments:details.payment.invoice")}
                               </span>
                             </Button>
                           )}
@@ -684,10 +698,10 @@ function ShipDetailsContent() {
                                   {unpaidPayment.confirmation_method === "manual" ? (
                                     <>
                                       <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-green-600" />
-                                      Submitted
+                                      {t("shipments:details.payment.submitted")}
                                     </>
                                   ) : (
-                                    "Confirm"
+                                    t("shipments:details.payment.confirm")
                                   )}
                                 </Button>
                                 <Button
@@ -696,7 +710,7 @@ function ShipDetailsContent() {
                                   onClick={handlePayNow}
                                   disabled={createPaymentOrder.isPending}
                                 >
-                                  Pay Now
+                                  {t("shipments:details.payment.pay_now")}
                                 </Button>
                               </>
                             )}
@@ -714,7 +728,7 @@ function ShipDetailsContent() {
                                 ) : (
                                   <FileText className="h-3.5 w-3.5" />
                                 )}
-                                <span className="ml-1.5">Receipt</span>
+                                <span className="ml-1.5">{t("shipments:details.payment.receipt")}</span>
                               </Button>
                             )}
                           </>
@@ -735,7 +749,7 @@ function ShipDetailsContent() {
                         <MapPin className="h-3.5 w-3.5 text-purple-600" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Route
+                        {t("shipments:details.route.title")}
                       </span>
                     </div>
                     {!isShipLoading && ship && (
@@ -743,7 +757,7 @@ function ShipDetailsContent() {
                         {/* FROM */}
                         <div>
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                            From
+                            {t("shipments:details.route.from")}
                           </p>
                           <p className="text-sm font-bold text-foreground capitalize leading-tight">
                             {ship.origin?.replace(/_/g, " ") || "—"}
@@ -763,7 +777,7 @@ function ShipDetailsContent() {
                         {/* TO */}
                         <div>
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                            To
+                            {t("shipments:details.route.to")}
                           </p>
                           <p className="text-sm font-bold text-foreground capitalize leading-tight">
                             {ship.destination?.replace(/_/g, " ") || "—"}
@@ -787,7 +801,7 @@ function ShipDetailsContent() {
                         <Calendar className="h-3.5 w-3.5 text-blue-600" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Pickup
+                        {t("shipments:details.pickup.title")}
                       </span>
                     </div>
                     {ship?.pickup_date && (
@@ -809,7 +823,7 @@ function ShipDetailsContent() {
                           <div className="pt-2 mt-2">
                             <div className="inline-flex flex-col gap-0.5 px-2.5 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
-                                Driver
+                                {t("shipments:details.pickup.driver")}
                               </p>
                               <p className="text-sm font-bold text-blue-700">
                                 {driver.first_name} {driver.last_name}
@@ -830,7 +844,7 @@ function ShipDetailsContent() {
                         <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Delivery
+                        {t("shipments:details.delivery.title")}
                       </span>
                     </div>
                     {ship?.delivery_date && (
@@ -852,7 +866,7 @@ function ShipDetailsContent() {
                           <div className="pt-2 mt-2">
                             <div className="inline-flex flex-col gap-0.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
-                                Truck ID
+                                {t("shipments:details.delivery.truck_id")}
                               </p>
                               <p className="text-sm font-bold text-emerald-700">
                                 {truck.plate_number}
@@ -873,7 +887,7 @@ function ShipDetailsContent() {
                     <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600">
                       <FileText className="h-4 w-4" />
                     </div>
-                    Shipment Details
+                    {t("shipments:details.shipment_info.title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5 pt-2">
@@ -887,11 +901,11 @@ function ShipDetailsContent() {
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                                Bill of Lading
+                                {t("shipments:details.shipment_info.bill_of_lading")}
                               </p>
                               <p className="font-mono text-sm font-bold text-foreground">
                                 {ship?.shipment_details?.bill_of_lading_number ||
-                                  "Document Only"}
+                                  t("shipments:details.shipment_info.document_only")}
                               </p>
                             </div>
                             {documents.find(
@@ -925,10 +939,10 @@ function ShipDetailsContent() {
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                                Packing List
+                                {t("shipments:details.shipment_info.packing_list")}
                               </p>
                               <p className="font-mono text-sm font-bold text-foreground">
-                                Available
+                                {t("shipments:details.shipment_info.available")}
                               </p>
                             </div>
                             {documents.find(
@@ -958,7 +972,7 @@ function ShipDetailsContent() {
                     {ship?.shipment_details?.pickup_number && (
                       <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                          Pickup Number
+                          {t("shipments:details.shipment_info.pickup_number")}
                         </p>
                         <p className="font-mono text-sm font-bold text-foreground">
                           {ship.shipment_details.pickup_number}
@@ -970,7 +984,7 @@ function ShipDetailsContent() {
                     {ship?.shipment_details?.delivery_number && (
                       <div className="p-3 rounded-lg bg-card border border-border hover:border-orange-500/30 transition-colors">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-                          Delivery Number
+                          {t("shipments:details.shipment_info.delivery_number")}
                         </p>
                         <p className="font-mono text-sm font-bold text-foreground">
                           {ship.shipment_details.delivery_number}
@@ -989,7 +1003,7 @@ function ShipDetailsContent() {
                       <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
                         <User className="h-4 w-4" />
                       </div>
-                      Shipper Details
+                      {t("shipments:details.shipper_details.title")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 pt-2">
@@ -1003,7 +1017,7 @@ function ShipDetailsContent() {
                       <>
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                            Shipper Name
+                            {t("shipments:details.shipper_details.name")}
                           </p>
                           <p className="font-bold text-foreground text-lg">
                             {shipperInfo.name}
@@ -1016,7 +1030,7 @@ function ShipDetailsContent() {
                             </div>
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                Email
+                                {t("shipments:details.shipper_details.email")}
                               </p>
                               <p className="text-sm font-medium">
                                 {shipperInfo.email}
@@ -1029,7 +1043,7 @@ function ShipDetailsContent() {
                             </div>
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                Phone
+                                {t("shipments:details.shipper_details.phone")}
                               </p>
                               <p className="text-sm font-medium">
                                 {shipperInfo.phone}
@@ -1040,7 +1054,7 @@ function ShipDetailsContent() {
                       </>
                     ) : (
                       <div className="text-sm text-muted-foreground">
-                        No shipper details available.
+                        {t("shipments:details.shipper_details.no_details")}
                       </div>
                     )}
                   </CardContent>
@@ -1056,7 +1070,7 @@ function ShipDetailsContent() {
                         <Package className="h-4 w-4" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Ship Items
+                        {t("shipments:details.ship_items.title")}
                       </span>
                     </div>
                     <span className="text-xs font-bold text-foreground bg-muted px-2 py-1 rounded-full">
@@ -1123,7 +1137,7 @@ function ShipDetailsContent() {
               Payment
             </DialogTitle>
             <DialogDescription>
-              Preparing your payment via Telebirr
+              {t("shipments:details.payment.gateway_description")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1131,7 +1145,7 @@ function ShipDetailsContent() {
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Preparing payment gateway...
+                    {t("shipments:details.payment.gateway_preparing")}
                 </p>
               </div>
             )}
@@ -1141,7 +1155,7 @@ function ShipDetailsContent() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {createPaymentOrder.error?.message ??
-                      "Something went wrong"}
+                      t("shipments:details.errors.generic")}
                   </AlertDescription>
                 </Alert>
                 <DialogFooter>
@@ -1149,7 +1163,7 @@ function ShipDetailsContent() {
                     variant="outline"
                     onClick={() => setPaymentModalOpen(false)}
                   >
-                    Close
+                    {t("common:buttons.cancel")}
                   </Button>
                 </DialogFooter>
               </>

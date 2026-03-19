@@ -1,0 +1,63 @@
+{
+  "title": "POD እና ተመላሽ ሰነዶች",
+  "subtitle": "የርክክብ ማረጋገጫ (POD) እና የኮንቴይነር መመለሻ ደረሰኞችን ይስቀሉ እና ያስተዳድሩ።",
+  "stats": {
+    "shipments": "ጭነቶች",
+    "items": "ዕቃዎች",
+    "containers": "ኮንቴይነሮች"
+  },
+  "labels": {
+    "no_shipments": "ምንም ብቁ ጭነቶች አልተገኙም",
+    "no_shipments_detail": "የተመደበ የጭነት መኪና እና ሹፌር ያላቸው ጭነቶች እዚህ ይታያሉ።",
+    "shipment_tag": "ጭነት #{{id}}",
+    "item_count": "{{count}} ዕቃ",
+    "item_count_plural": "{{count}} ዕቃዎች",
+    "container_count": "{{count}} ኮንቴይነር",
+    "container_count_plural": "{{count}} ኮንቴይነሮች",
+    "pickup": "መጫኛ",
+    "truck": "ትራክ",
+    "driver": "ሹፌር",
+    "assigned": "የተመደበ",
+    "not_assigned": "ያልተመደበ",
+    "route": "መንገድ",
+    "containers": "ኮንቴይነሮች",
+    "return": "መልስ",
+    "return_receipt": "የኮንቴይነር መመለሻ ደረሰኝ",
+    "return_receipts": "የመልስ ደረሰኞች",
+    "one_way": "አንድ መንገድ",
+    "more": "ተጨማሪ",
+    "no_container_info": "የኮንቴይነር መረጃ የለም",
+    "documents": "ሰነዶች",
+    "no_documents": "እስካሁን ምንም ሰነዶች የሉም",
+    "container": "ኮንቴይነር",
+    "number": "ቁጥር",
+    "size": "መጠን",
+    "type": "ዓይነት",
+    "view_document": "ሰነዱን ይመልከቱ",
+    "no_url": "ምንም URL አልተገኘም",
+    "pod": "የርክክብ ማረጋገጫ (POD)",
+    "pod_of_document": "የሰነድ ርክክብ ማረጋገጫ",
+    "upload_document": "ሰነድ ይጫኑ",
+    "upload_batch_desc": "ለ {{count}} የተመረጡ ኮንቴይነሮች በመጫን ላይ",
+    "upload_single_desc": "ለጭነት ዕቃ #{{id}} የርክክብ ማረጋገጫ ወይም የኮንቴይነር መመለሻ ደረሰኝ ይጫኑ",
+    "document_type": "የሰነድ ዓይነት",
+    "select_type": "ዓይነት ይምረጡ",
+    "upload_started_only": "ሁኔታው ሲጀመር ይጫኑ",
+    "container_optional": "ኮንቴይነር (አማራጭ)",
+    "select_container": "ኮንቴይነር ይምረጡ",
+    "whole_shipment_check": "ይህ ለጠቅላላው ጭነት የሚተገበር መሆኑን ያረጋግጡ",
+    "whole_shipment_desc": "ሁሉንም ኮንቴይነሮች የሚሸፍን ነጠላ ሰነድ ለመጫን \"ጠቅላላ ጭነት\" የሚለውን ይምረጡ።",
+    "upload_drag_drop": "ለመጫን እዚህ ይጫኑ ወይም ይጎትቱ",
+    "upload_formats": "PDF, JPG, PNG (ቢበዛ 10MB)"
+  },
+  "buttons": {
+    "upload_document": "ሰነድ ይጫኑ"
+  },
+  "messages": {
+    "no_url_error": "የሰነድ URL አልተገኘም",
+    "select_file_error": "እባክዎ የሚጫን ፋይል ይምረጡ",
+    "upload_batch_success": "ለ {{count}} ኮንቴይነሮች ሰነድ በተሳካ ሁኔታ ተጭኗል",
+    "upload_success": "ሰነድ በተሳካ ሁኔታ ተጭኗል",
+    "upload_error": "ሰነድ መጫን አልተሳካም"
+  }
+}

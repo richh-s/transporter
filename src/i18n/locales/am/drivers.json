@@ -1,0 +1,74 @@
+{
+  "title": "የአሽከርካሪዎች አስተዳደር",
+  "subtitle": "አሽከርካሪዎችዎን እና ሰነዶቻቸውን ያስተዳድሩ።",
+  "labels": {
+    "add_driver": "አሽከርካሪ ጨምር",
+    "edit_driver": "አሽከርካሪ አሻሽል",
+    "delete_driver": "አሽከርካሪ ሰርዝ",
+    "driver_details": "የአሽከርካሪ ዝርዝሮች",
+    "search_placeholder": "ስም ወይም ፍቃድ ፈልግ...",
+    "no_drivers": "ምንም አሽከርካሪዎች አልተገኙም።",
+    "total_drivers": "ጠቅላላ አሽከርካሪዎች",
+    "active_drivers": "ንቁ አሽከርካሪዎች",
+    "suspended_drivers": "የታገዱ አሽከርካሪዎች",
+    "upload_docs": "ሰነዶችን ይጫኑ",
+    "driver_info": "የአሽከርካሪ መረጃ",
+    "license_no": "የፍቃድ ቁጥር",
+    "phone": "ስልክ",
+    "email": "ኢሜይል",
+    "driver_added": "አሽከርካሪ ተጨምሯል!",
+    "upload_docs_msg": "ለአሽከርካሪው አስፈላጊ የሆኑ ሰነዶችን ይጫኑ።",
+    "scroll_hint": "ተጨማሪ ቦታዎችን ለማየት ወደ ታች ይውረዱ",
+    "delete_driver_confirm": "አሽከርካሪ ሰርዝ",
+    "delete_driver_description": "{{name}}ን ለመሰረዝ እርግጠኛ ነዎት? ይህ ተግባር ሊመለስ አይችልም።",
+    "contact_info": "የግንኙነት መረጃ",
+    "license_info": "የፍቃድ መረጃ",
+    "not_found": "አሽከርካሪው አልተገኘም",
+    "search_hint": "ይህንን አሽከርካሪ በዝርዝሩ ውስጥ ለመፈለግ ይሞክሩ።",
+    "drivers": "አሽከርካሪዎች"
+  },
+  "status": {
+    "active": "ንቁ",
+    "suspended": "የታገደ",
+    "all": "ሁሉም ሁኔታዎች"
+  },
+  "fields": {
+    "first_name": "መጀመሪያ ስም",
+    "last_name": "የአባት ስም",
+    "license_number": "የመንጃ ፍቃድ ቁጥር",
+    "phone_number": "የስልክ ቁጥር",
+    "email": "ኢሜይል",
+    "status": "ሁኔታ",
+    "document_type": "የሰነድ ዓይነት",
+    "file": "ፋይል"
+  },
+  "messages": {
+    "success_update": "የአሽከርካሪ መረጃ በተሳካ ሁኔታ ተሻሽሏል",
+    "success_create": "አሽከርካሪው በተሳካ ሁኔታ ተፈጥሯል። አሁን ሰነዶችን ይጫኑ።",
+    "error_create": "አሽከርካሪው ተፈጥሯል ነገር ግን ከአገልጋዩ ያልተጠበቀ ምላሽ ተገኝቷል።",
+    "error_duplicate": "አሽከርካሪው ቀድሞ ተመዝግቧል",
+    "error_save": "አሽከርካሪውን መመዝገብ አልተቻለም",
+    "driver_deleted": "አሽከርካሪው በተሳካ ሁኔታ ተሰርዟል",
+    "no_license": "ፍቃድ የለም",
+    "unknown": "ያልታወቀ"
+  },
+  "documents": {
+    "title": "ሰነዶች",
+    "upload": "ይጫኑ",
+    "add_first": "የመጀመሪያውን ሰነድ ይጫኑ",
+    "no_docs": "ምንም ሰነዶች የሉም",
+    "delete_confirm": "ሰነድ ሰርዝ",
+    "delete_description": "ይህ ተግባር ሊመለስ አይችልም። ሰነዱ በቋሚነት ይወገዳል።",
+    "upload_success": "ሰነዱ በተሳካ ሁኔታ ተጭኗል",
+    "upload_error": "ሰነዱን መጫን አልተቻለም",
+    "update_success": "ሰነዱ በተሳካ ሁኔታ ተሻሽሏል",
+    "update_error": "ሰነዱን ማሻሻል አልተቻለም",
+    "delete_success": "ሰነዱ በተሳካ ሁኔታ ተሰርዟል",
+    "select_type": "ዓይነት ይምረጡ",
+    "types": {
+      "driver_id": "የአሽከርካሪ መታወቂያ",
+      "driver_license": "የመንጃ ፍቃድ",
+      "other": "ሌላ"
+    }
+  }
+}

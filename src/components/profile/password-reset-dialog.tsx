@@ -26,24 +26,25 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { request } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 // Validation schema
-const passwordResetSchema = z
+const getPasswordResetSchema = (t: any) => z
   .object({
     current_password: z
       .string()
-      .min(8, "Password must be at least 8 characters"),
-    new_password: z.string().min(8, "Password must be at least 8 characters"),
+      .min(8, t("profile:password_hint")),
+    new_password: z.string().min(8, t("profile:password_hint")),
     confirm_password: z
       .string()
-      .min(8, "Password must be at least 8 characters"),
+      .min(8, t("profile:password_hint")),
   })
   .refine((data) => data.new_password === data.confirm_password, {
-    message: "Passwords don't match",
+    message: t("validation:passwords_dont_match", { defaultValue: "Passwords don't match" }),
     path: ["confirm_password"],
   });
 
-type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
+type PasswordResetFormValues = z.infer<ReturnType<typeof getPasswordResetSchema>>;
 
 interface PasswordResetDialogProps {
   open: boolean;
@@ -54,13 +55,14 @@ export function PasswordResetDialog({
   open,
   onOpenChange,
 }: PasswordResetDialogProps) {
+  const { t } = useTranslation(["profile", "common", "validation"]);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const form = useForm<PasswordResetFormValues>({
-    resolver: zodResolver(passwordResetSchema),
+    resolver: zodResolver(getPasswordResetSchema(t)),
     defaultValues: {
       current_password: "",
       new_password: "",
@@ -86,22 +88,20 @@ export function PasswordResetDialog({
         if (status === 422 && fields) {
           Object.entries(fields).forEach(([key, value]) => {
             // Map backend keys to form field names
-            // Backend often returns 'body' for general validation or specific property names
             if (key === "body" || key === "new_password") {
               form.setError("new_password", {
                 type: "manual",
-                message: value,
+                message: value as string,
               });
             } else if (key === "current_password") {
               form.setError("current_password", {
                 type: "manual",
-                message: value,
+                message: value as string,
               });
             } else {
-              // Fallback for unknown fields: set on new_password or show toast
               form.setError("new_password", {
                 type: "manual",
-                message: value,
+                message: value as string,
               });
             }
           });
@@ -112,30 +112,30 @@ export function PasswordResetDialog({
         if (status === 403) {
           form.setError("current_password", {
             type: "manual",
-            message: "Current password is incorrect",
+            message: t("profile:error_incorrect_password"),
           });
           return;
         }
 
         if (status === 401) {
-          toast.error("Your session has expired. Please log in again.");
+          toast.error(t("profile:error_session_expired"));
           router.push("/sign-in");
           return;
         }
 
         // 3. Fallback for other errors
-        toast.error(error || "Failed to reset password");
+        toast.error(error || t("profile:error_reset_failed"));
         return;
       }
 
-      toast.success("Password changed successfully");
+      toast.success(t("profile:success_password"));
 
       // Reset form and close dialog
       form.reset();
       onOpenChange(false);
     } catch (err) {
       console.error("Password reset error:", err);
-      toast.error("Failed to reset password. Please try again.");
+      toast.error(t("profile:error_try_again"));
     }
   }
 
@@ -145,10 +145,10 @@ export function PasswordResetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Change Password
+            {t("profile:change_password")}
           </DialogTitle>
           <DialogDescription>
-            Enter your current password and choose a new password.
+            {t("profile:change_password_description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -159,12 +159,12 @@ export function PasswordResetDialog({
               name="current_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Password *</FormLabel>
+                  <FormLabel>{t("profile:current_password")} *</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showCurrentPassword ? "text" : "password"}
-                        placeholder="Enter current password"
+                        placeholder={t("profile:current_password_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -195,12 +195,12 @@ export function PasswordResetDialog({
               name="new_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password *</FormLabel>
+                  <FormLabel>{t("profile:new_password")} *</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showNewPassword ? "text" : "password"}
-                        placeholder="Enter new password"
+                        placeholder={t("profile:new_password_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -220,7 +220,7 @@ export function PasswordResetDialog({
                     </div>
                   </FormControl>
                   <p className="text-sm text-muted-foreground">
-                    Password must be at least 8 characters long.
+                    {t("profile:password_hint")}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -232,12 +232,12 @@ export function PasswordResetDialog({
               name="confirm_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm New Password *</FormLabel>
+                  <FormLabel>{t("profile:confirm_password")} *</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm new password"
+                        placeholder={t("profile:confirm_password_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -273,10 +273,10 @@ export function PasswordResetDialog({
                 }}
                 disabled={form.formState.isSubmitting}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                {form.formState.isSubmitting ? t("profile:saving") : t("common:buttons.save_changes")}
               </Button>
             </DialogFooter>
           </form>
@@ -285,4 +285,3 @@ export function PasswordResetDialog({
     </Dialog>
   );
 }
-

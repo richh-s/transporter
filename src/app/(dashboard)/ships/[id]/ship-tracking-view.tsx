@@ -1,6 +1,7 @@
 "use client";
 
 import { useTrackShip, useShip } from "@/hooks/use-ships";
+import { useTranslation } from "react-i18next";
 import { TrackingTruck } from "@/types/ship";
 import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,6 +84,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function StatusTimeline({ currentStatus }: { currentStatus: string }) {
+    const { t } = useTranslation(["shipments", "common"]);
     const activeIdx = getStatusIndex(currentStatus);
 
     return (
@@ -90,7 +92,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: string }) {
             <CardContent className="p-6">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-8">
                     <Clock className="h-4 w-4 text-emerald-600" />
-                    Status Timeline
+                    {t("shipments:tracking_view.status_timeline")}
                 </h3>
 
                 {/* Desktop Horizontal Timeline */}
@@ -203,7 +205,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: string }) {
                                         {step.label}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {isCompleted ? (isCurrent ? "In Progress" : "Completed") : "Pending"}
+                                        {isCompleted ? (isCurrent ? t("common:status.in_progress", "In Progress") : t("common:status.completed", "Completed")) : t("common:status.pending", "Pending")}
                                     </p>
                                 </div>
                             </div>
@@ -216,6 +218,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: string }) {
 }
 
 function AssignedTruckCard({ truck }: { truck: TrackingTruck }) {
+    const { t } = useTranslation(["shipments", "common"]);
     const shipItem = truck.ship_item;
     const containers = shipItem.containers || [];
 
@@ -228,11 +231,11 @@ function AssignedTruckCard({ truck }: { truck: TrackingTruck }) {
                             <Truck className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold">Truck #{truck.truck_id}</p>
+                            <p className="text-sm font-bold">{t("common:labels.truck", "Truck")} #{truck.truck_id}</p>
                         </div>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                        {truck.count_location_log} GPS points
+                        {t("shipments:tracking_view.gps_points", { count: truck.count_location_log })}
                     </span>
                 </div>
 
@@ -275,6 +278,7 @@ interface ShipTrackingViewProps {
 }
 
 export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
+    const { t } = useTranslation(["shipments", "common"]);
     const {
         data: trackData,
         isLoading: isTrackLoading,
@@ -308,7 +312,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                     <p className="text-sm text-muted-foreground">
-                        Fetching tracking data...
+                        {t("shipments:tracking_view.fetching_data")}
                     </p>
                 </div>
             </div>
@@ -321,7 +325,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                 <CardContent className="p-6 flex items-center gap-3">
                     <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                     <p className="text-sm text-destructive">
-                        {(error as Error).message || "Failed to fetch tracking data"}
+                        {(error as Error).message || t("shipments:tracking_view.fetch_error")}
                     </p>
                 </CardContent>
             </Card>
@@ -336,13 +340,13 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to Ship Details
+                    {t("shipments:tracking_view.back_to_details")}
                 </button>
                 <Card className="border border-border bg-card">
                     <CardContent className="p-8 flex flex-col items-center gap-3">
                         <Package className="h-10 w-10 text-muted-foreground/40" />
                         <p className="text-sm text-muted-foreground">
-                            No tracking data found for Ship #{shipId}
+                            {t("shipments:tracking_view.no_data", { id: shipId })}
                         </p>
                     </CardContent>
                 </Card>
@@ -362,7 +366,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                         <ArrowLeft className="h-5 w-5" />
                     </button>
                     <div>
-                        <h2 className="text-xl font-bold">Track Shipment</h2>
+                        <h2 className="text-xl font-bold">{t("shipments:tracking_view.title")}</h2>
                     </div>
                 </div>
                 <StatusBadge status={shipStatus} />
@@ -379,7 +383,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                 <div className="flex items-center justify-center md:justify-start gap-1.5 mb-1.5">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Origin
+                                        {t("shipments:tracking_view.origin")}
                                     </span>
                                 </div>
                                 <p className="text-xl font-bold capitalize">
@@ -410,7 +414,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                 <div className="flex items-center justify-center md:justify-end gap-1.5 mb-1.5">
                                     <span className="h-2 w-2 rounded-full bg-red-500" />
                                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Destination
+                                        {t("shipments:tracking_view.destination")}
                                     </span>
                                 </div>
                                 <p className="text-xl font-bold capitalize">
@@ -436,7 +440,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                             </div>
                             <div>
                                 <span className="text-xs text-muted-foreground">
-                                    Shipment ID
+                                    {t("shipments:tracking_view.shipment_id")}
                                 </span>
                                 <p className="text-lg font-bold">#{shipId}</p>
                             </div>
@@ -449,7 +453,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground">
-                                        Trucks Assigned
+                                        {t("shipments:tracking_view.trucks_assigned")}
                                     </p>
                                     <p className="text-base font-bold">{trucks.length}</p>
                                 </div>
@@ -459,7 +463,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                                     <Package className="h-3.5 w-3.5 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Containers</p>
+                                    <p className="text-xs text-muted-foreground">{t("shipments:tracking_view.containers")}</p>
                                     <p className="text-base font-bold">{totalContainers}</p>
                                 </div>
                             </div>
@@ -474,7 +478,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
                     <div className="p-4 border-b border-border flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2">
                             <MapIcon className="h-4 w-4 text-emerald-600" />
-                            Live Tracking Map
+                            {t("shipments:tracking_view.live_tracking_map")}
                         </h3>
                     </div>
                     <div className="h-[400px] w-full">
@@ -490,7 +494,7 @@ export function ShipTrackingView({ shipId, onBack }: ShipTrackingViewProps) {
             <div>
                 <h3 className="text-base font-bold flex items-center gap-2 mb-4">
                     <Truck className="h-5 w-5" />
-                    Assigned Trucks ({trucks.length})
+                    {t("shipments:tracking_view.assigned_trucks")} ({trucks.length})
                 </h3>
                 <div className="space-y-3">
                     {trucks.map((truck) => (

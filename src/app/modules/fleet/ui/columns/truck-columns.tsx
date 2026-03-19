@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Truck } from "@/lib/api/trucks";
 
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
+
 export type TruckTableRow = Truck;
 
 // Separate component for actions cell to allow use of hooks
@@ -28,6 +31,7 @@ function ActionsCell({
   };
 }) {
   const router = useRouter();
+  const { t } = useTranslation(["fleet", "common"]);
 
   return (
     <div
@@ -37,7 +41,7 @@ function ActionsCell({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{t("common:actions.open_menu")}</span>
             <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -48,7 +52,7 @@ function ActionsCell({
               router.push(`/fleet/placeholder?id=${truck.id}`);
             }}
           >
-            <Eye className="mr-2 h-4 w-4" /> View Details
+            <Eye className="mr-2 h-4 w-4" /> {t("common:buttons.view_details")}
           </DropdownMenuItem>
           {meta?.onEdit && (
             <DropdownMenuItem
@@ -57,7 +61,7 @@ function ActionsCell({
                 meta.onEdit?.(truck);
               }}
             >
-              <Edit2 className="mr-2 h-4 w-4" /> Edit
+              <Edit2 className="mr-2 h-4 w-4" /> {t("common:buttons.edit")}
             </DropdownMenuItem>
           )}
           {meta?.onDelete && (
@@ -68,7 +72,7 @@ function ActionsCell({
                 meta.onDelete?.(truck);
               }}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
+              <Trash2 className="mr-2 h-4 w-4" /> {t("common:buttons.delete")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -77,7 +81,7 @@ function ActionsCell({
   );
 }
 
-export const truckColumns: ColumnDef<TruckTableRow>[] = [
+export const getTruckColumns = (t: TFunction): ColumnDef<TruckTableRow>[] => [
   {
     accessorKey: "plate_number",
     id: "plate_number",
@@ -88,7 +92,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1 "
         >
-          <span className="hidden sm:inline">Plate / </span>VIN
+          <span className="hidden sm:inline">{t("fleet:fields.plate_number")} / </span>{t("fleet:fields.vin")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -119,15 +123,16 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1 "
         >
-          Type
+          {t("fleet:fields.truck_type")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
     },
     cell: ({ row }) => {
+      const type = row.getValue("truck_type") as string;
       return (
         <div className="capitalize text-xs sm:text-sm min-w-[80px] whitespace-nowrap flex items-center">
-          {row.getValue("truck_type")}
+          {t(`fleet:types.${type.toLowerCase()}`, { defaultValue: type })}
         </div>
       );
     },
@@ -137,7 +142,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     id: "make",
     header: () => (
       <span className="text-xs sm:text-sm whitespace-nowrap flex items-center px-1 ">
-        Make / Model
+        {t("fleet:fields.make")} / {t("fleet:fields.model")}
       </span>
     ),
     cell: ({ row }) => {
@@ -163,7 +168,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm whitespace-nowrap flex items-center cursor-pointer px-1 "
         >
-          Capacity
+          {t("fleet:fields.capacity", { defaultValue: "Capacity" })}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -171,7 +176,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap flex items-center">
-          {row.getValue("capacity_quintal")} Kg
+          {row.getValue("capacity_quintal")} {t("fleet:labels.unit_kg")}
         </div>
       );
     },
@@ -185,7 +190,7 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm whitespace-nowrap flex items-center cursor-pointer px-1 "
         >
-          Status
+          {t("fleet:fields.status")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -193,9 +198,10 @@ export const truckColumns: ColumnDef<TruckTableRow>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const statusString = status ? String(status) : "unknown";
-      const formattedStatus = statusString.replace(/_/g, " ");
-      const displayStatus =
-        formattedStatus.charAt(0).toUpperCase() + formattedStatus.slice(1);
+      
+      const displayStatus = t(`fleet:status.${statusString.toLowerCase()}`, {
+        defaultValue: statusString.replace(/_/g, " ").charAt(0).toUpperCase() + statusString.replace(/_/g, " ").slice(1)
+      });
 
       return (
         <div className="flex items-center">

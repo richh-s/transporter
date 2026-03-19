@@ -46,6 +46,7 @@ import { useDeleteDriver } from "../../server/hooks/use-delete-driver";
 import { driverColumns } from "../columns/driver-columns";
 
 import type { Driver } from "../../server/types";
+import { useTranslation } from "react-i18next";
 
 // Stats Card (scrollable on mobile, equal gap)
 function StatsCard({
@@ -130,6 +131,7 @@ function TableLoadingSkeleton() {
 
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation(["drivers"]);
   const isActive = status === "active";
   return (
     <span
@@ -146,7 +148,7 @@ function StatusBadge({ status }: { status: string }) {
           isActive ? "bg-primary" : "bg-gray-400",
         )}
       />
-      {status}
+      {t(`drivers:status.${status}`, { defaultValue: status })}
     </span>
   );
 }
@@ -163,6 +165,7 @@ function DriverCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation(["drivers", "common"]);
   return (
     <div
       className="p-4 rounded-xl bg-card border border-border/50 shadow-sm cursor-pointer active:scale-[0.99] transition-transform"
@@ -206,7 +209,7 @@ function DriverCard({
                 className="rounded-lg"
               >
                 <Eye className="mr-2 h-4 w-4" />
-                View
+                {t("common:buttons.view")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -216,7 +219,7 @@ function DriverCard({
                 className="rounded-lg"
               >
                 <Edit className="mr-2 h-4 w-4" />
-                Edit
+                {t("common:buttons.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -226,7 +229,7 @@ function DriverCard({
                 className="rounded-lg text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("common:buttons.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -248,6 +251,7 @@ function DriverCard({
 }
 
 export function DriverManagementView() {
+  const { t } = useTranslation(["drivers", "common"]);
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
@@ -300,11 +304,12 @@ export function DriverManagementView() {
   const columns = useMemo(
     () =>
       driverColumns({
+        t,
         onView: handleView,
         onEdit: handleEdit,
         onDelete: handleDelete,
       }),
-    [handleView, handleEdit, handleDelete],
+    [t, handleView, handleEdit, handleDelete],
   );
 
   return (
@@ -313,10 +318,10 @@ export function DriverManagementView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shrink-0 px-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Driver Management
+            {t("drivers:title")}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage your drivers
+            {t("drivers:subtitle")}
           </p>
         </div>
         <Button
@@ -327,7 +332,7 @@ export function DriverManagementView() {
           }}
         >
           <Plus className="mr-1 h-4 w-4" />
-          Add
+          {t("common:buttons.add")}
         </Button>
       </div>
 
@@ -337,7 +342,7 @@ export function DriverManagementView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={Users}
-              label="Total"
+              label={t("drivers:labels.total_drivers")}
               value={totalDrivers}
               accent="bg-primary/10 text-primary"
               isLoading={isLoading}
@@ -346,7 +351,7 @@ export function DriverManagementView() {
           <div className="shrink-0 w-[72%] min-w-[160px] sm:w-auto sm:min-w-0">
             <StatsCard
               icon={UserCheck}
-              label="Active"
+              label={t("drivers:labels.active_drivers")}
               value={activeCount}
               accent="bg-primary/10 text-primary"
               isLoading={isLoading}
@@ -364,7 +369,7 @@ export function DriverManagementView() {
             columns={columns}
             data={drivers}
             searchKey="first_name"
-            searchPlaceholder="Search name or license..."
+            searchPlaceholder={t("drivers:labels.search_placeholder")}
             onRowClick={(row) => handleView(row)}
             manualPagination
             page={page}
@@ -382,12 +387,12 @@ export function DriverManagementView() {
                 }}
               >
                 <SelectTrigger className="h-9 w-[130px] sm:w-[150px] bg-background text-xs sm:text-sm">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t("drivers:fields.status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="all">{t("drivers:status.all")}</SelectItem>
+                  <SelectItem value="active">{t("drivers:status.active")}</SelectItem>
+                  <SelectItem value="suspended">{t("drivers:status.suspended")}</SelectItem>
                 </SelectContent>
               </Select>
             }
@@ -424,13 +429,11 @@ export function DriverManagementView() {
       >
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Delete Driver</DialogTitle>
+            <DialogTitle>{t("drivers:labels.delete_driver_confirm")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">
-                {driverToDelete?.first_name} {driverToDelete?.last_name}
-              </span>
-              ? This action cannot be undone.
+              {t("drivers:labels.delete_driver_description", {
+                name: `${driverToDelete?.first_name} ${driverToDelete?.last_name}`,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -442,7 +445,7 @@ export function DriverManagementView() {
               }}
               className="rounded-xl"
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -458,7 +461,7 @@ export function DriverManagementView() {
               }}
               className="rounded-xl"
             >
-              Delete
+              {t("common:buttons.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

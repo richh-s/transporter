@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export function PodUploadModal({
   onUploadSuccess,
   selectedContainerIds = [],
 }: PodUploadModalProps) {
+  const { t } = useTranslation(["pod", "common"]);
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<ShipItemDocumentTypeEnum>(
     ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY,
@@ -61,7 +63,7 @@ export function PodUploadModal({
 
   const handleUpload = async () => {
     if (!file) {
-      toast.error("Please select a file to upload");
+      toast.error(t("pod:messages.select_file_error"));
       return;
     }
 
@@ -81,7 +83,7 @@ export function PodUploadModal({
           await shipApi.uploadShipItemDocument(shipItem.id, formData);
         }
         toast.success(
-          `Document uploaded for ${selectedContainerIds.length} containers`,
+          t("pod:messages.upload_batch_success", { count: selectedContainerIds.length }),
         );
       } else {
         // Single upload
@@ -92,7 +94,7 @@ export function PodUploadModal({
           formData.append("container_id", manualContainerId);
         }
         await shipApi.uploadShipItemDocument(shipItem.id, formData);
-        toast.success("Document uploaded successfully");
+        toast.success(t("pod:messages.upload_success"));
       }
 
       onUploadSuccess();
@@ -105,7 +107,7 @@ export function PodUploadModal({
     } catch (error: unknown) {
       console.error("Upload error:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to upload document";
+        error instanceof Error ? error.message : t("pod:messages.upload_error");
       toast.error(errorMessage);
     } finally {
       setIsUploading(false);
@@ -145,17 +147,17 @@ export function PodUploadModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
+          <DialogTitle>{t("pod:labels.upload_document")}</DialogTitle>
           <DialogDescription>
             {isBatch
-              ? `Uploading for ${selectedContainerIds.length} selected containers`
-              : `Upload Proof of Delivery or Container Return Receipt for Ship Item #${shipItem.ship_id}`}
+              ? t("pod:labels.upload_batch_desc", { count: selectedContainerIds.length })
+              : t("pod:labels.upload_single_desc", { id: shipItem.ship_id })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="doc-type">Document Type</Label>
+            <Label htmlFor="doc-type">{t("pod:labels.document_type")}</Label>
             <Select
               value={documentType}
               onValueChange={(val) => {
@@ -185,11 +187,11 @@ export function PodUploadModal({
               }}
             >
               <SelectTrigger id="doc-type">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t("pod:labels.select_type")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY}>
-                  Proof of Delivery (POD)
+                  {t("pod:labels.pod")}
                 </SelectItem>
                 {showReturnReceiptOption && (
                   <SelectItem
@@ -197,15 +199,15 @@ export function PodUploadModal({
                       ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT
                     }
                   >
-                    Container Return Receipt
+                    {t("pod:labels.return_receipt")}
                   </SelectItem>
                 )}
                 <SelectItem
                   value={ShipItemDocumentTypeEnum.PROOF_OF_DELIVERY_OF_DOCUMENT}
                   disabled={!canUploadDocuments}
                 >
-                  Proof of Delivery of Document{" "}
-                  {!canUploadDocuments && "(Upload when status is Started)"}
+                  {t("pod:labels.pod_of_document")}{" "}
+                  {!canUploadDocuments && `(${t("pod:labels.upload_started_only")})`}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -213,24 +215,24 @@ export function PodUploadModal({
 
           {!isBatch && (
             <div className="grid gap-2">
-              <Label htmlFor="upload-level">Container (Optional)</Label>
+              <Label htmlFor="upload-level">{t("pod:labels.container_optional")}</Label>
               <Select
                 value={manualContainerId}
                 onValueChange={setManualContainerId}
               >
                 <SelectTrigger id="upload-level">
-                  <SelectValue placeholder="Select container" />
+                  <SelectValue placeholder={t("pod:labels.select_container")} />
                 </SelectTrigger>
                 <SelectContent>
                   {documentType !==
                     ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT && (
                       <SelectItem value="all">
-                        Check if this applies to the whole shipment
+                        {t("pod:labels.whole_shipment_check")}
                       </SelectItem>
                     )}
                   {availableContainers.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.container_number} ({c.container_size || "Unknown Size"}
+                      {c.container_number} ({c.container_size || t("common:labels.unknown_size")}
                       )
                     </SelectItem>
                   ))}
@@ -239,15 +241,14 @@ export function PodUploadModal({
               {documentType !==
                 ShipItemDocumentTypeEnum.CONTAINER_INTERCHANGE_DOCUMENT && (
                   <p className="text-xs text-muted-foreground">
-                    Select &quot;Whole Shipment&quot; for a single document
-                    covering all containers.
+                    {t("pod:labels.whole_shipment_desc")}
                   </p>
                 )}
             </div>
           )}
 
           <div className="grid gap-2">
-            <Label>File</Label>
+            <Label>{t("common:labels.file")}</Label>
             <div
               className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
               onDragOver={(e) => e.preventDefault()}
@@ -277,16 +278,16 @@ export function PodUploadModal({
                       setFile(null);
                     }}
                   >
-                    Remove
+                    {t("common:buttons.remove")}
                   </Button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center text-center text-muted-foreground">
                   <Upload className="h-8 w-8 mb-2" />
                   <span className="text-sm">
-                    Click to upload or drag and drop
+                    {t("pod:labels.upload_drag_drop")}
                   </span>
-                  <span className="text-xs mt-1">PDF, JPG, PNG (Max 10MB)</span>
+                  <span className="text-xs mt-1">{t("pod:labels.upload_formats")}</span>
                 </div>
               )}
             </div>
@@ -299,11 +300,11 @@ export function PodUploadModal({
             onClick={() => onOpenChange(false)}
             disabled={isUploading}
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button onClick={handleUpload} disabled={!file || isUploading}>
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Upload {isBatch ? `(${selectedContainerIds.length})` : ""}
+            {t("common:buttons.upload")} {isBatch ? `(${selectedContainerIds.length})` : ""}
           </Button>
         </DialogFooter>
       </DialogContent>

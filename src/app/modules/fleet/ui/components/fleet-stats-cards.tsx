@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { Truck, ShieldCheck, Package } from "lucide-react";
 import type { Truck as TruckType } from "@/lib/api/trucks";
 
@@ -9,6 +10,7 @@ interface FleetStatsCardsProps {
 }
 
 export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
+  const { t } = useTranslation(["fleet", "common"]);
   const activeTrucks = trucks.filter((t) => t.status === "active").length;
   const avgCapacity =
     trucks.length > 0
@@ -32,7 +34,7 @@ export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
             </div>
             <div className="mt-1.5 sm:mt-2">
               <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                Total Fleet
+                {t("fleet:labels.total_fleet")}
               </h3>
               <p className="text-lg sm:text-2xl font-bold text-brand-primary">
                 {total}
@@ -50,7 +52,7 @@ export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
             </div>
             <div className="mt-1.5 sm:mt-2">
               <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                Active Trucks
+                {t("fleet:labels.active_trucks")}
               </h3>
               <p className="text-lg sm:text-2xl font-bold text-primary">
                 {activeTrucks}
@@ -68,11 +70,13 @@ export function FleetStatsCards({ total, trucks }: FleetStatsCardsProps) {
             </div>
             <div className="mt-1.5 sm:mt-2">
               <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                Avg Capacity
+                {t("fleet:labels.avg_capacity")}
               </h3>
               <p className="text-lg sm:text-2xl font-bold text-amber-500">
                 {avgCapacity}{" "}
-                <span className="text-[10px] font-normal opacity-70">Kg</span>
+                <span className="text-[10px] font-normal opacity-70">
+                  {t("fleet:labels.unit_kg")}
+                </span>
               </p>
             </div>
           </div>

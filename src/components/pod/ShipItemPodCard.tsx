@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ShipItem,
   ShipItemDocument,
@@ -43,6 +44,7 @@ interface ShipItemPodCardProps {
 export function ShipItemPodCard({
   shipItem: initialShipItem,
 }: ShipItemPodCardProps) {
+  const { t } = useTranslation(["pod", "common"]);
   const [documents, setDocuments] = useState<ShipItemDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -161,7 +163,7 @@ export function ShipItemPodCard({
   const driverLabel = shipItem.assigned_driver
     ? `${shipItem.assigned_driver.first_name} ${shipItem.assigned_driver.last_name}`
     : shipItem.driver_id
-      ? `Assigned (${shipItem.driver_id})`
+      ? `${t("pod:labels.assigned")} (${shipItem.driver_id})`
       : "—";
 
   return (
@@ -189,7 +191,7 @@ export function ShipItemPodCard({
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Truck
+                  {t("pod:labels.truck")}
                 </p>
                 <p className="font-semibold text-sm leading-tight wrap-break-word text-foreground">
                   {truckLabel}
@@ -202,7 +204,7 @@ export function ShipItemPodCard({
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Driver
+                  {t("pod:labels.driver")}
                 </p>
                 <p className="font-semibold text-sm leading-tight wrap-break-word text-foreground">
                   {driverLabel}
@@ -215,7 +217,7 @@ export function ShipItemPodCard({
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Route
+                  {t("pod:labels.route")}
                 </p>
                 <p className="font-semibold text-sm leading-tight wrap-break-word text-foreground">
                   {shipItem.origin && shipItem.destination ? (
@@ -241,7 +243,7 @@ export function ShipItemPodCard({
             <div className="flex items-center justify-between gap-1.5 flex-wrap">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <MapPin className="h-4 w-4 text-destructive" />
-                Containers
+                {t("pod:labels.containers")}
               </h3>
               <div className="flex gap-1.5">
                 <Badge
@@ -268,19 +270,19 @@ export function ShipItemPodCard({
                     <span className="font-medium">{c.container_number}</span>
                     <span className="text-muted-foreground text-sm capitalize text-right">
                       {(c.container_size || "").replace(/_/g, " ")} ·{" "}
-                      {c.is_returning ? "Return" : "One-way"}
+                      {c.is_returning ? t("pod:labels.return") : t("pod:labels.one_way")}
                     </span>
                   </div>
                 ))}
                 {shipItem.containers.length > 5 && (
                   <div className="py-2.5 px-3 text-sm text-muted-foreground">
-                    +{shipItem.containers.length - 5} more
+                    +{shipItem.containers.length - 5} {t("pod:labels.more")}
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-sm text-muted-foreground italic py-3 px-3 rounded-md border border-dashed border-border bg-muted/20 min-h-[44px] flex items-center">
-                {shipItem.container?.container_number ?? "No container info"}
+                {shipItem.container?.container_number ?? t("pod:labels.no_container_info")}
               </div>
             )}
           </div>
@@ -289,7 +291,7 @@ export function ShipItemPodCard({
           <div className="space-y-2">
             <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5" />
-              Documents
+              {t("pod:labels.documents")}
             </h3>
             <div className="rounded-md border border-border bg-muted/30 p-3 min-h-[80px]">
               {loadingDocs ? (
@@ -300,7 +302,7 @@ export function ShipItemPodCard({
                 <div className="flex flex-col items-center justify-center py-4 rounded-lg border border-dashed border-border bg-muted/20">
                   <FileText className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-xs text-muted-foreground">
-                    No documents yet
+                    {t("pod:labels.no_documents")}
                   </p>
                 </div>
               ) : (
@@ -315,7 +317,7 @@ export function ShipItemPodCard({
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => setUploadModalOpen(true)}
           >
-            Upload document
+            {t("pod:buttons.upload_document")}
           </Button>
         </div>
       </div>
@@ -345,7 +347,7 @@ export function ShipItemPodCard({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Truck
+                    {t("pod:labels.truck")}
                   </p>
                   <p className="font-bold text-sm leading-tight">
                     {shipItem.assigned_truck ? (
@@ -360,9 +362,9 @@ export function ShipItemPodCard({
                         ) : null}
                       </>
                     ) : shipItem.truck_id ? (
-                      `Assigned (ID: ${shipItem.truck_id})`
+                      `${t("pod:labels.assigned")} (ID: ${shipItem.truck_id})`
                     ) : (
-                      "Not Assigned"
+                      t("pod:labels.not_assigned")
                     )}
                   </p>
                 </div>
@@ -377,14 +379,14 @@ export function ShipItemPodCard({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Driver
+                    {t("pod:labels.driver")}
                   </p>
                   <p className="font-bold text-sm leading-tight">
                     {shipItem.assigned_driver
                       ? `${shipItem.assigned_driver.first_name} ${shipItem.assigned_driver.last_name}`
                       : shipItem.driver_id
-                        ? `Assigned (ID: ${shipItem.driver_id})`
-                        : "Not Assigned"}
+                        ? `${t("pod:labels.assigned")} (ID: ${shipItem.driver_id})`
+                        : t("pod:labels.not_assigned")}
                   </p>
                 </div>
               </div>
@@ -398,7 +400,7 @@ export function ShipItemPodCard({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Route
+                    {t("pod:labels.route")}
                   </p>
                   <p className="font-bold text-sm leading-tight">
                     {shipItem.origin && shipItem.destination ? (
@@ -430,7 +432,7 @@ export function ShipItemPodCard({
                 <div className="flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-destructive shrink-0" />
                   <span className="font-bold uppercase tracking-wider text-destructive text-xs">
-                    Containers
+                    {t("pod:labels.containers")}
                   </span>
                 </div>
                 <div className="flex gap-1">
@@ -458,16 +460,16 @@ export function ShipItemPodCard({
                           #
                         </TableHead>
                         <TableHead className="text-xs font-medium">
-                          Number
+                          {t("pod:labels.number")}
                         </TableHead>
                         <TableHead className="text-xs font-medium">
-                          Size
+                          {t("pod:labels.size")}
                         </TableHead>
                         <TableHead className="text-xs font-medium">
-                          Type
+                          {t("pod:labels.type")}
                         </TableHead>
                         <TableHead className="text-right text-xs font-medium">
-                          Return
+                          {t("pod:labels.return")}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -499,11 +501,11 @@ export function ShipItemPodCard({
                                 variant="outline"
                                 className="text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-200 uppercase"
                               >
-                                Returns
+                                {t("pod:labels.return")}
                               </Badge>
                             ) : (
                               <span className="text-[10px] text-muted-foreground/40 italic">
-                                One-way
+                                {t("pod:labels.one_way")}
                               </span>
                             )}
                           </TableCell>
@@ -515,7 +517,7 @@ export function ShipItemPodCard({
               ) : (
                 <div className="text-xs text-muted-foreground italic py-2 rounded-md border border-dashed border-border bg-muted/20 px-3">
                   {shipItem.container?.container_number ||
-                    "No container detailed info available"}
+                    t("pod:labels.no_container_info")}
                 </div>
               )}
             </div>
@@ -525,7 +527,7 @@ export function ShipItemPodCard({
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5" />
-                  Documents
+                  {t("pod:labels.documents")}
                 </h3>
                 <Button
                   size="sm"
@@ -533,7 +535,7 @@ export function ShipItemPodCard({
                   className="h-7 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => setUploadModalOpen(true)}
                 >
-                  Upload
+                  {t("common:buttons.upload")}
                 </Button>
               </div>
               <div className="rounded-md border border-border bg-muted/30 p-3 min-h-[100px]">
@@ -545,7 +547,7 @@ export function ShipItemPodCard({
                   <div className="flex flex-col items-center justify-center py-4 text-center">
                     <FileText className="h-8 w-8 text-muted-foreground/50 mb-2" />
                     <p className="text-xs text-muted-foreground">
-                      No documents yet
+                      {t("pod:labels.no_documents")}
                     </p>
                   </div>
                 ) : (

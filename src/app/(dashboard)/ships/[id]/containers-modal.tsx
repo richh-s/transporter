@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import {
   Package,
@@ -30,6 +31,7 @@ export function ContainersModal({
   open,
   onOpenChange,
 }: ContainersModalProps) {
+  const { t } = useTranslation(["shipments", "common"]);
   const totalWeight = containers.reduce(
     (sum, c) => sum + (c.gross_weight || c.weight || 0),
     0,
@@ -45,7 +47,7 @@ export function ContainersModal({
               <div className="p-2 rounded-lg bg-muted/50 text-foreground">
                 <Package className="h-5 w-5" />
               </div>
-              Containers
+              {t("shipments:containers_modal.title")}
               <span className="text-muted-foreground font-normal ml-1">
                 ({containers.length})
               </span>
@@ -81,9 +83,9 @@ export function ContainersModal({
               <div className="p-4 rounded-lg bg-muted/30 mb-4">
                 <Package className="h-8 w-8 opacity-40" />
               </div>
-              <p className="font-medium text-base">No containers found</p>
+              <p className="font-medium text-base">{t("shipments:containers_modal.no_containers")}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                This shipment item currently has no containers assigned.
+                {t("shipments:containers_modal.no_containers_description")}
               </p>
             </div>
           ) : (
@@ -101,10 +103,10 @@ export function ContainersModal({
                       <div>
                         <h3 className="font-bold text-base text-foreground leading-tight">
                           {container.container_number ||
-                            `Container #${container.id}`}
+                            `${t("shipments:containers_modal.title")} #${container.id}`}
                         </h3>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mt-0.5">
-                          {container.container_type || "Standard"}{" "}
+                          {container.container_type || t("shipments:containers_modal.standard")}{" "}
                           {container.container_size
                             ? `• ${container.container_size}`
                             : ""}
@@ -141,18 +143,18 @@ export function ContainersModal({
                   <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Truck Type
+                        {t("shipments:containers_modal.truck_type")}
                       </p>
                       <div className="flex items-center gap-1.5">
                         <Truck className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-semibold text-foreground">
-                          {container.recommended_truck_type || "Standard"}
+                          {container.recommended_truck_type || t("shipments:containers_modal.standard")}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Weight
+                        {t("shipments:containers_modal.weight")}
                       </p>
                       <div className="flex items-center gap-1.5">
                         <Scale className="h-4 w-4 text-muted-foreground" />
@@ -160,15 +162,15 @@ export function ContainersModal({
                           {(
                             container.gross_weight ?? container.weight
                           )?.toLocaleString() ?? "-"}
-                          <span className="text-xs text-muted-foreground ml-1">
-                            kg
+                           <span className="text-xs text-muted-foreground ml-1">
+                            {t("shipments:containers_modal.weight").toLowerCase() === "weight" ? "kg" : "ኪ.ግ"}
                           </span>
                         </span>
                       </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Volume
+                        {t("shipments:containers_modal.volume")}
                       </p>
                       <div className="flex items-center gap-1.5">
                         <Move className="h-4 w-4 text-muted-foreground" />
@@ -182,21 +184,21 @@ export function ContainersModal({
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Return Trip
+                        {t("shipments:containers_modal.return_trip")}
                       </p>
                       <div className="flex items-center gap-1.5">
                         {container.is_returning ? (
                           <>
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
                             <span className="text-sm font-semibold text-green-700">
-                              Required
+                              {t("shipments:containers_modal.required")}
                             </span>
                           </>
                         ) : (
                           <>
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm font-medium text-muted-foreground">
-                              One Way
+                              {t("shipments:containers_modal.one_way")}
                             </span>
                           </>
                         )}
@@ -210,7 +212,7 @@ export function ContainersModal({
                           {container.container_details?.commodity && (
                             <div className="space-y-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                Commodities
+                                {t("shipments:containers_modal.commodities")}
                               </p>
                               <div className="flex flex-wrap gap-1.5">
                                 {container.container_details.commodity.map(
@@ -230,7 +232,7 @@ export function ContainersModal({
                           {container.container_details?.instruction && (
                             <div className="space-y-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                                Instructions
+                                {t("shipments:containers_modal.instructions")}
                                 <Info className="h-3.5 w-3.5" />
                               </p>
                               <div className="p-3 rounded-lg bg-muted/30 border border-border">

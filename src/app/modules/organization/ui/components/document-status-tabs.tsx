@@ -1,19 +1,11 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-const TABS = [
-  { value: "all" as const, label: "All" },
-  { value: "pending" as const, label: "Pending" },
-  { value: "approved" as const, label: "Approved" },
-  { value: "rejected" as const, label: "Rejected" },
-];
-
 interface DocumentStatusTabsProps {
-  current: "pending" | "approved" | "rejected" | null;
-  onSelect: (
-    status: "pending" | "approved" | "rejected" | "all" | null,
-  ) => void;
+  current: string | null;
+  onSelect: (status: "pending" | "approved" | "rejected" | "all" | null) => void;
   className?: string;
 }
 
@@ -22,31 +14,35 @@ export function DocumentStatusTabs({
   onSelect,
   className,
 }: DocumentStatusTabsProps) {
-  const getSelectedStyle = (tab: (typeof TABS)[number]) => {
-    if (tab.value === "rejected")
-      return "bg-red-500 text-white hover:bg-red-600";
-    if (tab.value === "pending")
-      return "bg-amber-500 text-white hover:bg-amber-600";
-    if (tab.value === "approved")
-      return "bg-green-600 text-white hover:bg-green-700";
-    return "bg-green-600 text-white hover:bg-green-700"; // All
-  };
+  const { t } = useTranslation(["organization"]);
+
+  const tabs = [
+    { id: "all", label: t("organization:tabs.all") },
+    { id: "pending", label: t("organization:tabs.pending") },
+    { id: "approved", label: t("organization:tabs.approved") },
+    { id: "rejected", label: t("organization:tabs.rejected") },
+  ] as const;
 
   return (
-    <div className={cn("grid grid-cols-4 gap-1.5 w-full", className)}>
-      {TABS.map((tab) => {
-        const isSelected =
-          tab.value === "all" ? !current : current === tab.value;
+    <div
+      className={cn(
+        "flex flex-nowrap items-center gap-1 p-1 bg-muted/50 rounded-xl overflow-x-auto no-scrollbar",
+        className,
+      )}
+    >
+      {tabs.map((tab) => {
+        const isActive = tab.id === "all" ? current === null : current === tab.id;
         return (
           <button
-            key={tab.value}
-            type="button"
-            onClick={() => onSelect(tab.value === "all" ? null : tab.value)}
+            key={tab.id}
+            onClick={() =>
+              onSelect(tab.id as "pending" | "approved" | "rejected" | "all" | null)
+            }
             className={cn(
-              "rounded-lg px-3 py-2.5 text-xs font-medium transition-colors w-full min-w-0",
-              isSelected
-                ? getSelectedStyle(tab)
-                : "border border-border bg-background text-muted-foreground hover:bg-muted/50",
+              "flex-1 min-w-[80px] px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap",
+              isActive
+                ? "bg-background text-brand-primary shadow-sm ring-1 ring-border/50"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.label}

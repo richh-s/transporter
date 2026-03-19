@@ -1,0 +1,184 @@
+{
+  "title": "Shipment Management",
+  "subtitle": "Track and manage your freight shipments across all stages.",
+  "labels": {
+    "all_shipments": "All Shipments",
+    "status_filters": "Status Filters",
+    "search_placeholder": "Search shipments...",
+    "no_results": "No shipments found.",
+    "no_results_detail": "Try adjusting your search or filters."
+  },
+  "columns": {
+    "shipment_id": "Shipment ID",
+    "origin": "Origin",
+    "destination": "Destination",
+    "quantity": "Quantity",
+    "status": "Status",
+    "date": "Creation Date",
+    "actions": "Actions"
+  },
+  "status": {
+    "created": "Created",
+    "price_requested": "Price Requested",
+    "priced": "Priced",
+    "accepted_by_shipper": "Accepted by Shipper",
+    "rejected_by_shipper": "Rejected by Shipper",
+    "allocated": "Allocated",
+    "ready_for_pickup": "Ready for Pickup",
+    "in_transit": "In Transit",
+    "delivered": "Delivered",
+    "completed": "Completed"
+  },
+  "details": {
+    "loading": "Loading...",
+    "ship_id_label": "Ship #{{id}}",
+    "track_shipment": "Track Shipment",
+    "payment": {
+      "title": "Payment Overview",
+      "fees": "Fees",
+      "vat": "VAT",
+      "pending": "Pending",
+      "paid": "Paid",
+      "invoice_id": "Invoice ID",
+      "invoice": "Invoice",
+      "submitted": "Submitted",
+      "confirm": "Confirm",
+      "pay_now": "Pay Now",
+      "receipt": "Receipt",
+      "telebirr_preparing": "Preparing your payment via Telebirr",
+      "gateway_preparing": "Preparing payment gateway...",
+      "gateway_description": "Preparing your payment via Telebirr"
+    },
+    "route": {
+      "title": "Route",
+      "from": "From",
+      "to": "To"
+    },
+    "pickup": {
+      "title": "Pickup",
+      "driver": "Driver"
+    },
+    "delivery": {
+      "title": "Delivery",
+      "truck_id": "Truck ID"
+    },
+    "shipment_info": {
+      "title": "Shipment Details",
+      "bill_of_lading": "Bill of Lading",
+      "packing_list": "Packing List",
+      "pickup_number": "Pickup Number",
+      "delivery_number": "Delivery Number",
+      "available": "Available",
+      "document_only": "Document Only"
+    },
+    "shipper_details": {
+      "title": "Shipper Details",
+      "name": "Shipper Name",
+      "email": "Email",
+      "phone": "Phone",
+      "no_details": "No shipper details available."
+    },
+    "ship_items": {
+      "title": "Ship Items"
+    },
+    "errors": {
+      "no_unpaid": "No unpaid payments found",
+      "generic": "Something went wrong",
+      "failed_download": "Failed to download",
+      "invoice_opened": "Invoice opened",
+      "invoice_downloaded": "Invoice downloaded",
+      "loading_invoice": "Loading invoice..."
+    },
+    "buttons": {
+      "go_to_ships": "Go to Ships"
+    },
+    "assign_modal": {
+      "title": "Assign Ship Item #{{id}}",
+      "description": "Select a truck and driver for this shipment",
+      "containers_count": "{{count}} Container",
+      "containers_count_plural": "{{count}} Containers",
+      "total_weight": "{{weight}} kg total",
+      "truck_label": "Truck",
+      "truck_placeholder": "Select a truck...",
+      "truck_selected": "Truck selected",
+      "no_trucks": "No trucks available",
+      "driver_label": "Driver",
+      "driver_placeholder": "Select a driver...",
+      "driver_selected": "Driver selected",
+      "no_drivers": "No drivers available",
+      "assign_button": "Assign",
+      "assigning_button": "Assigning..."
+    },
+    "manual_confirmation": {
+      "title": "Manual Payment Confirmation",
+      "description": "Provide payment reference details for manual verification.",
+      "payment_id": "Payment ID",
+      "ship_id": "Ship ID",
+      "reference_id": "Reference ID",
+      "reference_id_placeholder": "e.g. TXN-123456",
+      "reference_url": "Reference URL",
+      "reference_url_placeholder": "https://...",
+      "payment_date": "Payment Date",
+      "note": "Note",
+      "note_placeholder": "Additional details about the payment...",
+      "reference_doc": "Reference Document",
+      "remove": "Remove",
+      "upload_text": "Click to upload or drag and drop",
+      "upload_hint": "PDF, JPG, PNG (Max 10MB)",
+      "submit_button": "Submit"
+    },
+    "containers_modal": {
+      "title": "Containers",
+      "no_containers": "No containers found",
+      "no_containers_description": "This shipment item currently has no containers assigned.",
+      "truck_type": "Truck Type",
+      "weight": "Weight",
+      "volume": "Volume",
+      "return_trip": "Return Trip",
+      "required": "Required",
+      "one_way": "One Way",
+      "commodities": "Commodities",
+      "instructions": "Instructions",
+      "standard": "Standard"
+    },
+    "tracking_view": {
+      "title": "Track Shipment",
+      "origin": "Origin",
+      "destination": "Destination",
+      "shipment_id": "Shipment ID",
+      "trucks_assigned": "Trucks Assigned",
+      "containers": "Containers",
+      "live_tracking_map": "Live Tracking Map",
+      "assigned_trucks": "Assigned Trucks",
+      "fetching_data": "Fetching tracking data...",
+      "fetch_error": "Failed to fetch tracking data",
+      "no_data": "No tracking data found for Ship #{{id}}",
+      "back_to_details": "Back to Ship Details",
+      "status_timeline": "Status Timeline",
+      "gps_points": "{{count}} GPS points"
+    },
+    "containers_table": {
+      "container_number": "Container Number",
+      "type": "Type",
+      "weight": "Weight",
+      "volume": "Volume",
+      "status": "Status"
+    },
+    "ship_items_table": {
+      "details_header": "Shipment Details",
+      "assignment_header": "Assignment",
+      "status_header": "Status",
+      "actions_header": "Actions",
+      "container_one": "Container",
+      "container_other": "Containers",
+      "no_truck": "No truck",
+      "no_driver": "No driver",
+      "mark_delivered": "Mark Delivered",
+      "assign_action": "Assign Truck/Driver",
+      "view_containers": "View Containers",
+      "assigned": "Assigned",
+      "partial": "Partial",
+      "unassigned": "Unassigned"
+    }
+  }
+}

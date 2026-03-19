@@ -1,70 +1,39 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Users, UserCheck, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, CheckCircle, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-type Driver = {
-  status: "active" | "suspended";
-  experience_years: number;
-};
-
-export function DriverStats({ drivers }: { drivers: Driver[] }) {
-  const total = drivers.length;
-  const active = drivers.filter((d) => d.status === "active").length;
-
-  const avgExp =
-    drivers.reduce((sum, d) => sum + (d.experience_years || 0), 0) /
-    (total || 1);
-
+export function DriverStats() {
+  const { t } = useTranslation(["drivers"]);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* TOTAL DRIVERS */}
-      <Card className="p-5 flex items-center gap-4 bg-card border border-border">
-        <Users className="h-5 w-5 text-muted-foreground" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Total Drivers
-          </p>
-          <p className="text-2xl font-bold">{total}</p>
-        </div>
+    <div className="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{t("drivers:labels.total_drivers")}</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">128</div>
+        </CardContent>
       </Card>
-
-      {/* ACTIVE DRIVERS */}
-      <Card
-        className="
-          p-5 flex items-center gap-4
-          bg-blue-50 dark:bg-blue-950/40
-          border border-blue-200 dark:border-blue-900
-        "
-      >
-        <UserCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Active Drivers
-          </p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {active}
-          </p>
-        </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{t("drivers:labels.active_drivers")}</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">112</div>
+        </CardContent>
       </Card>
-
-      {/* AVG EXPERIENCE */}
-      <Card
-        className="
-          p-5 flex items-center gap-4
-          bg-orange-50 dark:bg-orange-950/40
-          border border-orange-200 dark:border-orange-900
-        "
-      >
-        <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Avg Experience
-          </p>
-          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-            {avgExp.toFixed(1)} yrs
-          </p>
-        </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{t("drivers:labels.suspended_drivers")}</CardTitle>
+          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">16</div>
+        </CardContent>
       </Card>
     </div>
   );

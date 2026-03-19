@@ -12,6 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ import { format } from "date-fns";
 export type GPSDeviceTableRow = GPSDevice;
 
 function StatusBadge({ active }: { active: boolean }) {
+  const { t } = useTranslation("gps");
   return (
     <span
       className={cn(
@@ -40,7 +42,7 @@ function StatusBadge({ active }: { active: boolean }) {
           active ? "bg-primary" : "bg-gray-400",
         )}
       />
-      {active ? "Active" : "Inactive"}
+      {active ? t("create_form.status.active") : t("create_form.status.inactive")}
     </span>
   );
 }
@@ -53,6 +55,7 @@ function ActionsCell({
   meta?: {
     onEdit?: (device: GPSDevice) => void;
     onDeactivate?: (id: number) => void;
+    t?: (key: string) => string;
   };
 }) {
   const router = useRouter();
@@ -77,7 +80,7 @@ function ActionsCell({
             }}
             className="rounded-lg"
           >
-            <Eye className="mr-2 h-4 w-4" /> View
+            <Eye className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.view") || "View"}
           </DropdownMenuItem>
           {meta?.onEdit && (
             <DropdownMenuItem
@@ -87,7 +90,7 @@ function ActionsCell({
               }}
               className="rounded-lg"
             >
-              <Edit className="mr-2 h-4 w-4" /> Edit
+              <Edit className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.edit") || "Edit"}
             </DropdownMenuItem>
           )}
           {device.status && meta?.onDeactivate && (
@@ -98,7 +101,7 @@ function ActionsCell({
               }}
               className="text-destructive rounded-lg"
             >
-              <Power className="mr-2 h-4 w-4" /> Deactivate
+              <Power className="mr-2 h-4 w-4" /> {meta?.t?.("list.actions.deactivate") || "Deactivate"}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -111,17 +114,21 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
   {
     accessorKey: "external_device_id",
     id: "plate_number", // Used by DataTable's mobile view as a header
-    header: ({ column }) => (
-      <span
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="text-xs font-semibold uppercase tracking-wider flex items-center cursor-pointer"
-      >
-        Device ID / IMEI
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </span>
-    ),
+    header: ({ column }) => {
+      const { t } = useTranslation("gps");
+      return (
+        <span
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-xs font-semibold uppercase tracking-wider flex items-center cursor-pointer"
+        >
+          {t("list.columns.device_id_imei")}
+          <ArrowUpDown className="ml-2 h-3 w-3" />
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const device = row.original;
+      const { t } = useTranslation("gps");
       return (
         <div className="flex flex-col min-w-[150px]">
           <div className="flex items-center gap-2">
@@ -133,7 +140,7 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
             </span>
           </div>
           <span className="text-[10px] text-muted-foreground font-mono mt-0.5 pl-7">
-            IMEI: {device.imei_number}
+            {t("card.imei")}: {device.imei_number}
           </span>
         </div>
       );
@@ -142,11 +149,14 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
   },
   {
     accessorKey: "device_name",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Device Info
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("gps");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.device_info")}
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const device = row.original;
       return (
@@ -163,11 +173,14 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
   },
   {
     accessorKey: "expire_date",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Expiration
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("gps");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.expiration")}
+        </span>
+      );
+    },
     cell: ({ row }) => {
       const date = row.getValue("expire_date") as string;
       try {
@@ -184,17 +197,24 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
   },
   {
     id: "assignment",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Assignment
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("gps");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.assignment")}
+        </span>
+      );
+    },
     cell: ({ row, table }) => {
       const device = row.original;
       const meta = table.options.meta as {
         gpsDeviceToTruckMap?: Record<number, number>;
+        onEdit?: (device: GPSDevice) => void;
+        onDeactivate?: (id: number) => void;
+        t?: (key: string) => string;
       };
       const isAssigned = !!meta?.gpsDeviceToTruckMap?.[device.id];
+      const { t } = useTranslation("gps");
 
       return (
         <div className="flex items-center gap-1.5 text-xs min-w-[100px]">
@@ -209,7 +229,7 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
               isAssigned ? "text-primary font-medium" : "text-muted-foreground"
             }
           >
-            {isAssigned ? "Assigned" : "Unassigned"}
+            {isAssigned ? t("card.assigned") : t("card.unassigned")}
           </span>
         </div>
       );
@@ -217,16 +237,22 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
   },
   {
     accessorKey: "status",
-    header: () => (
-      <span className="text-xs font-semibold uppercase tracking-wider">
-        Status
-      </span>
-    ),
+    header: () => {
+      const { t } = useTranslation("gps");
+      return (
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {t("list.columns.status")}
+        </span>
+      );
+    },
     cell: ({ row, table }) => {
       const device = row.original;
       const meta = table.options.meta as {
         onStatusChange?: (device: GPSDevice, newStatus: boolean) => void;
         isUpdating?: boolean;
+        onEdit?: (device: GPSDevice) => void;
+        onDeactivate?: (id: number) => void;
+        t?: (key: string) => string;
       };
 
       return (
@@ -254,6 +280,7 @@ export const gpsDeviceColumns: ColumnDef<GPSDeviceTableRow>[] = [
       const meta = table.options.meta as {
         onEdit?: (device: GPSDevice) => void;
         onDeactivate?: (id: number) => void;
+        t?: (key: string) => string;
       };
 
       return <ActionsCell device={device} meta={meta} />;

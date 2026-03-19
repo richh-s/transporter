@@ -5,11 +5,13 @@ import { Ship } from "@/types/ship";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "@/lib/format";
 
 function ActionCell({ ship }: { ship: Ship }) {
   const router = useRouter();
+  const { t } = useTranslation("common");
   return (
     <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
       <Button
@@ -20,7 +22,7 @@ function ActionCell({ ship }: { ship: Ship }) {
           e.stopPropagation();
           router.push(`/ships/placeholder?id=${ship.id}`);
         }}
-        title="View details"
+        title={t("buttons.edit")}
       >
         <Eye className="h-4 w-4" />
       </Button>
@@ -29,42 +31,43 @@ function ActionCell({ ship }: { ship: Ship }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("shipments");
   const config: Record<string, { label: string; className: string }> = {
-    created: { label: "Created", className: "bg-muted text-muted-foreground" },
+    created: { label: t("status.pending"), className: "bg-muted text-muted-foreground" },
     price_requested: {
-      label: "Price Requested",
+      label: t("status.pending"),
       className: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
     },
     priced: {
-      label: "Priced",
+      label: t("status.pending"),
       className: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
     },
     accepted_by_shipper: {
-      label: "Accepted",
+      label: t("status.assigned"),
       className: "bg-primary/10 text-primary",
     },
     rejected_by_shipper: {
-      label: "Rejected",
+      label: t("status.cancelled"),
       className: "bg-red-500/10 text-red-700 dark:text-red-400",
     },
     allocated: {
-      label: "Allocated",
+      label: t("status.assigned"),
       className: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
     },
     ready_for_pickup: {
-      label: "Ready for Pickup",
+      label: t("status.assigned"),
       className: "bg-lime-500/10 text-lime-700 dark:text-lime-400",
     },
     in_transit: {
-      label: "In Transit",
+      label: t("status.in_transit"),
       className: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
     },
     delivered: {
-      label: "Delivered",
+      label: t("status.delivered"),
       className: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
     },
     completed: {
-      label: "Completed",
+      label: t("status.delivered"),
       className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
     },
   };
@@ -88,21 +91,12 @@ function formatLocation(s: string) {
   return (s || "-").replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "—";
-  try {
-    return format(new Date(dateStr), "MMM d, yyyy");
-  } catch {
-    return "—";
-  }
-}
-
-export const columns: ColumnDef<Ship>[] = [
+export const getColumns = (t: any): ColumnDef<Ship>[] => [
   {
     accessorKey: "id",
     id: "id",
     enableHiding: false,
-    header: "ID",
+    header: t("shipments:columns.shipment_id"),
     cell: ({ row }) => (
       <span className="font-mono text-sm font-bold text-primary">
         #{row.getValue("id")}
@@ -119,7 +113,7 @@ export const columns: ColumnDef<Ship>[] = [
         className="-ml-3 h-8"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Route
+        {t("shipments:columns.origin")}
         <ArrowUpDown className="ml-2 h-3.5 w-3.5 opacity-50" />
       </Button>
     ),
@@ -144,20 +138,20 @@ export const columns: ColumnDef<Ship>[] = [
   {
     accessorKey: "pickup_date",
     id: "pickup_date",
-    header: "Pickup",
+    header: t("shipments:status.pending"), // Or "Pickup"
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {formatDate(row.original.pickup_date)}
+        {row.original.pickup_date ? formatDate(row.original.pickup_date) : "—"}
       </span>
     ),
   },
   {
     accessorKey: "delivery_date",
     id: "delivery_date",
-    header: "Delivery",
+    header: t("shipments:status.delivered"), // Or "Delivery"
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {formatDate(row.original.delivery_date)}
+        {row.original.delivery_date ? formatDate(row.original.delivery_date) : "—"}
       </span>
     ),
   },
@@ -171,7 +165,7 @@ export const columns: ColumnDef<Ship>[] = [
         className="-ml-3 h-8"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Status
+        {t("shipments:columns.status")}
         <ArrowUpDown className="ml-2 h-3.5 w-3.5 opacity-50" />
       </Button>
     ),

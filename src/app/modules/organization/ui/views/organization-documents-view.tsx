@@ -26,8 +26,10 @@ import {
 import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
 import { openInApp } from "@/lib/utils/open-in-app";
+import { useTranslation } from "react-i18next";
 
 export function OrganizationDocumentsView() {
+  const { t } = useTranslation(["organization", "common"]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -72,13 +74,13 @@ export function OrganizationDocumentsView() {
       },
       {
         onSuccess: () => {
-          toast.success("Document uploaded successfully");
+          toast.success(t("organization:messages.upload_success"));
         },
         onError: (error) => {
           toast.error(
             error instanceof Error
               ? error.message
-              : "Failed to upload document",
+              : t("organization:messages.upload_error"),
           );
         },
       },
@@ -97,13 +99,13 @@ export function OrganizationDocumentsView() {
       { id, data },
       {
         onSuccess: () => {
-          toast.success("Document updated successfully");
+          toast.success(t("organization:messages.update_success"));
         },
         onError: (error) => {
           toast.error(
             error instanceof Error
               ? error.message
-              : "Failed to update document",
+              : t("organization:messages.update_error"),
           );
         },
       },
@@ -122,11 +124,11 @@ export function OrganizationDocumentsView() {
 
     deleteDocumentMutation.mutate(documentId, {
       onSuccess: () => {
-        toast.success("Document deleted successfully");
+        toast.success(t("organization:messages.delete_success"));
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete document",
+          error instanceof Error ? error.message : t("organization:messages.delete_error"),
         );
       },
     });
@@ -138,17 +140,17 @@ export function OrganizationDocumentsView() {
       const response = await organizationApi.getDocument(id);
 
       if (!response.data) {
-        throw new Error(response.error || "Failed to fetch document");
+        throw new Error(response.error || t("organization:messages.view_error"));
       }
 
       if (response.data.presigned_url) {
         await openInApp(response.data.presigned_url);
       } else {
-        toast.error("Document URL not available");
+        toast.error(t("organization:messages.url_error"));
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to view document",
+        error instanceof Error ? error.message : t("organization:messages.view_error"),
       );
     }
   };
@@ -233,10 +235,10 @@ export function OrganizationDocumentsView() {
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-brand-primary">
-              Documents
+              {t("organization:title")}
             </h2>
             <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-              Upload and manage organization-related documents securely
+              {t("organization:subtitle")}
             </p>
           </div>
         </div>
@@ -251,6 +253,7 @@ export function OrganizationDocumentsView() {
       <div className="flex-1 min-h-0 overflow-hidden shrink-0 flex flex-col">
         <DataTable
           columns={organizationDocumentColumns(
+            t,
             handleViewDocument,
             handleEditDocument,
             handleDeleteDocument,
@@ -259,7 +262,7 @@ export function OrganizationDocumentsView() {
           )}
           data={filteredDocuments as OrganizationDocumentTableRow[]}
           searchKey="document_type"
-          searchPlaceholder="Search documents by type..."
+          searchPlaceholder={t("organization:messages.search_placeholder")}
           manualPagination={false}
           page={page}
           perPage={perPage}
@@ -287,7 +290,7 @@ export function OrganizationDocumentsView() {
                 className="h-8 text-xs"
               >
                 <Upload className="h-3.5 w-3.5 mr-1.5" />
-                Upload Document
+                {t("organization:buttons.upload_doc")}
               </Button>
             </div>
           }

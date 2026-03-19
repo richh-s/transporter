@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,35 +55,35 @@ import { cn } from "@/lib/utils";
 
 const formSchema = z
   .object({
-    origin: z.nativeEnum(LocationEnum, { message: "Origin is required" }),
+    origin: z.nativeEnum(LocationEnum, { message: "price_quotes:create.validation.origin_required" }),
     destination: z.nativeEnum(LocationEnum, {
-      message: "Destination is required",
+      message: "price_quotes:create.validation.destination_required",
     }),
     gross_weight_min: z
-      .number({ message: "Min weight is required" })
-      .min(1, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.min_weight_required" })
+      .min(1, "price_quotes:create.validation.must_be_positive"),
     gross_weight_max: z
-      .number({ message: "Max weight is required" })
-      .min(1, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.max_weight_required" })
+      .min(1, "price_quotes:create.validation.must_be_positive"),
     truck_type: z.nativeEnum(TruckTypeEnum, {
-      message: "Truck type is required",
+      message: "price_quotes:create.validation.truck_type_required",
     }),
     container_size: z.nativeEnum(ContainerSizeEnum, {
-      message: "Container size is required",
+      message: "price_quotes:create.validation.container_size_required",
     }),
     amount: z
-      .number({ message: "Amount is required" })
-      .min(0.01, "Must be > 0"),
+      .number({ message: "price_quotes:create.validation.amount_required" })
+      .min(0.01, "price_quotes:create.validation.must_be_positive"),
     currency: z.string().max(3),
     axle_type: z.nativeEnum(TruckAxleTypeEnum).optional().nullable(),
     status: z.nativeEnum(PriceQuoteStatusEnum).optional(),
   })
   .refine((data) => data.origin !== data.destination, {
-    message: "Origin and destination must be different",
+    message: "price_quotes:create.validation.origin_destination_different",
     path: ["destination"],
   })
   .refine((data) => data.gross_weight_max >= data.gross_weight_min, {
-    message: "Max weight must be >= min weight",
+    message: "price_quotes:create.validation.max_weight_ge_min",
     path: ["gross_weight_max"],
   });
 
@@ -165,6 +166,7 @@ function EditSkeleton() {
 
 function EditPriceQuoteContent() {
   const router = useRouter();
+  const { t } = useTranslation(["price_quotes", "common"]);
   const params = useParams();
   const searchParams = useSearchParams();
   const rawId = searchParams.get("id") || (params.id as string);
@@ -272,16 +274,18 @@ function EditPriceQuoteContent() {
         <div className="p-4 space-y-2">
           <MobileBreadcrumb
             items={[
-              { label: "Price Quotes", href: "/price-quotes" },
+              { label: t("price_quotes:title"), href: "/price-quotes" },
               {
-                label: `Quote #${id}`,
+                label: `${t("price_quotes:details.quote_number")} #${id}`,
                 href: `/price-quotes/placeholder?id=${id}`,
               },
-              { label: "Edit" },
+              { label: t("common:buttons.edit") },
             ]}
           />
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold">Edit Quote #{id}</h1>
+            <h1 className="text-lg font-bold">
+              {t("price_quotes:edit.title")} #{id}
+            </h1>
             {quote?.status && <StatusBadge status={quote.status} />}
           </div>
         </div>
@@ -296,7 +300,7 @@ function EditPriceQuoteContent() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={MapPin}
-              title="Route"
+              title={t("price_quotes:create.sections.route")}
               accent="bg-red-500/10 text-red-500"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -306,7 +310,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Origin <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.origin")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -339,7 +343,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Destination <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.destination")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -372,7 +376,7 @@ function EditPriceQuoteContent() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Truck}
-              title="Vehicle"
+              title={t("price_quotes:create.sections.vehicle")}
               accent="bg-blue-500/10 text-blue-500"
             />
             <div className="space-y-4">
@@ -382,7 +386,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Truck Type <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.truck_type")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -416,11 +420,11 @@ function EditPriceQuoteContent() {
                             <div className="flex items-center gap-2">
                               <Truck className="h-4 w-4" />
                               <span className="text-sm font-medium">
-                                Flatbed
+                                {t("price_quotes:create.truck_types.flatbed")}
                               </span>
                             </div>
                             <span className="text-[10px] text-muted-foreground font-normal">
-                              {flatbedCount} Active
+                              {flatbedCount} {t("price_quotes:create.labels.active")}
                             </span>
                           </Label>
                           <Label
@@ -447,11 +451,11 @@ function EditPriceQuoteContent() {
                             <div className="flex items-center gap-2">
                               <Truck className="h-4 w-4" />
                               <span className="text-sm font-medium">
-                                Trailer
+                                {t("price_quotes:create.truck_types.trailer")}
                               </span>
                             </div>
                             <span className="text-[10px] text-muted-foreground font-normal">
-                              {trailerCount} Active
+                              {trailerCount} {t("price_quotes:create.labels.active")}
                             </span>
                           </Label>
                         </div>
@@ -459,7 +463,7 @@ function EditPriceQuoteContent() {
                         {containerSize === ContainerSizeEnum.FORTY_FEET && field.value === TruckTypeEnum.TRAILER && (
                           <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 text-red-600 text-[10px] animate-in fade-in slide-in-from-top-1 border border-red-100">
                             <AlertCircle className="h-3 w-3" />
-                            Warning: 40ft containers typically require Flatbed trucks
+                            {t("price_quotes:create.warnings.forty_ft_truck")}
                           </div>
                         )}
 
@@ -467,14 +471,14 @@ function EditPriceQuoteContent() {
                           flatbedCount === 0 && (
                             <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-600 text-[10px] animate-in fade-in slide-in-from-top-1">
                               <AlertCircle className="h-3 w-3" />
-                              No active Flatbed trucks available for fulfillment
+                              {t("price_quotes:create.warnings.no_flatbed")}
                             </div>
                           )}
                         {field.value === TruckTypeEnum.TRAILER &&
                           trailerCount === 0 && (
                             <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-600 text-[10px] animate-in fade-in slide-in-from-top-1">
                               <AlertCircle className="h-3 w-3" />
-                              No active Trailer trucks available for fulfillment
+                              {t("price_quotes:create.warnings.no_trailer")}
                             </div>
                           )}
                       </RadioGroup>
@@ -490,7 +494,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Container Size <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.container_size")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -546,7 +550,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Axle Type (Optional)
+                      {t("price_quotes:create.labels.axle_type")} ({t("common:labels.optional")})
                     </FormLabel>
                     <Select
                       onValueChange={(value) =>
@@ -565,15 +569,15 @@ function EditPriceQuoteContent() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="none">{t("common:labels.none")}</SelectItem>
                         <SelectItem value={TruckAxleTypeEnum.SINGLE}>
-                          Single
+                          {t("price_quotes:create.axle_options.single")}
                         </SelectItem>
                         <SelectItem value={TruckAxleTypeEnum.DOUBLE}>
-                          Double
+                          {t("price_quotes:create.axle_options.double")}
                         </SelectItem>
                         <SelectItem value={TruckAxleTypeEnum.TRIPLE}>
-                          Triple
+                          {t("price_quotes:create.axle_options.triple")}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -588,7 +592,7 @@ function EditPriceQuoteContent() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Scale}
-              title="Weight Range"
+              title={t("price_quotes:create.sections.weight")}
               accent="bg-amber-500/10 text-amber-600"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -598,7 +602,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Min (kg) <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.min_weight")} (kg) <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -620,7 +624,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Max (kg) <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.max_weight")} (kg) <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -642,7 +646,7 @@ function EditPriceQuoteContent() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={DollarSign}
-              title="Pricing"
+              title={t("price_quotes:create.sections.pricing")}
               accent="bg-emerald-500/10 text-emerald-600"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -652,7 +656,7 @@ function EditPriceQuoteContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      Amount <span className="text-red-500">*</span>
+                      {t("price_quotes:create.labels.amount")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -676,7 +680,7 @@ function EditPriceQuoteContent() {
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Currency</FormLabel>
+                    <FormLabel className="text-xs">{t("price_quotes:create.labels.currency")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -704,7 +708,7 @@ function EditPriceQuoteContent() {
           <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm">
             <SectionHeader
               icon={Settings}
-              title="Status"
+              title={t("price_quotes:edit.sections.status")}
               accent="bg-gray-500/10 text-gray-600"
             />
             <FormField
@@ -712,7 +716,7 @@ function EditPriceQuoteContent() {
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Quote Status</FormLabel>
+                  <FormLabel className="text-xs">{t("price_quotes:edit.labels.status")}</FormLabel>
                   <Select
                     onValueChange={(value) =>
                       field.onChange(value as PriceQuoteStatusEnum)
@@ -727,18 +731,18 @@ function EditPriceQuoteContent() {
                     </FormControl>
                     <SelectContent className="rounded-xl">
                       <SelectItem value={PriceQuoteStatusEnum.DRAFT}>
-                        Draft
+                        {t("price_quotes:filters.status.draft")}
                       </SelectItem>
                       <SelectItem value={PriceQuoteStatusEnum.ACTIVE}>
-                        Active
+                        {t("price_quotes:filters.status.active")}
                       </SelectItem>
                       <SelectItem value={PriceQuoteStatusEnum.INACTIVE}>
-                        Inactive
+                        {t("price_quotes:filters.status.inactive")}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Setting to Active will automatically set validity dates.
+                    {t("price_quotes:edit.hints.active_status")}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -757,7 +761,7 @@ function EditPriceQuoteContent() {
           disabled={updateMutation.isPending}
           className="flex-1 h-11 rounded-xl"
         >
-          Cancel
+          {t("common:buttons.cancel")}
         </Button>
         <Button
           type="submit"
@@ -768,10 +772,10 @@ function EditPriceQuoteContent() {
           {updateMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t("common:buttons.saving")}
             </>
           ) : (
-            "Save Changes"
+            t("common:buttons.save_changes")
           )}
         </Button>
       </div>

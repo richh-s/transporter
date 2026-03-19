@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { ChevronRight, Satellite, Clock, Truck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { GPSDevice } from "@/types/gps-device";
 
@@ -23,6 +24,7 @@ export function GPSDeviceCard({
   assigned?: boolean;
   onClick?: () => void;
 }) {
+  const { t } = useTranslation("gps");
   const isActive = !!device.status;
 
   return (
@@ -62,12 +64,12 @@ export function GPSDeviceCard({
                 : "bg-muted text-muted-foreground",
             )}
           >
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? t("gps:create_form.status.active") : t("gps:create_form.status.inactive")}
           </span>
         </div>
 
         <div className="text-muted-foreground text-xs font-mono">
-          IMEI: {device.imei_number}
+          {t("gps:card.imei")}: {device.imei_number}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
@@ -93,7 +95,7 @@ export function GPSDeviceCard({
             )}
           >
             <Truck className="h-3 w-3" />
-            {assigned ? "Assigned" : "Unassigned"}
+            {assigned ? t("gps:card.assigned") : t("gps:card.unassigned")}
           </span>
         </div>
       </div>
