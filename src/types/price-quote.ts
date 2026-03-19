@@ -69,6 +69,7 @@ export interface UpdatePriceQuoteRequest {
     destination?: string;
     gross_weight_min?: number;
     gross_weight_max?: number;
+    gross_weight_unit?: string;
     truck_type?: TruckTypeEnum;
     container_size?: ContainerSizeEnum;
     amount?: number;
