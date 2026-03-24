@@ -47,3 +47,10 @@ next-env.d.ts
 # Android release signing (never commit)
 *.keystore
 wetruck-transporter-release.keystore
+
+# resource folder
+resource/
+resources/
+
+# public manifest (generated or local)
+public/manifest.webmanifest

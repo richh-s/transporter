@@ -1,4 +1,5 @@
 import { extractErrorMessage } from "./utils/error-humanizer";
+import i18n from "@/i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -89,6 +90,7 @@ async function tryRefreshToken(): Promise<boolean> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept-Language": i18n.language || "en",
       },
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
@@ -124,6 +126,7 @@ export async function request<T>(
   isRetry = false,
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
+    "Accept-Language": i18n.language || "en",
     ...(options.headers as Record<string, string>),
   };
 
