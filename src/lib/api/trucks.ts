@@ -1,11 +1,15 @@
 import { request, tokenStorage } from "../api-client";
+import i18n from "@/i18n";
 
 /**
  * Get authorization headers with Bearer token
  */
 function getAuthHeaders(): Record<string, string> {
   const token = tokenStorage.getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    "Accept-Language": i18n.language || "en",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 export interface Truck {

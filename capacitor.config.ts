@@ -1,11 +1,32 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.wetruck.transporter", // ← Change this
+  appId: "com.wetruck.transporter",
   appName: "Wetruck Transporter",
   webDir: "out",
   server: {
     androidScheme: "https",
+  },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      launchFadeOutDuration: 500,
+      backgroundColor: "#10b981",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_INSIDE",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      overlaysWebView: false,
+      style: "DARK",
+      backgroundColor: "#FFFFFF",
+    },
   },
 };
 

@@ -3,6 +3,7 @@
 ===================================================== */
 
 import { tokenStorage } from "./api-client";
+import i18n from "@/i18n";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,7 +23,7 @@ export class ApiError extends Error {
     public statusText: string,
     message: string,
     public fields?: Record<string, string>,
-    public code?: string
+    public code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -38,6 +39,7 @@ export async function apiRequest<T>(
   const { requireAuth = true, ...fetchOptions } = options;
 
   const headers: Record<string, string> = {
+    "Accept-Language": i18n.language || "en",
     ...(fetchOptions.headers as Record<string, string>),
   };
 
@@ -61,7 +63,6 @@ export async function apiRequest<T>(
     credentials: "include",
   });
 
-
   if (response.status === 204) {
     return { status: true } as T;
   }
@@ -81,13 +82,19 @@ export async function apiRequest<T>(
     throw new ApiError(
       response.status,
       response.statusText,
-      ((result as unknown) as Record<string, unknown>)?.detail as string ||
-      ((result as unknown) as Record<string, unknown>)?.error as string ||
-      ((result as unknown) as Record<string, unknown>)?.message as string ||
-      (typeof result === "string" ? result : response.statusText) ||
-      "Request failed",
-      ((result as unknown) as Record<string, unknown>)?.fields as Record<string, string>,
-      (((result as unknown) as Record<string, unknown>)?.code as string) || (((result as unknown) as Record<string, unknown>)?.status_code as string)?.toString()
+      ((result as unknown as Record<string, unknown>)?.detail as string) ||
+        ((result as unknown as Record<string, unknown>)?.error as string) ||
+        ((result as unknown as Record<string, unknown>)?.message as string) ||
+        (typeof result === "string" ? result : response.statusText) ||
+        "Request failed",
+      (result as unknown as Record<string, unknown>)?.fields as Record<
+        string,
+        string
+      >,
+      ((result as unknown as Record<string, unknown>)?.code as string) ||
+        (
+          (result as unknown as Record<string, unknown>)?.status_code as string
+        )?.toString(),
     );
   }
 

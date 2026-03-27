@@ -1,5 +1,6 @@
 import { request, tokenStorage } from "../api-client";
 import { apiRequest } from "../api";
+import i18n from "@/i18n";
 import {
   Ship,
   ShipDocument,
@@ -17,7 +18,10 @@ import {
  */
 function getAuthHeaders(): Record<string, string> {
   const token = tokenStorage.getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    "Accept-Language": i18n.language || "en",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 export interface BaseResponse {
@@ -301,8 +305,8 @@ export const shipApi = {
           // Throw a structured error with the API error message
           const error = new Error(
             (errorData.error as string) ||
-            (errorData.message as string) ||
-            "Failed to fetch invoice",
+              (errorData.message as string) ||
+              "Failed to fetch invoice",
           );
           (error as Error & { code?: string }).code = errorData.code as string;
           (error as Error & { status_code?: number }).status_code =
@@ -438,16 +442,22 @@ export const shipApi = {
     formData.append("payment_id", data.payment_id.toString());
     formData.append("ship_id", data.ship_id.toString());
     if (data.reference_id) formData.append("reference_id", data.reference_id);
-    if (data.reference_url) formData.append("reference_url", data.reference_url);
+    if (data.reference_url)
+      formData.append("reference_url", data.reference_url);
     if (data.date) formData.append("date", data.date);
     if (data.note) formData.append("note", data.note);
-    if (data.reference_doc_file) formData.append("reference_doc_file", data.reference_doc_file);
-    if (data.transaction_receipt) formData.append("transaction_receipt", data.transaction_receipt);
+    if (data.reference_doc_file)
+      formData.append("reference_doc_file", data.reference_doc_file);
+    if (data.transaction_receipt)
+      formData.append("transaction_receipt", data.transaction_receipt);
 
-    return apiRequest<Record<string, unknown>>(`/transporter/manual-confirmation-request`, {
-      method: "PATCH",
-      body: formData,
-    });
+    return apiRequest<Record<string, unknown>>(
+      `/transporter/manual-confirmation-request`,
+      {
+        method: "PATCH",
+        body: formData,
+      },
+    );
   },
 
   /**
@@ -489,8 +499,8 @@ export const shipApi = {
           const errorData = (await response.json()) as Record<string, unknown>;
           throw new Error(
             (errorData.error as string) ||
-            (errorData.message as string) ||
-            "Failed to fetch receipt",
+              (errorData.message as string) ||
+              "Failed to fetch receipt",
           );
         } catch {
           /* ignore */
