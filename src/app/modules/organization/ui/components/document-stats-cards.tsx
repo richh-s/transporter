@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface DocumentStatsCardsProps {
-  documents: { status: string }[];
+  documents: { status?: string }[];
 }
 
 export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
@@ -22,7 +22,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
     },
     {
       label: t("organization:stats.pending_docs"),
-      value: documents.filter((d) => d.status.toLowerCase() === "pending").length,
+      value: documents.filter((d) => (d.status || "").toLowerCase() === "pending").length,
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-500/10",
@@ -30,7 +30,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
     },
     {
       label: t("organization:stats.approved_docs"),
-      value: documents.filter((d) => d.status.toLowerCase() === "approved").length,
+      value: documents.filter((d) => (d.status || "").toLowerCase() === "approved").length,
       icon: CheckCircle2,
       color: "text-emerald-600",
       bg: "bg-emerald-500/10",
@@ -39,7 +39,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
     {
       label: t("organization:stats.rejected_docs"),
       value: documents.filter((d) => {
-        const s = d.status.toLowerCase().replace(/_/g, "");
+        const s = (d.status || "").toLowerCase().replace(/_/g, "");
         return s === "rejected" || s === "inactive";
       }).length,
       icon: AlertCircle,

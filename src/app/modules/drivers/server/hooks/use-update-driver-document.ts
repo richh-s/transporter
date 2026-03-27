@@ -5,12 +5,16 @@ import { driverKeys } from "../query-keys";
 import { driverDocumentSchema } from "@/lib/zod/driver/driver-document.schema";
 import type { DriverDocument } from "../types";
 import { tokenStorage } from "@/lib/api-client";
+import i18n from "@/i18n";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 function getAuthHeaders(): Record<string, string> {
   const token = tokenStorage.getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    "Accept-Language": i18n.language || "en",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 type UpdateInput = {

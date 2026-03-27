@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: ".",
+  },
   // Critical for containerized deployment (App Runner, Docker, etc.)
   output: "export",
   eslint: {

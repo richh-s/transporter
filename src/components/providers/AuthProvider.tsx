@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { request, tokenStorage } from "@/lib/api-client";
+import { useCapacitorInit } from "@/hooks/use-capacitor-init";
 
 type User = {
   id: string;
@@ -34,6 +35,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  useCapacitorInit();
+
   const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
 

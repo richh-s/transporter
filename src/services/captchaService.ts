@@ -9,6 +9,8 @@ export interface VerifyCaptchaResponse {
   detail?: string;
 }
 
+import i18n from "@/i18n";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /** Convert blob to base64 data URL so img works in Capacitor WebView (blob URLs can fail there). */
@@ -33,6 +35,9 @@ export const captchaService = {
       const response = await fetch(captchaUrl, {
         method: "GET",
         credentials: "include",
+        headers: {
+          "Accept-Language": i18n.language || "en",
+        },
       });
 
       if (!response.ok) {
@@ -123,6 +128,7 @@ export const captchaService = {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
+          "Accept-Language": i18n.language || "en",
         },
         credentials: "include",
         body: formData,
